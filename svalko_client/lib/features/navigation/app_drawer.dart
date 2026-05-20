@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
-import '../../core/settings_storage.dart';
 import '../../core/result.dart';
+import '../../core/settings_storage.dart';
 import '../../features/feed/feed_controller.dart';
 import '../../models/tag.dart';
 
@@ -14,11 +14,35 @@ final tagsProvider = FutureProvider<List<Tag>>((ref) async {
   };
 });
 
-class AppDrawer extends ConsumerWidget {
+class AppDrawer extends ConsumerStatefulWidget {
   const AppDrawer({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppDrawer> createState() => _AppDrawerState();
+}
+
+class _AppDrawerState extends ConsumerState<AppDrawer> {
+  bool _loadingRandom = false;
+
+  Future<void> _openRandom() async {
+    if (_loadingRandom) return;
+    setState(() => _loadingRandom = true);
+    final result =
+        await ref.read(repositoryProvider).getRandomPostId();
+    if (!mounted) return;
+    setState(() => _loadingRandom = false);
+    switch (result) {
+      case Ok(:final value):
+        Navigator.of(context).pop();
+        Navigator.of(context).pushNamed('/post', arguments: value);
+      case Err(:final error):
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tagsAsync = ref.watch(tagsProvider);
     final s = AppStrings.of(ref.watch(languageProvider));
     final theme = Theme.of(context);
@@ -31,9 +55,18 @@ class AppDrawer extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.home_outlined),
               title: Text(s.navHome),
-              onTap: () {
-                Navigator.of(context).popUntil((r) => r.isFirst);
-              },
+              onTap: () => Navigator.of(context).popUntil((r) => r.isFirst),
+            ),
+            ListTile(
+              leading: _loadingRandom
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.shuffle_outlined),
+              title: Text(s.navRandom),
+              onTap: _openRandom,
             ),
             const Divider(height: 1),
             Padding(
@@ -69,7 +102,8 @@ class AppDrawer extends ConsumerWidget {
                           : null,
                       onTap: () {
                         Navigator.of(context).pop();
-                        Navigator.of(context).pushNamed('/tag', arguments: tag);
+                        Navigator.of(context)
+                            .pushNamed('/tag', arguments: tag);
                       },
                     );
                   },
