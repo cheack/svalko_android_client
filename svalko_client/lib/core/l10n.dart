@@ -19,6 +19,8 @@ abstract class AppStrings {
   String get shareLink;
   String get photoSaved;
   String get videoSaved;
+  String get navHome;
+  String get navTags;
 
   /// "насрано 5 раз" / "5 комментариев" — used in post screen header
   String commentsHeader(int n);
@@ -74,6 +76,12 @@ class SvalkoStrings extends AppStrings {
 
   @override
   String get videoSaved => 'видео сохранено';
+
+  @override
+  String get navHome => 'Главная';
+
+  @override
+  String get navTags => 'ТАГИ — ПТААГИ';
 
   @override
   String commentsHeader(int n) => 'насрано $n ${_raz(n)}';
@@ -134,6 +142,12 @@ class RuStrings extends AppStrings {
 
   @override
   String get videoSaved => 'Видео сохранено';
+
+  @override
+  String get navHome => 'Главная';
+
+  @override
+  String get navTags => 'Теги';
 
   @override
   String commentsHeader(int n) => '$n ${_komentariy(n)}';

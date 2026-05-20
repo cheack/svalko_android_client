@@ -1,10 +1,12 @@
 import '../parsers/feed_parser.dart';
 import '../parsers/post_parser.dart';
+import '../parsers/tags_parser.dart';
 import '../svalko_api.dart';
 import '../../core/result.dart';
 import '../../models/feed_source.dart';
 import '../../models/post.dart';
 import '../../models/comment.dart';
+import '../../models/tag.dart';
 
 class FeedPage {
   const FeedPage({required this.posts, required this.pagination});
@@ -66,6 +68,14 @@ class SvalkoRepository {
     }
   }
 
+  Future<Result<List<Tag>, AppError>> getTags() async {
+    final result = await _api.fetchTagsPage();
+    return switch (result) {
+      Err(:final error) => Err(error),
+      Ok(:final value) => _parseTags(value),
+    };
+  }
+
   Result<PostPage, AppError> _parsePost(String html, int id) {
     try {
       final parsed = PostParser.parse(html, id);
@@ -75,6 +85,14 @@ class SvalkoRepository {
         comments: parsed.comments,
         pagination: parsed.pagination,
       ));
+    } catch (_) {
+      return const Err(AppError.parseFailure);
+    }
+  }
+
+  Result<List<Tag>, AppError> _parseTags(String html) {
+    try {
+      return Ok(TagsParser.parse(html));
     } catch (_) {
       return const Err(AppError.parseFailure);
     }
