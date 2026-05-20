@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
+import '../../core/settings_storage.dart';
 import 'media_actions.dart';
 
 void showFullscreenImage(BuildContext context, String url) {

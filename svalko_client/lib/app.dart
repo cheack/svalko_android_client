@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/skin.dart';
+import 'core/settings_storage.dart';
 import 'features/feed/feed_screen.dart';
 import 'features/post/post_screen.dart';
 import 'features/logs/logs_screen.dart';
