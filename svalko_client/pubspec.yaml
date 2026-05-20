@@ -1,0 +1,62 @@
+name: svalko_client
+description: "Мобильный клиент для svalko.org"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # HTTP
+  dio: ^5.8.0+1
+
+  # HTML parser
+  html: ^0.15.5
+
+  # Encoding (windows-1251)
+  charset_converter: ^2.1.1
+
+  # Image caching
+  cached_network_image: ^3.4.1
+
+  # Local cache
+  hive_ce_flutter: ^2.2.0
+
+  # Routing
+  go_router: ^14.8.1
+
+  # Browser launch
+  url_launcher: ^6.3.1
+
+  # Video playback
+  video_player: ^2.9.2
+  chewie: ^1.10.0
+
+  # Media save & share
+  gal: ^2.3.0
+  share_plus: ^10.1.4
+  path_provider: ^2.1.5
+
+  # HTTP cache (persistent)
+  dio_cache_interceptor: ^3.5.0
+  dio_cache_interceptor_file_store: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  riverpod_generator: ^2.6.2
+  build_runner: ^2.4.15
+
+flutter:
+  uses-material-design: true
