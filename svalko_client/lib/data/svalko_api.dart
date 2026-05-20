@@ -6,6 +6,7 @@ import '../core/config.dart';
 import '../core/encoding.dart';
 import '../core/logging_interceptor.dart';
 import '../core/result.dart';
+import '../models/feed_source.dart';
 
 class SvalkoApi {
   SvalkoApi({FileCacheStore? cacheStore})
@@ -45,11 +46,19 @@ class SvalkoApi {
     return dio;
   }
 
-  /// Fetches the feed page. [page] = null → latest (homepage).
-  Future<Result<String, AppError>> fetchFeedPage({int? page}) async {
-    final url = page == null
-        ? Config.baseUrl
-        : '${Config.baseUrl}/page/$page';
+  /// Fetches the feed page. [page] = null → latest (homepage/tag root).
+  Future<Result<String, AppError>> fetchFeedPage({
+    int? page,
+    FeedSource source = const MainFeed(),
+  }) async {
+    final url = switch (source) {
+      MainFeed() => page == null
+          ? Config.baseUrl
+          : '${Config.baseUrl}/page/$page',
+      TagFeed(:final tagId) => page == null
+          ? '${Config.baseUrl}/tag/$tagId'
+          : '${Config.baseUrl}/page/$page?tag_id=$tagId',
+    };
     return _get(url);
   }
 

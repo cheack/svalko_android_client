@@ -8,20 +8,22 @@ class PostTagsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelSmall;
+    final color = Theme.of(context).colorScheme.secondary;
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(color: color);
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      children: tags
-          .map((t) => Chip(
-                label: Text(t.name),
-                labelStyle: style,
-                padding: EdgeInsets.zero,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ))
-          .toList(),
+        spacing: 10,
+        runSpacing: 2,
+        children: tags
+            .map(
+              (t) => GestureDetector(
+                onTap: () =>
+                    Navigator.of(context).pushNamed('/tag', arguments: t),
+                child: Text('#${t.name}', style: style),
+              ),
+            )
+            .toList(),
       ),
     );
   }

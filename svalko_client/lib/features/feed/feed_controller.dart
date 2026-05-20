@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/svalko_repository.dart';
 import '../../data/svalko_api.dart';
+import '../../models/feed_source.dart';
 import '../../models/post.dart';
 import '../../core/result.dart';
 
@@ -73,11 +74,12 @@ class FeedState {
 // ---------------------------------------------------------------------------
 
 class FeedController extends StateNotifier<FeedState> {
-  FeedController(this._repo) : super(const FeedState()) {
+  FeedController(this._repo, this._source) : super(const FeedState()) {
     loadInitial();
   }
 
   final SvalkoRepository _repo;
+  final FeedSource _source;
 
   FeedState _stateFromFeedPage(
     FeedPage value, {
@@ -97,7 +99,7 @@ class FeedController extends StateNotifier<FeedState> {
 
   Future<void> loadInitial() async {
     state = state.copyWith(isLoading: true, clearError: true);
-    final result = await _repo.getFeed();
+    final result = await _repo.getFeed(source: _source);
     state = switch (result) {
       Ok(:final value) => _stateFromFeedPage(value),
       Err(:final error) => FeedState(error: error),
@@ -106,7 +108,7 @@ class FeedController extends StateNotifier<FeedState> {
 
   Future<void> refresh() async {
     state = state.copyWith(isRefreshing: true, clearError: true);
-    final result = await _repo.getFeed();
+    final result = await _repo.getFeed(source: _source);
     state = switch (result) {
       Ok(:final value) => _stateFromFeedPage(value),
       Err(:final error) => state.copyWith(isRefreshing: false, error: error),
@@ -115,7 +117,7 @@ class FeedController extends StateNotifier<FeedState> {
 
   Future<void> loadPage(int page) async {
     state = state.copyWith(isRefreshing: true, clearError: true);
-    final result = await _repo.getFeed(page: page);
+    final result = await _repo.getFeed(page: page, source: _source);
     state = switch (result) {
       Ok(:final value) => _stateFromFeedPage(value),
       Err(:final error) => state.copyWith(isRefreshing: false, error: error),
@@ -130,7 +132,7 @@ class FeedController extends StateNotifier<FeedState> {
       return;
     }
     state = state.copyWith(isLoadingMore: true);
-    final result = await _repo.getFeed(page: nextPage);
+    final result = await _repo.getFeed(page: nextPage, source: _source);
     state = switch (result) {
       Ok(:final value) => _stateFromFeedPage(
           value,
@@ -143,6 +145,6 @@ class FeedController extends StateNotifier<FeedState> {
 }
 
 final feedControllerProvider =
-    StateNotifierProvider<FeedController, FeedState>((ref) {
-  return FeedController(ref.watch(repositoryProvider));
-});
+    StateNotifierProvider.family<FeedController, FeedState, FeedSource>(
+  (ref, source) => FeedController(ref.watch(repositoryProvider), source),
+);
