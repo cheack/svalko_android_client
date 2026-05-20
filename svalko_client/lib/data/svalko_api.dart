@@ -62,6 +62,17 @@ class SvalkoApi {
     return _get(url);
   }
 
+  Future<Result<String, AppError>> fetchTagsPage() => _get(
+        Config.tagsUrl,
+        cacheOptions: _cacheStore == null
+            ? null
+            : CacheOptions(
+                store: _cacheStore,
+                policy: CachePolicy.forceCache,
+                maxStale: const Duration(days: 1),
+              ),
+      );
+
   /// Fetches a post page with its comments.
   /// [commentsPage] null → server default (last page).
   /// [isHistorical] true → page is not the last one; safe to cache 30 days.

@@ -1,6 +1,7 @@
 abstract final class Config {
   static const String baseUrl = 'https://svalko.org';
   static const String pdaBaseUrl = 'https://pda.svalko.org';
+  static const String tagsUrl = '$baseUrl/tags.html';
   static const String rssUrl = '$baseUrl/rss.php';
   static const String rssCommentsUrl = '$rssUrl?comments=1';
 

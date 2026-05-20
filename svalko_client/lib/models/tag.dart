@@ -2,10 +2,11 @@ import 'package:flutter/foundation.dart';
 
 @immutable
 class Tag {
-  const Tag({required this.id, required this.name});
+  const Tag({required this.id, required this.name, this.count});
 
   final int id;
   final String name;
+  final int? count;
 
   @override
   bool operator ==(Object other) =>
