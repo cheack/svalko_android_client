@@ -1,8 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 enum AppLanguage { svalko, ru }
-
-final languageProvider = StateProvider<AppLanguage>((_) => AppLanguage.svalko);
 
 abstract class AppStrings {
   const AppStrings();

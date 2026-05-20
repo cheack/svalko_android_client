@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/config.dart';
 import '../../../core/l10n.dart';
+import '../../../core/settings_storage.dart';
 import '../../../models/post.dart';
 import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/linked_text.dart';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
+import '../../core/settings_storage.dart';
 import '../../core/result.dart';
 import '../../features/feed/feed_controller.dart';
 import '../../models/tag.dart';

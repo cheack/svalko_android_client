@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
+import '../../core/settings_storage.dart';
 import '../../core/skin.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -20,7 +21,7 @@ class SettingsScreen extends ConsumerWidget {
           RadioGroup<AppLanguage>(
             groupValue: lang,
             onChanged: (v) {
-              if (v != null) ref.read(languageProvider.notifier).state = v;
+              if (v != null) ref.read(languageProvider.notifier).set(v);
             },
             child: const Column(
               children: [
@@ -43,7 +44,7 @@ class SettingsScreen extends ConsumerWidget {
           RadioGroup<AppSkin>(
             groupValue: skin,
             onChanged: (v) {
-              if (v != null) ref.read(skinProvider.notifier).state = v;
+              if (v != null) ref.read(skinProvider.notifier).set(v);
             },
             child: const Column(
               children: [

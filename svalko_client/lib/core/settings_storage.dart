@@ -1,0 +1,52 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'l10n.dart';
+import 'skin.dart';
+
+/// Overridden in main.dart with the real opened Hive box.
+final settingsBoxProvider =
+    Provider<Box<String>>((_) => throw UnimplementedError());
+
+// ---------------------------------------------------------------------------
+// Skin
+// ---------------------------------------------------------------------------
+
+class SkinNotifier extends Notifier<AppSkin> {
+  @override
+  AppSkin build() {
+    final box = ref.watch(settingsBoxProvider);
+    final skin = AppSkin.values.firstWhere(
+      (s) => s.name == box.get('skin'),
+      orElse: () => AppSkin.blue,
+    );
+    listenSelf((_, next) => box.put('skin', next.name));
+    return skin;
+  }
+
+  void set(AppSkin value) => state = value;
+}
+
+final skinProvider =
+    NotifierProvider<SkinNotifier, AppSkin>(SkinNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Language
+// ---------------------------------------------------------------------------
+
+class LanguageNotifier extends Notifier<AppLanguage> {
+  @override
+  AppLanguage build() {
+    final box = ref.watch(settingsBoxProvider);
+    final lang = AppLanguage.values.firstWhere(
+      (l) => l.name == box.get('language'),
+      orElse: () => AppLanguage.svalko,
+    );
+    listenSelf((_, next) => box.put('language', next.name));
+    return lang;
+  }
+
+  void set(AppLanguage value) => state = value;
+}
+
+final languageProvider =
+    NotifierProvider<LanguageNotifier, AppLanguage>(LanguageNotifier.new);

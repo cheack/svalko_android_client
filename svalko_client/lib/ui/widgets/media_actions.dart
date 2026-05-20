@@ -5,6 +5,7 @@ import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/l10n.dart';
+import '../../core/settings_storage.dart';
 
 final _dio = Dio();
 
