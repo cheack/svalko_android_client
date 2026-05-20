@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
+import '../../models/feed_source.dart';
 import 'feed_controller.dart';
 import 'widgets/post_card.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
-  const FeedScreen({super.key});
+  const FeedScreen({super.key, this.source = const MainFeed()});
+
+  final FeedSource source;
 
   @override
   ConsumerState<FeedScreen> createState() => _FeedScreenState();
@@ -65,12 +68,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(feedControllerProvider);
-    final ctrl = ref.read(feedControllerProvider.notifier);
+    final state = ref.watch(feedControllerProvider(widget.source));
+    final ctrl = ref.read(feedControllerProvider(widget.source).notifier);
     final s = AppStrings.of(ref.watch(languageProvider));
 
     // After loadPage/refresh: reset offsets, update page, jump to top.
-    ref.listen<FeedState>(feedControllerProvider, (prev, next) {
+    ref.listen<FeedState>(feedControllerProvider(widget.source), (prev, next) {
       if (prev?.isRefreshing == true && !next.isRefreshing &&
           next.currentPage != null) {
         _pageScrollOffsets
@@ -121,7 +124,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(s.appTitle),
+        title: Text(switch (widget.source) {
+          MainFeed() => s.appTitle,
+          TagFeed(:final tagName) => '#$tagName',
+        }),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

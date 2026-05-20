@@ -2,6 +2,7 @@ import '../parsers/feed_parser.dart';
 import '../parsers/post_parser.dart';
 import '../svalko_api.dart';
 import '../../core/result.dart';
+import '../../models/feed_source.dart';
 import '../../models/post.dart';
 import '../../models/comment.dart';
 
@@ -29,8 +30,11 @@ class SvalkoRepository {
 
   final SvalkoApi _api;
 
-  Future<Result<FeedPage, AppError>> getFeed({int? page}) async {
-    final result = await _api.fetchFeedPage(page: page);
+  Future<Result<FeedPage, AppError>> getFeed({
+    int? page,
+    FeedSource source = const MainFeed(),
+  }) async {
+    final result = await _api.fetchFeedPage(page: page, source: source);
     return switch (result) {
       Err(:final error) => Err(error),
       Ok(:final value) => _parseFeed(value),

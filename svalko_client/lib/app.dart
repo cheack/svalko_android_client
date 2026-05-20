@@ -5,6 +5,8 @@ import 'features/feed/feed_screen.dart';
 import 'features/post/post_screen.dart';
 import 'features/logs/logs_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'models/feed_source.dart';
+import 'models/tag.dart';
 import 'ui/theme.dart';
 
 class SvalkoApp extends ConsumerWidget {
@@ -26,6 +28,14 @@ class SvalkoApp extends ConsumerWidget {
           final postId = settings.arguments as int;
           return MaterialPageRoute(
             builder: (_) => PostScreen(postId: postId),
+          );
+        }
+        if (settings.name == '/tag') {
+          final tag = settings.arguments as Tag;
+          return MaterialPageRoute(
+            builder: (_) => FeedScreen(
+              source: TagFeed(tagId: tag.id, tagName: tag.name),
+            ),
           );
         }
         if (settings.name == '/settings') {
