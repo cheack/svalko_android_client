@@ -88,11 +88,14 @@ class PostController extends StateNotifier<PostState> {
     AppLogger.instance.info(
       'loadPage($page) start, currentPage=${state.currentPage}',
     );
+    // Capture before async gap — state.totalPages may have been set from a
+    // fresh network response and we must not overwrite it with stale cached HTML.
+    final isHistorical = page < state.totalPages - 1;
     state = state.copyWith(isLoadingMore: true);
     final result = await _repo.getPost(
       _postId,
       commentsPage: page,
-      isHistorical: page < state.totalPages - 1,
+      isHistorical: isHistorical,
     );
     switch (result) {
       case Ok(:final value):
@@ -103,8 +106,11 @@ class PostController extends StateNotifier<PostState> {
         state = state.copyWith(
           comments: value.comments,
           currentPage: page,
-          totalPages: value.pagination.totalPages,
-          totalComments: value.pagination.totalComments,
+          // Historical pages are served from a long-lived cache whose HTML
+          // reflects the page count at cache time, not today. Keep the fresh
+          // totalPages/totalComments obtained during load().
+          totalPages: isHistorical ? state.totalPages : value.pagination.totalPages,
+          totalComments: isHistorical ? state.totalComments : value.pagination.totalComments,
           isLoadingMore: false,
         );
       case Err(:final error):
