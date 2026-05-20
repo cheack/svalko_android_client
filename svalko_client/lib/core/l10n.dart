@@ -17,6 +17,7 @@ abstract class AppStrings {
   String get videoSaved;
   String get navHome;
   String get navTags;
+  String get navRandom;
 
   /// "насрано 5 раз" / "5 комментариев" — used in post screen header
   String commentsHeader(int n);
@@ -78,6 +79,9 @@ class SvalkoStrings extends AppStrings {
 
   @override
   String get navTags => 'ТАГИ — ПТААГИ';
+
+  @override
+  String get navRandom => 'Что попало';
 
   @override
   String commentsHeader(int n) => 'насрано $n ${_raz(n)}';
@@ -144,6 +148,9 @@ class RuStrings extends AppStrings {
 
   @override
   String get navTags => 'Теги';
+
+  @override
+  String get navRandom => 'Случайный пост';
 
   @override
   String commentsHeader(int n) => '$n ${_komentariy(n)}';

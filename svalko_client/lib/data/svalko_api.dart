@@ -62,6 +62,28 @@ class SvalkoApi {
     return _get(url);
   }
 
+  Future<Result<int, AppError>> fetchRandomPostId() async {
+    try {
+      final response = await _dio.get<dynamic>(
+        '${Config.baseUrl}/random.html',
+        options: Options(
+          followRedirects: true,
+          maxRedirects: 5,
+          responseType: ResponseType.bytes,
+        ),
+      );
+      final match =
+          RegExp(r'/(\d+)\.html').firstMatch(response.realUri.toString());
+      final id = int.tryParse(match?.group(1) ?? '');
+      if (id == null) return const Err(AppError.parseFailure);
+      return Ok(id);
+    } on DioException {
+      return const Err(AppError.network);
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
   Future<Result<String, AppError>> fetchTagsPage() => _get(
         Config.tagsUrl,
         cacheOptions: _cacheStore == null

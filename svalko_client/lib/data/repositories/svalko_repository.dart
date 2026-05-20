@@ -68,6 +68,9 @@ class SvalkoRepository {
     }
   }
 
+  Future<Result<int, AppError>> getRandomPostId() =>
+      _api.fetchRandomPostId();
+
   Future<Result<List<Tag>, AppError>> getTags() async {
     final result = await _api.fetchTagsPage();
     return switch (result) {
