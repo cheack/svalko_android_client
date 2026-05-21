@@ -1,0 +1,119 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/l10n.dart';
+import '../../core/result.dart';
+import '../../core/settings_storage.dart';
+import '../../features/feed/feed_controller.dart';
+import '../../models/image_item.dart';
+import '../../ui/widgets/image_viewer.dart';
+import 'images_controller.dart';
+
+class ImagesScreen extends ConsumerWidget {
+  const ImagesScreen({super.key});
+
+  void _tapImage(BuildContext context, WidgetRef ref, ImageItem item) {
+    showFullscreenCarousel(
+      context,
+      [item.imageUrl],
+      0,
+      onOpenPost: () async {
+        final result =
+            await ref.read(repositoryProvider).getImagePostId(item.filename);
+        if (!context.mounted) return;
+        switch (result) {
+          case Ok(:final value):
+            Navigator.of(context).pushNamed('/post', arguments: value);
+          case Err(:final error):
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(error.toString())));
+        }
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(imagesControllerProvider);
+    final s = AppStrings.of(ref.watch(languageProvider));
+
+    return Scaffold(
+      appBar: AppBar(title: Text(s.navImages)),
+      body: _buildBody(context, ref, state, s),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    WidgetRef ref,
+    ImagesState state,
+    AppStrings s,
+  ) {
+    if (state.isLoading && state.items.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.error != null && state.items.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(state.error.toString()),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () =>
+                  ref.read(imagesControllerProvider.notifier).load(),
+              child: Text(s.retry),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(4),
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (ctx, i) {
+                final item = state.items[i];
+                return GestureDetector(
+                  onTap: () => _tapImage(context, ref, item),
+                  child: CachedNetworkImage(
+                    imageUrl: item.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, _) =>
+                        const ColoredBox(color: Color(0x18808080)),
+                    errorWidget: (_, _, _) =>
+                        const Icon(Icons.broken_image_outlined),
+                  ),
+                );
+              },
+              childCount: state.items.length,
+            ),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 4,
+              crossAxisSpacing: 4,
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: state.isLoading
+                  ? const CircularProgressIndicator()
+                  : TextButton.icon(
+                      onPressed: () =>
+                          ref.read(imagesControllerProvider.notifier).load(),
+                      icon: const Icon(Icons.refresh),
+                      label: Text(s.more),
+                    ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

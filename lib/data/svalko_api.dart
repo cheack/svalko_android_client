@@ -84,6 +84,33 @@ class SvalkoApi {
     }
   }
 
+  Future<Result<String, AppError>> fetchImagesPage() =>
+      _get(Config.imagesUrl);
+
+  Future<Result<int, AppError>> fetchImagePostId(String filename) async {
+    try {
+      final url =
+          '${Config.imagesUrl}?find=${Uri.encodeComponent(filename)}';
+      final response = await _dio.get<dynamic>(
+        url,
+        options: Options(
+          followRedirects: true,
+          maxRedirects: 5,
+          responseType: ResponseType.bytes,
+        ),
+      );
+      final match =
+          RegExp(r'/(\d+)\.html').firstMatch(response.realUri.toString());
+      final id = int.tryParse(match?.group(1) ?? '');
+      if (id == null) return const Err(AppError.parseFailure);
+      return Ok(id);
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
   Future<Result<String, AppError>> fetchTagsPage() => _get(
         Config.tagsUrl,
         cacheOptions: _cacheStore == null

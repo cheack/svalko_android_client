@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/settings_storage.dart';
 import 'features/feed/feed_screen.dart';
-import 'features/post/post_screen.dart';
+import 'features/images/images_screen.dart';
 import 'features/logs/logs_screen.dart';
+import 'features/post/post_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'models/feed_source.dart';
 import 'models/tag.dart';
@@ -37,6 +38,9 @@ class SvalkoApp extends ConsumerWidget {
               source: TagFeed(tagId: tag.id, tagName: tag.name),
             ),
           );
+        }
+        if (settings.name == '/images') {
+          return MaterialPageRoute(builder: (_) => const ImagesScreen());
         }
         if (settings.name == '/settings') {
           return MaterialPageRoute(builder: (_) => const SettingsScreen());
