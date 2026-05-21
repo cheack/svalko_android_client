@@ -12,7 +12,7 @@ void showFullscreenCarousel(
   BuildContext context,
   List<String> urls,
   int initialIndex, {
-  Future<void> Function()? onOpenPost,
+  Future<void> Function(int index)? onOpenPost,
 }) {
   Navigator.of(context).push(
     MaterialPageRoute<void>(
@@ -35,7 +35,7 @@ class _FullscreenCarouselPage extends ConsumerStatefulWidget {
 
   final List<String> urls;
   final int initialIndex;
-  final Future<void> Function()? onOpenPost;
+  final Future<void> Function(int index)? onOpenPost;
 
   @override
   ConsumerState<_FullscreenCarouselPage> createState() =>
@@ -100,7 +100,7 @@ class _FullscreenCarouselPageState
                     tooltip: s.openInBrowser,
                     onPressed: () async {
                       setState(() => _postLoading = true);
-                      await widget.onOpenPost!();
+                      await widget.onOpenPost!(_current);
                       if (mounted) setState(() => _postLoading = false);
                     },
                   ),
