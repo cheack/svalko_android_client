@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'image_viewer.dart';
 import 'media_actions.dart';
@@ -49,15 +48,14 @@ class _ImageCarouselState extends State<ImageCarousel> {
               return GestureDetector(
                 onTap: () => showFullscreenCarousel(context, urls, i),
                 onLongPress: () => showMediaSheet(context, url),
-                child: CachedNetworkImage(
-                  imageUrl: url,
+                child: Image.network(
+                  url,
                   width: double.infinity,
                   fit: BoxFit.contain,
                   alignment: Alignment.center,
-                  placeholder: (_, _) => const ShimmerPlaceholder(),
-                  fadeInDuration: Duration.zero,
-                  fadeOutDuration: Duration.zero,
-                  errorWidget: (_, _, _) => const SizedBox.shrink(),
+                  loadingBuilder: (_, child, progress) =>
+                      progress == null ? child : const ShimmerPlaceholder(),
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
                 ),
               );
             },
