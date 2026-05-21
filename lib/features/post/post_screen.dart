@@ -8,6 +8,8 @@ import '../../ui/widgets/image_carousel.dart';
 import '../../ui/widgets/linked_text.dart';
 import '../../ui/widgets/media_actions.dart';
 import '../../ui/widgets/post_tags.dart';
+import '../../ui/widgets/video_embed_player.dart';
+import '../../ui/widgets/video_link_card.dart';
 import '../../ui/widgets/video_player_widget.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
@@ -171,6 +173,18 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                 child: VideoPlayerWidget(url: url),
               ),
             ),
+          // External video embeds
+          for (final link in post.externalLinks)
+            if (VideoEmbedPlayer.isSupported(link))
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: VideoEmbedPlayer(url: link),
+              )
+            else if (VideoLinkCard.isSupported(link))
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: VideoLinkCard(url: link),
+              ),
           // Post text
           if (post.text != null && post.text!.isNotEmpty)
             Padding(

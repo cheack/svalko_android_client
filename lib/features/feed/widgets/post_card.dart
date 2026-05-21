@@ -9,6 +9,7 @@ import '../../../models/post.dart';
 import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/linked_text.dart';
 import '../../../ui/widgets/post_tags.dart';
+import '../../../ui/widgets/video_link_card.dart';
 import '../../../ui/widgets/video_player_widget.dart';
 
 
@@ -56,6 +57,9 @@ class PostCard extends ConsumerWidget {
               ImageCarousel(urls: post.imageUrls),
             if (post.imageUrls.isEmpty && post.videoUrls.isNotEmpty)
               VideoPlayerWidget(url: post.videoUrls.first),
+            for (final link in post.externalLinks)
+              if (VideoLinkCard.isSupported(link))
+                VideoLinkCard(url: link, onTap: onTap),
             if (post.text != null && post.text!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
