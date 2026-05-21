@@ -42,6 +42,7 @@ dependencies:
   # Video playback
   video_player: ^2.9.2
   chewie: ^1.10.0
+  webview_flutter: ^4.10.0
 
   # Media save & share
   gal: ^2.3.0
