@@ -97,7 +97,7 @@ class _FullscreenCarouselPageState
                   )
                 : IconButton(
                     icon: const Icon(Icons.open_in_new_outlined),
-                    tooltip: s.openInBrowser,
+                    tooltip: s.postLink,
                     onPressed: () async {
                       setState(() => _postLoading = true);
                       await widget.onOpenPost!(_current);

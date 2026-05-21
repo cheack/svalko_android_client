@@ -81,7 +81,7 @@ class SvalkoRepository {
     };
   }
 
-  Future<Result<int, AppError>> getImagePostId(String filename) =>
+  Future<Result<(int, int?), AppError>> getImagePostId(String filename) =>
       _api.fetchImagePostId(filename);
 
   Result<List<ImageItem>, AppError> _parseImages(String html) {

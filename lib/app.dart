@@ -26,9 +26,18 @@ class SvalkoApp extends ConsumerWidget {
           return MaterialPageRoute(builder: (_) => const FeedScreen());
         }
         if (settings.name == '/post') {
-          final postId = settings.arguments as int;
+          final args = settings.arguments;
+          final int postId;
+          final int? commentId;
+          if (args is (int, int?)) {
+            postId = args.$1;
+            commentId = args.$2;
+          } else {
+            postId = args as int;
+            commentId = null;
+          }
           return MaterialPageRoute(
-            builder: (_) => PostScreen(postId: postId),
+            builder: (_) => PostScreen(postId: postId, highlightCommentId: commentId),
           );
         }
         if (settings.name == '/tag') {

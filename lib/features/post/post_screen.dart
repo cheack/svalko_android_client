@@ -11,9 +11,10 @@ import '../../ui/widgets/post_tags.dart';
 import '../../ui/widgets/video_player_widget.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
-  const PostScreen({super.key, required this.postId});
+  const PostScreen({super.key, required this.postId, this.highlightCommentId});
 
   final int postId;
+  final int? highlightCommentId;
 
   @override
   ConsumerState<PostScreen> createState() => _PostScreenState();
@@ -22,7 +23,17 @@ class PostScreen extends ConsumerStatefulWidget {
 class _PostScreenState extends ConsumerState<PostScreen> {
   final _scrollController = ScrollController();
   final _commentsKey = GlobalKey();
+  final _highlightKey = GlobalKey();
   double? _commentsTarget;
+  bool _didScrollToHighlight = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.highlightCommentId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _tryScrollToHighlight());
+    }
+  }
 
   @override
   void dispose() {
@@ -40,6 +51,20 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     _commentsTarget = _scrollController.offset +
         box.localToGlobal(Offset.zero).dy -
         appBarHeight;
+  }
+
+  void _tryScrollToHighlight() {
+    if (_didScrollToHighlight) return;
+    final state = ref.read(postControllerProvider(widget.postId));
+    if (state.isLoading || state.totalPages != 1) return;
+    final ctx = _highlightKey.currentContext;
+    if (ctx == null) return;
+    _didScrollToHighlight = true;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    );
   }
 
   void _scrollToComments() {
@@ -66,6 +91,9 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     ref.listen<PostState>(postControllerProvider(widget.postId), (prev, next) {
       if (prev?.isLoadingMore == true && !next.isLoadingMore) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToComments());
+      }
+      if (prev?.isLoading == true && !next.isLoading) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _tryScrollToHighlight());
       }
     });
     final s = AppStrings.of(ref.watch(languageProvider));
@@ -181,7 +209,12 @@ class _PostScreenState extends ConsumerState<PostScreen> {
             child: Column(
               children: [
                 for (final comment in state.comments)
-                  CommentTile(comment: comment),
+                  CommentTile(
+                    key: comment.id == widget.highlightCommentId
+                        ? _highlightKey
+                        : null,
+                    comment: comment,
+                  ),
               ],
             ),
           ),
