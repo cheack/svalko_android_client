@@ -132,6 +132,17 @@ class _FullscreenCarouselPageState
                 child: Image.network(
                   url,
                   fit: BoxFit.contain,
+                  loadingBuilder: (_, child, progress) {
+                    if (progress == null) return child;
+                    final total = progress.expectedTotalBytes;
+                    final loaded = progress.cumulativeBytesLoaded;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white54,
+                        value: total != null ? loaded / total : null,
+                      ),
+                    );
+                  },
                   errorBuilder: (_, _, _) => const Icon(
                     Icons.broken_image,
                     color: Colors.white54,
