@@ -1,9 +1,11 @@
 import '../parsers/feed_parser.dart';
+import '../parsers/images_parser.dart';
 import '../parsers/post_parser.dart';
 import '../parsers/tags_parser.dart';
 import '../svalko_api.dart';
 import '../../core/result.dart';
 import '../../models/feed_source.dart';
+import '../../models/image_item.dart';
 import '../../models/post.dart';
 import '../../models/comment.dart';
 import '../../models/tag.dart';
@@ -70,6 +72,25 @@ class SvalkoRepository {
 
   Future<Result<int, AppError>> getRandomPostId() =>
       _api.fetchRandomPostId();
+
+  Future<Result<List<ImageItem>, AppError>> getImages() async {
+    final result = await _api.fetchImagesPage();
+    return switch (result) {
+      Err(:final error) => Err(error),
+      Ok(:final value) => _parseImages(value),
+    };
+  }
+
+  Future<Result<int, AppError>> getImagePostId(String filename) =>
+      _api.fetchImagePostId(filename);
+
+  Result<List<ImageItem>, AppError> _parseImages(String html) {
+    try {
+      return Ok(ImagesParser.parse(html));
+    } catch (_) {
+      return const Err(AppError.parseFailure);
+    }
+  }
 
   Future<Result<List<Tag>, AppError>> getTags() async {
     final result = await _api.fetchTagsPage();

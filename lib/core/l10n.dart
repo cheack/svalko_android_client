@@ -18,6 +18,8 @@ abstract class AppStrings {
   String get navHome;
   String get navTags;
   String get navRandom;
+  String get navImages;
+  String get more;
 
   /// "насрано 5 раз" / "5 комментариев" — used in post screen header
   String commentsHeader(int n);
@@ -82,6 +84,12 @@ class SvalkoStrings extends AppStrings {
 
   @override
   String get navRandom => 'Что попало';
+
+  @override
+  String get navImages => 'Картинки';
+
+  @override
+  String get more => 'Ещё';
 
   @override
   String commentsHeader(int n) => 'насрано $n ${_raz(n)}';
@@ -151,6 +159,12 @@ class RuStrings extends AppStrings {
 
   @override
   String get navRandom => 'Случайный пост';
+
+  @override
+  String get navImages => 'Картинки';
+
+  @override
+  String get more => 'Ещё';
 
   @override
   String commentsHeader(int n) => '$n ${_komentariy(n)}';

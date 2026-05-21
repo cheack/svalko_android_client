@@ -68,6 +68,14 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
               title: Text(s.navRandom),
               onTap: _openRandom,
             ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(s.navImages),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/images');
+              },
+            ),
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),

@@ -11,14 +11,16 @@ void showFullscreenImage(BuildContext context, String url) {
 void showFullscreenCarousel(
   BuildContext context,
   List<String> urls,
-  int initialIndex,
-) {
+  int initialIndex, {
+  Future<void> Function()? onOpenPost,
+}) {
   Navigator.of(context).push(
     MaterialPageRoute<void>(
       fullscreenDialog: true,
       builder: (_) => _FullscreenCarouselPage(
         urls: urls,
         initialIndex: initialIndex,
+        onOpenPost: onOpenPost,
       ),
     ),
   );
@@ -28,10 +30,12 @@ class _FullscreenCarouselPage extends ConsumerStatefulWidget {
   const _FullscreenCarouselPage({
     required this.urls,
     required this.initialIndex,
+    this.onOpenPost,
   });
 
   final List<String> urls;
   final int initialIndex;
+  final Future<void> Function()? onOpenPost;
 
   @override
   ConsumerState<_FullscreenCarouselPage> createState() =>
@@ -42,6 +46,7 @@ class _FullscreenCarouselPageState
     extends ConsumerState<_FullscreenCarouselPage> {
   late int _current;
   late final PageController _pageController;
+  bool _postLoading = false;
 
   @override
   void initState() {
@@ -77,6 +82,28 @@ class _FullscreenCarouselPageState
               )
             : null,
         actions: [
+          if (widget.onOpenPost != null)
+            _postLoading
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.open_in_new_outlined),
+                    tooltip: s.openInBrowser,
+                    onPressed: () async {
+                      setState(() => _postLoading = true);
+                      await widget.onOpenPost!();
+                      if (mounted) setState(() => _postLoading = false);
+                    },
+                  ),
           IconButton(
             icon: const Icon(Icons.download_outlined),
             tooltip: s.savePhoto,
