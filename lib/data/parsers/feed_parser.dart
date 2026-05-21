@@ -169,11 +169,12 @@ abstract final class FeedParser {
   }
 
   static List<Tag> _parseTags(Element el) {
-    return el.querySelectorAll('.tags a[href]').map((a) {
+    return el.querySelectorAll('.tags a[href]').expand((a) {
       final href = a.attributes['href'] ?? '';
       final idMatch = RegExp(r'/tag/(\d+)').firstMatch(href);
-      final id = int.tryParse(idMatch?.group(1) ?? '') ?? 0;
-      return Tag(id: id, name: a.text.trim());
+      if (idMatch == null) return const <Tag>[];
+      final id = int.tryParse(idMatch.group(1) ?? '') ?? 0;
+      return [Tag(id: id, name: a.text.trim())];
     }).toList();
   }
 
