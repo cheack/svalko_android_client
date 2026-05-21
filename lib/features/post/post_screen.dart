@@ -127,7 +127,8 @@ class _PostScreenState extends ConsumerState<PostScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(post.author.name)),
-      body: Scrollbar(
+      body: SelectionArea(
+        child: Scrollbar(
         controller: _scrollController,
         child: ListView(
         controller: _scrollController,
@@ -244,6 +245,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               },
             ),
         ],
+      ),
       ),
       ),
     );
