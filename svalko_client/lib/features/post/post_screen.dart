@@ -216,21 +216,62 @@ class _CommentPageBar extends StatelessWidget {
   final bool isLoading;
   final void Function(int) onPageTap;
 
+  // Returns a list of page indices and -1 as a sentinel for "...".
+  List<int> _buildPageSlots() {
+    if (totalPages <= 9) {
+      return List.generate(totalPages, (i) => i);
+    }
+    final last = totalPages - 1;
+    final Set<int> pages = {
+      0,
+      1,
+      last - 1,
+      last,
+      currentPage - 2,
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      currentPage + 2,
+    };
+    final sorted = pages.where((p) => p >= 0 && p <= last).toList()..sort();
+
+    final result = <int>[];
+    for (int i = 0; i < sorted.length; i++) {
+      if (i > 0 && sorted[i] - sorted[i - 1] > 1) result.add(-1);
+      result.add(sorted[i]);
+    }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final slots = _buildPageSlots();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Wrap(
         spacing: 4,
         runSpacing: 4,
-        children: List.generate(totalPages, (i) {
-          final isCurrent = i == currentPage;
+        children: slots.map((slot) {
+          if (slot == -1) {
+            return SizedBox(
+              width: 24,
+              height: 32,
+              child: Center(
+                child: Text(
+                  '…',
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ),
+            );
+          }
+          final isCurrent = slot == currentPage;
           return SizedBox(
             width: 36,
             height: 32,
             child: FilledButton.tonal(
-              onPressed: isLoading || isCurrent ? null : () => onPageTap(i),
+              onPressed: isLoading || isCurrent ? null : () => onPageTap(slot),
               style: FilledButton.styleFrom(
                 padding: EdgeInsets.zero,
                 backgroundColor: isCurrent
@@ -248,10 +289,10 @@ class _CommentPageBar extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4)),
               ),
-              child: Text('$i', style: const TextStyle(fontSize: 12)),
+              child: Text('$slot', style: const TextStyle(fontSize: 12)),
             ),
           );
-        }),
+        }).toList(),
       ),
     );
   }
