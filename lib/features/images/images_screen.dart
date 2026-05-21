@@ -87,7 +87,9 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
       );
     }
 
-    return CustomScrollView(
+    return RefreshIndicator(
+      onRefresh: _loadMore,
+      child: CustomScrollView(
       controller: _scrollController,
       slivers: [
         SliverPadding(
@@ -132,6 +134,7 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
           ),
         ),
       ],
+      ),
     );
   }
 }
