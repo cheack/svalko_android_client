@@ -6,6 +6,7 @@ import 'features/images/images_screen.dart';
 import 'features/logs/logs_screen.dart';
 import 'features/post/post_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'models/author.dart';
 import 'models/feed_source.dart';
 import 'models/tag.dart';
 import 'ui/theme.dart';
@@ -45,6 +46,17 @@ class SvalkoApp extends ConsumerWidget {
           return MaterialPageRoute(
             builder: (_) => FeedScreen(
               source: TagFeed(tagId: tag.id, tagName: tag.name),
+            ),
+          );
+        }
+        if (settings.name == '/author') {
+          final author = settings.arguments as Author;
+          return MaterialPageRoute(
+            builder: (_) => FeedScreen(
+              source: AuthorFeed(
+                authorName: author.name,
+                profileUrl: author.profileUrl,
+              ),
             ),
           );
         }

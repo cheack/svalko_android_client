@@ -136,9 +136,23 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           // Post header
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-            child: Text(
-              '${post.author.name}  ${_fmt(post.publishedAt)}',
-              style: Theme.of(context).textTheme.bodySmall,
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context)
+                      .pushNamed('/author', arguments: post.author),
+                  child: Text(
+                    post.author.name,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                  ),
+                ),
+                Text(
+                  '  ${_fmt(post.publishedAt)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ),
           ),
           // Post images

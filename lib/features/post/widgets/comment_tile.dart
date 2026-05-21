@@ -23,11 +23,15 @@ class CommentTile extends StatelessWidget {
           Row(
             children: [
               Flexible(
-                child: Text(
-                  comment.author.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context)
+                      .pushNamed('/author', arguments: comment.author),
+                  child: Text(
+                    comment.author.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ),
               ),

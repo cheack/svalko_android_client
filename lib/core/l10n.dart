@@ -21,6 +21,7 @@ abstract class AppStrings {
   String get navImages;
   String get more;
   String get postLink;
+  String get noPostsFound;
 
   /// "насрано 5 раз" / "5 комментариев" — used in post screen header
   String commentsHeader(int n);
@@ -94,6 +95,9 @@ class SvalkoStrings extends AppStrings {
 
   @override
   String get postLink => 'сцылка';
+
+  @override
+  String get noPostsFound => 'постов нет';
 
   @override
   String commentsHeader(int n) => 'насрано $n ${_raz(n)}';
@@ -172,6 +176,9 @@ class RuStrings extends AppStrings {
 
   @override
   String get postLink => 'Ссылка';
+
+  @override
+  String get noPostsFound => 'Постов нет';
 
   @override
   String commentsHeader(int n) => '$n ${_komentariy(n)}';
