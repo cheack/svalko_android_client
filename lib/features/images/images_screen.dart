@@ -9,18 +9,31 @@ import '../../models/image_item.dart';
 import '../../ui/widgets/image_viewer.dart';
 import 'images_controller.dart';
 
-class ImagesScreen extends ConsumerWidget {
+class ImagesScreen extends ConsumerStatefulWidget {
   const ImagesScreen({super.key});
 
-  void _tapImage(BuildContext context, WidgetRef ref, ImageItem item) {
+  @override
+  ConsumerState<ImagesScreen> createState() => _ImagesScreenState();
+}
+
+class _ImagesScreenState extends ConsumerState<ImagesScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _tapImage(ImageItem item) {
     showFullscreenCarousel(
       context,
-      [item.imageUrl],
+      [item.fullUrl],
       0,
       onOpenPost: () async {
         final result =
             await ref.read(repositoryProvider).getImagePostId(item.filename);
-        if (!context.mounted) return;
+        if (!mounted) return;
         switch (result) {
           case Ok(:final value):
             Navigator.of(context).pushNamed('/post', arguments: value);
@@ -32,23 +45,29 @@ class ImagesScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _loadMore() async {
+    await ref.read(imagesControllerProvider.notifier).load();
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final state = ref.watch(imagesControllerProvider);
     final s = AppStrings.of(ref.watch(languageProvider));
 
     return Scaffold(
       appBar: AppBar(title: Text(s.navImages)),
-      body: _buildBody(context, ref, state, s),
+      body: _buildBody(state, s),
     );
   }
 
-  Widget _buildBody(
-    BuildContext context,
-    WidgetRef ref,
-    ImagesState state,
-    AppStrings s,
-  ) {
+  Widget _buildBody(ImagesState state, AppStrings s) {
     if (state.isLoading && state.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -60,8 +79,7 @@ class ImagesScreen extends ConsumerWidget {
             Text(state.error.toString()),
             const SizedBox(height: 12),
             TextButton(
-              onPressed: () =>
-                  ref.read(imagesControllerProvider.notifier).load(),
+              onPressed: _loadMore,
               child: Text(s.retry),
             ),
           ],
@@ -70,6 +88,7 @@ class ImagesScreen extends ConsumerWidget {
     }
 
     return CustomScrollView(
+      controller: _scrollController,
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.all(4),
@@ -78,9 +97,9 @@ class ImagesScreen extends ConsumerWidget {
               (ctx, i) {
                 final item = state.items[i];
                 return GestureDetector(
-                  onTap: () => _tapImage(context, ref, item),
+                  onTap: () => _tapImage(item),
                   child: CachedNetworkImage(
-                    imageUrl: item.imageUrl,
+                    imageUrl: item.thumbUrl,
                     fit: BoxFit.cover,
                     placeholder: (_, _) =>
                         const ColoredBox(color: Color(0x18808080)),
@@ -105,8 +124,7 @@ class ImagesScreen extends ConsumerWidget {
               child: state.isLoading
                   ? const CircularProgressIndicator()
                   : TextButton.icon(
-                      onPressed: () =>
-                          ref.read(imagesControllerProvider.notifier).load(),
+                      onPressed: _loadMore,
                       icon: const Icon(Icons.refresh),
                       label: Text(s.more),
                     ),
