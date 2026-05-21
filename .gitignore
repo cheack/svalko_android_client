@@ -1,6 +1,9 @@
 # Claude Code
 .claude/
 
+# Secrets (never commit)
+secrets.json
+
 # Miscellaneous
 *.class
 *.log

@@ -52,6 +52,10 @@ dependencies:
   dio_cache_interceptor: ^3.5.0
   dio_cache_interceptor_file_store: ^1.2.2
 
+  # Crash reporting context
+  package_info_plus: ^8.3.0
+  device_info_plus: ^11.4.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
