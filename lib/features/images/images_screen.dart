@@ -25,14 +25,15 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
     super.dispose();
   }
 
-  void _tapImage(ImageItem item) {
+  void _tapImage(List<ImageItem> items, int index) {
     showFullscreenCarousel(
       context,
-      [item.fullUrl],
-      0,
-      onOpenPost: () async {
-        final result =
-            await ref.read(repositoryProvider).getImagePostId(item.filename);
+      items.map((e) => e.fullUrl).toList(),
+      index,
+      onOpenPost: (i) async {
+        final result = await ref
+            .read(repositoryProvider)
+            .getImagePostId(items[i].filename);
         if (!mounted) return;
         switch (result) {
           case Ok(:final value):
@@ -99,7 +100,7 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
               (ctx, i) {
                 final item = state.items[i];
                 return GestureDetector(
-                  onTap: () => _tapImage(item),
+                  onTap: () => _tapImage(state.items, i),
                   child: CachedNetworkImage(
                     imageUrl: item.thumbUrl,
                     fit: BoxFit.cover,
