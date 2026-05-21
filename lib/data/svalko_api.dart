@@ -58,6 +58,15 @@ class SvalkoApi {
       TagFeed(:final tagId) => page == null
           ? '${Config.baseUrl}/tag/$tagId'
           : '${Config.baseUrl}/page/$page?tag_id=$tagId',
+      AuthorFeed(:final profileUrl) => page == null
+          ? profileUrl
+          : () {
+              // Extract the raw encoded ?author=... param from the profileUrl.
+              final authorParam = profileUrl.contains('?author=')
+                  ? profileUrl.split('?author=').last
+                  : '';
+              return '${Config.baseUrl}/page/$page?author=$authorParam';
+            }(),
     };
     return _get(url);
   }

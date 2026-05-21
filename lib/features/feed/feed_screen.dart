@@ -104,6 +104,19 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       );
     }
 
+    if (state.error == null && state.posts.isEmpty && !state.hasMore) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(switch (widget.source) {
+            MainFeed() => s.appTitle,
+            TagFeed(:final tagName) => '#$tagName',
+            AuthorFeed(:final authorName) => authorName,
+          }),
+        ),
+        body: Center(child: Text(s.noPostsFound)),
+      );
+    }
+
     if (state.error != null && state.posts.isEmpty) {
       return Scaffold(
         body: Center(
@@ -130,6 +143,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         title: Text(switch (widget.source) {
           MainFeed() => s.appTitle,
           TagFeed(:final tagName) => '#$tagName',
+          AuthorFeed(:final authorName) => authorName,
         }),
         actions: [
           IconButton(
