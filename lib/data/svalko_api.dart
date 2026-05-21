@@ -87,7 +87,8 @@ class SvalkoApi {
   Future<Result<String, AppError>> fetchImagesPage() =>
       _get(Config.imagesUrl);
 
-  Future<Result<int, AppError>> fetchImagePostId(String filename) async {
+  // Returns (postId, commentId?) — commentId from ?high=N in the redirect URL.
+  Future<Result<(int, int?), AppError>> fetchImagePostId(String filename) async {
     try {
       final url =
           '${Config.imagesUrl}?find=${Uri.encodeComponent(filename)}';
@@ -99,11 +100,12 @@ class SvalkoApi {
           responseType: ResponseType.bytes,
         ),
       );
-      final match =
-          RegExp(r'/(\d+)\.html').firstMatch(response.realUri.toString());
-      final id = int.tryParse(match?.group(1) ?? '');
-      if (id == null) return const Err(AppError.parseFailure);
-      return Ok(id);
+      final finalUri = response.realUri;
+      final postMatch = RegExp(r'/(\d+)\.html').firstMatch(finalUri.toString());
+      final postId = int.tryParse(postMatch?.group(1) ?? '');
+      if (postId == null) return const Err(AppError.parseFailure);
+      final commentId = int.tryParse(finalUri.queryParameters['high'] ?? '');
+      return Ok((postId, commentId));
     } on DioException catch (e) {
       return Err(_mapDioError(e));
     } catch (_) {
