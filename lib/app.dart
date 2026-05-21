@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/settings_storage.dart';
 import 'features/feed/feed_screen.dart';
@@ -21,6 +22,12 @@ class SvalkoApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Свалко',
       theme: themeForSkin(skin),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('ru')],
       initialRoute: '/',
       onGenerateRoute: (settings) {
         if (settings.name == '/') {
