@@ -5,7 +5,7 @@ import '../../core/settings_storage.dart';
 import 'post_controller.dart';
 import 'widgets/comment_tile.dart';
 import '../../ui/widgets/image_carousel.dart';
-import '../../ui/widgets/linked_text.dart';
+import '../../ui/widgets/comment_html.dart';
 import '../../ui/widgets/media_actions.dart';
 import '../../ui/widgets/post_tags.dart';
 import '../../ui/widgets/post_vote_section.dart';
@@ -187,11 +187,11 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                 child: VideoLinkCard(url: link),
               ),
           // Post text
-          if (post.text != null && post.text!.isNotEmpty)
+          if (post.textHtml != null && post.textHtml!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-              child: LinkedText(
-                post.text!,
+              child: CommentHtml(
+                post.textHtml!,
                 onSvalkoPost: (id) =>
                     Navigator.of(context).pushNamed('/post', arguments: id),
               ),

@@ -7,7 +7,7 @@ import '../../../core/l10n.dart';
 import '../../../core/settings_storage.dart';
 import '../../../models/post.dart';
 import '../../../ui/widgets/image_carousel.dart';
-import '../../../ui/widgets/linked_text.dart';
+import '../../../ui/widgets/comment_html.dart';
 import '../../../ui/widgets/post_tags.dart';
 import '../../../ui/widgets/video_link_card.dart';
 import '../../../ui/widgets/video_player_widget.dart';
@@ -73,13 +73,11 @@ class PostCard extends ConsumerWidget {
             for (final link in post.externalLinks)
               if (VideoLinkCard.isSupported(link))
                 VideoLinkCard(url: link, onTap: onTap),
-            if (post.text != null && post.text!.isNotEmpty)
+            if (post.textHtml != null && post.textHtml!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                child: LinkedText(
-                  post.text!,
-                  style: theme.textTheme.bodyMedium,
-                  maxLines: 4,
+                child: CommentHtml(
+                  post.textHtml!,
                   onSvalkoPost: (id) => Navigator.of(context)
                       .pushNamed('/post', arguments: id),
                 ),

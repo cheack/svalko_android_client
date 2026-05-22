@@ -62,6 +62,7 @@ abstract final class FeedParser {
     final tags = parseTags(el);
     final commentCount = _parseCommentCount(el);
     final text = parseText(el);
+    final textHtml = parsePostHtml(el);
 
     AppLogger.instance.info(
       'post $id: ${imageUrls.length} img, ${videoUrls.length} vid',
@@ -71,6 +72,7 @@ abstract final class FeedParser {
       author: author,
       publishedAt: publishedAt,
       text: text,
+      textHtml: textHtml,
       imageUrls: imageUrls,
       videoUrls: videoUrls,
       externalLinks: externalLinks,

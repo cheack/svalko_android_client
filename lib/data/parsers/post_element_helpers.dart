@@ -117,6 +117,29 @@ String? parseText(Element el) {
   return raw.isEmpty ? null : raw;
 }
 
+String? parsePostHtml(Element el) {
+  final textDiv = el.querySelector('.text');
+  if (textDiv == null) return null;
+  final clone = textDiv.clone(true);
+  clone.querySelector('.tags')?.remove();
+  for (final img in clone.querySelectorAll('img')) {
+    img.remove();
+  }
+  for (final video in clone.querySelectorAll('video')) {
+    video.remove();
+  }
+  // Remove gifplayer wrappers left empty after img removal
+  for (final a in clone.querySelectorAll('a.gifplayer')) {
+    a.remove();
+  }
+  final html = clone.innerHtml
+      .trim()
+      .replaceAll(RegExp(r'^(<br\s*/?>|\s)+', caseSensitive: false), '')
+      .replaceAll(RegExp(r'(<br\s*/?>|\s)+$', caseSensitive: false), '')
+      .trim();
+  return html.isEmpty ? null : html;
+}
+
 String resolveUrl(String url) {
   if (url.isEmpty) return '';
   if (url.startsWith('http')) return url;
