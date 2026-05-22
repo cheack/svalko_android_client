@@ -160,6 +160,26 @@ class SvalkoApi {
     return _get(url, cacheOptions: cacheOptions);
   }
 
+  Future<Result<String, AppError>> vote(int postId, int vote) =>
+      _action('${Config.baseUrl}/vote.php?post_id=$postId&vote=$vote&dynamic=1');
+
+  Future<Result<String, AppError>> boroda(int postId, int dbl) =>
+      _action('${Config.baseUrl}/boroda.php?boroda_id=$postId&double=$dbl&dynamic=1');
+
+  Future<Result<String, AppError>> _action(String url) async {
+    try {
+      final response = await _dio.get<String>(
+        url,
+        options: Options(responseType: ResponseType.plain),
+      );
+      return Ok(response.data ?? '');
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
   Future<Result<String, AppError>> _get(
     String url, {
     CacheOptions? cacheOptions,

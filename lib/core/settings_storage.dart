@@ -7,6 +7,10 @@ import 'skin.dart';
 final settingsBoxProvider =
     Provider<Box<String>>((_) => throw UnimplementedError());
 
+/// Stores votes: keys 'v_{postId}' and 'b_{postId}', values are int as string.
+final votesBoxProvider =
+    Provider<Box<String>>((_) => throw UnimplementedError());
+
 // ---------------------------------------------------------------------------
 // Skin
 // ---------------------------------------------------------------------------
