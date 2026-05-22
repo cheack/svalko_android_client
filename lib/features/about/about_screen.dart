@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/build_info.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -30,15 +31,8 @@ class _AboutScreenState extends State<AboutScreen> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         children: [
-          // Логотип
-          Image.asset(
-            'assets/splash.png',
-            height: 72,
-            fit: BoxFit.contain,
-          ),
+          Image.asset('assets/splash.png', height: 72, fit: BoxFit.contain),
           const SizedBox(height: 24),
-
-          // Название + версия
           Center(
             child: Text(
               'Свалко',
@@ -47,40 +41,25 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
           ),
-          if (_version.isNotEmpty)
-            Center(
-              child: Text(
-                'Версия $_version',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.outline,
-                ),
+          const SizedBox(height: 4),
+          Center(
+            child: Text(
+              'Неофициальный клиент svalko.org',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.outline,
               ),
             ),
+          ),
           const SizedBox(height: 32),
-
-          // Описание
-          Text(
-            'СВАЛКА! СВАЛКО!',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Неофициальный мобильный клиент для svalko.org.',
-            style: theme.textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
+          const Divider(),
           const SizedBox(height: 8),
-          Text(
-            'Автор: bzdno',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.outline,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          _InfoRow(label: 'Версия', value: _version.isEmpty ? '…' : _version),
+          if (buildHash.isNotEmpty)
+            _InfoRow(label: 'Билд', value: buildHash),
+          if (buildDate.isNotEmpty)
+            _InfoRow(label: 'Дата сборки', value: buildDate),
+          const SizedBox(height: 8),
+          const Divider(),
           const SizedBox(height: 8),
           Text(
             'А НЕЧИСТЫМ ПРОГРАММИСТАМ ТРАМПАМПАМ ТРАМПАМПАМ!!!1 ОППА!111АДИНАДИН',
@@ -90,11 +69,9 @@ class _AboutScreenState extends State<AboutScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
-          const Divider(),
           const SizedBox(height: 16),
-
-          // Ссылка на сайт
+          const Divider(),
+          const SizedBox(height: 8),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.language_outlined),
@@ -104,6 +81,39 @@ class _AboutScreenState extends State<AboutScreen> {
               Uri.parse('https://svalko.org'),
               mode: LaunchMode.externalApplication,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.outline,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(value, style: theme.textTheme.bodySmall),
           ),
         ],
       ),
