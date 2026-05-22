@@ -64,12 +64,14 @@ abstract final class PostParser {
     final externalLinks = parseExternalLinks(el);
     final tags = parseTags(el);
     final text = parseText(el);
+    final textHtml = parsePostHtml(el);
 
     return Post(
       id: postId,
       author: author,
       publishedAt: publishedAt,
       text: text,
+      textHtml: textHtml,
       imageUrls: imageUrls,
       videoUrls: videoUrls,
       externalLinks: externalLinks,

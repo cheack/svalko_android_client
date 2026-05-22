@@ -29,6 +29,7 @@ class Post {
     required this.tags,
     required this.commentCount,
     this.text,
+    this.textHtml,
     this.rating,
     this.borodaCount,
     this.approvedBy,
@@ -40,6 +41,7 @@ class Post {
   final Author author;
   final DateTime publishedAt;
   final String? text;
+  final String? textHtml;
   final List<String> imageUrls;
   final List<String> videoUrls;
   final List<String> externalLinks;
