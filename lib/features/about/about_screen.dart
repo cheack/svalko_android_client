@@ -82,6 +82,12 @@ class _AboutScreenState extends State<AboutScreen> {
               mode: LaunchMode.externalApplication,
             ),
           ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.bug_report_outlined),
+            title: const Text('Логи'),
+            onTap: () => Navigator.of(context).pushNamed('/logs'),
+          ),
         ],
       ),
     );

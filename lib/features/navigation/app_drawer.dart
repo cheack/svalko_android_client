@@ -77,6 +77,23 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
               },
             ),
             const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Настройки'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/settings');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('О приложении'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/about');
+              },
+            ),
+            const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
               child: Text(
@@ -117,15 +134,6 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                   },
                 ),
               ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('О приложении'),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/about');
-              },
             ),
           ],
         ),
