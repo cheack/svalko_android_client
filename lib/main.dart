@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,11 @@ void main() {
         FlutterError.presentError(details);
         CrashReporter.instance
             .report(details.exception, details.stack ?? StackTrace.empty);
+      };
+
+      PlatformDispatcher.instance.onError = (error, stack) {
+        CrashReporter.instance.report(error, stack);
+        return true;
       };
 
       await CrashReporter.instance.init();
