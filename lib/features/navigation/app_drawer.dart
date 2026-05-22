@@ -118,6 +118,15 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                 ),
               ),
             ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('О приложении'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/about');
+              },
+            ),
           ],
         ),
       ),

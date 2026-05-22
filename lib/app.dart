@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/settings_storage.dart';
+import 'features/about/about_screen.dart';
 import 'features/feed/feed_screen.dart';
 import 'features/images/images_screen.dart';
 import 'features/logs/logs_screen.dart';
@@ -75,6 +76,9 @@ class SvalkoApp extends ConsumerWidget {
         }
         if (settings.name == '/logs') {
           return MaterialPageRoute(builder: (_) => const LogsScreen());
+        }
+        if (settings.name == '/about') {
+          return MaterialPageRoute(builder: (_) => const AboutScreen());
         }
         return null;
       },

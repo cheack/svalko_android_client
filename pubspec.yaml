@@ -33,9 +33,6 @@ dependencies:
   # Local cache
   hive_ce_flutter: ^2.2.0
 
-  # Routing
-  go_router: ^14.8.1
-
   # Browser launch
   url_launcher: ^6.3.1
 
@@ -88,3 +85,5 @@ flutter_native_splash:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/splash.png
