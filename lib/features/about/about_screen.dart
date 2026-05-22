@@ -84,6 +84,16 @@ class _AboutScreenState extends State<AboutScreen> {
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.telegram),
+            title: const Text('t.me/svalo4ka'),
+            subtitle: const Text('Telegram'),
+            onTap: () => launchUrl(
+              Uri.parse('https://t.me/svalo4ka'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.bug_report_outlined),
             title: const Text('Логи'),
             onTap: () => Navigator.of(context).pushNamed('/logs'),
