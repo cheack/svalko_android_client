@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
+import '../feed/feed_controller.dart';
 import 'post_controller.dart';
 import 'widgets/comment_tile.dart';
 import '../../ui/widgets/image_carousel.dart';
 import '../../ui/widgets/comment_html.dart';
+import '../../ui/widgets/comment_input_sheet.dart';
 import '../../ui/widgets/media_actions.dart';
 import '../../ui/widgets/post_tags.dart';
 import '../../ui/widgets/post_vote_section.dart';
@@ -29,6 +31,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   final _highlightKey = GlobalKey();
   double? _commentsTarget;
   bool _didScrollToHighlight = false;
+  bool _pendingScrollToBottom = false;
 
   @override
   void initState() {
@@ -80,6 +83,15 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     );
   }
 
+  void _scrollToBottom() {
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   String _fmt(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
       '${dt.day.toString().padLeft(2, '0')} '
@@ -93,7 +105,14 @@ class _PostScreenState extends ConsumerState<PostScreen> {
 
     ref.listen<PostState>(postControllerProvider(widget.postId), (prev, next) {
       if (prev?.isLoadingMore == true && !next.isLoadingMore) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToComments());
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_pendingScrollToBottom) {
+            _pendingScrollToBottom = false;
+            _scrollToBottom();
+          } else {
+            _scrollToComments();
+          }
+        });
       }
       if (prev?.isLoading == true && !next.isLoading) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _tryScrollToHighlight());
@@ -128,8 +147,22 @@ class _PostScreenState extends ConsumerState<PostScreen> {
 
     final post = state.post!;
 
+    final api = ref.read(apiProvider);
+    final settingsBox = ref.read(settingsBoxProvider);
+
     return Scaffold(
       appBar: AppBar(title: Text(post.author.name)),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final sent = await showCommentSheet(context, api, settingsBox, post.id);
+          if (sent && mounted) {
+            _pendingScrollToBottom = true;
+            ctrl.loadLastPage();
+          }
+        },
+        icon: const Icon(Icons.edit_outlined),
+        label: const Text('Написать'),
+      ),
       body: SelectionArea(
         child: Scrollbar(
         controller: _scrollController,

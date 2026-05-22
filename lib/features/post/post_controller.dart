@@ -83,6 +83,24 @@ class PostController extends StateNotifier<PostState> {
     };
   }
 
+  Future<void> loadLastPage() async {
+    if (state.isLoadingMore) return;
+    state = state.copyWith(isLoadingMore: true);
+    final result = await _repo.getPost(_postId);
+    switch (result) {
+      case Ok(:final value):
+        state = state.copyWith(
+          comments: value.comments,
+          currentPage: value.pagination.currentPage,
+          totalPages: value.pagination.totalPages,
+          totalComments: value.pagination.totalComments,
+          isLoadingMore: false,
+        );
+      case Err(:final error):
+        state = state.copyWith(isLoadingMore: false, error: error);
+    }
+  }
+
   Future<void> loadPage(int page) async {
     if (state.isLoadingMore) return;
     AppLogger.instance.info(
