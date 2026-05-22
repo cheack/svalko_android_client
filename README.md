@@ -1,17 +1,22 @@
-# svalko_client
+# Свалко
 
-A new Flutter project.
+Неофициальный мобильный клиент для [svalko.org](https://svalko.org).
 
-## Getting Started
+## Запуск
 
-This project is a starting point for a Flutter application.
+```sh
+flutter run \
+  --dart-define=BUILD_HASH=$(git rev-parse --short HEAD) \
+  --dart-define=BUILD_DATE=$(date +%Y-%m-%d)
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Сборка APK
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```sh
+flutter build apk \
+  --build-number=$(git rev-list --count HEAD) \
+  --dart-define=BUILD_HASH=$(git rev-parse --short HEAD) \
+  --dart-define=BUILD_DATE=$(date +%Y-%m-%d)
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+APK: `build/app/outputs/flutter-apk/app-release.apk`
