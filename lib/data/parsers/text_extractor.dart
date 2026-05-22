@@ -5,7 +5,7 @@ import 'package:html/dom.dart';
 String extractText(Element el) {
   final buffer = StringBuffer();
   _visitNode(el, buffer);
-  return buffer.toString().trim();
+  return buffer.toString().trim().replaceAll(RegExp(r'\n{3,}'), '\n\n');
 }
 
 void _visitNode(Node node, StringBuffer buf) {
@@ -20,6 +20,24 @@ void _visitNode(Node node, StringBuffer buf) {
 
   if (tag == 'br') {
     buf.write('\n');
+    return;
+  }
+
+  if (tag == 'em' || tag == 'i') {
+    buf.write('<em>');
+    for (final child in el.nodes) {
+      _visitNode(child, buf);
+    }
+    buf.write('</em>');
+    return;
+  }
+
+  if (tag == 'del' || tag == 's') {
+    buf.write('<del>');
+    for (final child in el.nodes) {
+      _visitNode(child, buf);
+    }
+    buf.write('</del>');
     return;
   }
 

@@ -1,8 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../core/config.dart';
 import '../../../models/comment.dart';
 import '../../../ui/widgets/image_viewer.dart';
-import '../../../ui/widgets/linked_text.dart';
+import '../../../ui/widgets/comment_html.dart';
 import '../../../ui/widgets/media_actions.dart';
 import '../../../ui/widgets/shimmer_placeholder.dart';
 import '../../../ui/widgets/video_player_widget.dart';
@@ -12,9 +15,75 @@ class CommentTile extends StatelessWidget {
 
   final Comment comment;
 
+  String _commentUrl() =>
+      '${Config.baseUrl}/${comment.postId}.html#c${comment.id}';
+
+  bool _hasComplexStyles() =>
+      comment.text?.contains('transform') == true;
+
+  void _showCommentMenu(BuildContext context) {
+    final url = _commentUrl();
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.open_in_browser_outlined),
+              title: const Text('Открыть в браузере'),
+              onTap: () {
+                Navigator.pop(ctx);
+                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy_outlined),
+              title: const Text('Скопировать ссылку'),
+              onTap: () {
+                Navigator.pop(ctx);
+                Clipboard.setData(ClipboardData(text: url));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showComplexStylesInfo(BuildContext context) {
+    final url = _commentUrl();
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'Этот комментарий содержит стили, которые невозможно отобразить правильно.',
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.open_in_browser_outlined),
+              title: const Text('Открыть в браузере'),
+              onTap: () {
+                Navigator.pop(ctx);
+                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasComplex = _hasComplexStyles();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Column(
@@ -39,16 +108,31 @@ class CommentTile extends StatelessWidget {
               Text(_formatDate(comment.publishedAt),
                   style: theme.textTheme.bodySmall),
               const SizedBox(width: 8),
-              Text('#${comment.id}',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.outline)),
+              GestureDetector(
+                onTap: () => _showCommentMenu(context),
+                child: Text(
+                  '#${comment.id}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                    decoration: TextDecoration.underline,
+                    decorationColor: theme.colorScheme.outline,
+                  ),
+                ),
+              ),
+              if (hasComplex) ...[
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => _showComplexStylesInfo(context),
+                  child: Icon(Icons.info_outline,
+                      size: 14, color: theme.colorScheme.outline),
+                ),
+              ],
             ],
           ),
           if (comment.text != null && comment.text!.isNotEmpty) ...[
             const SizedBox(height: 4),
-            LinkedText(
+            CommentHtml(
               comment.text!,
-              style: theme.textTheme.bodyMedium,
               onSvalkoPost: (id) =>
                   Navigator.of(context).pushNamed('/post', arguments: id),
             ),

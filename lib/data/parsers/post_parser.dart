@@ -112,7 +112,7 @@ abstract final class PostParser {
 
     final imageUrls = parseImageUrls(el);
     final videoUrls = parseVideoUrls(el);
-    final text = parseText(el);
+    final text = _parseCommentHtml(el);
 
     return Comment(
       id: id,
@@ -123,6 +123,17 @@ abstract final class PostParser {
       imageUrls: imageUrls,
       videoUrls: videoUrls,
     );
+  }
+
+  static String? _parseCommentHtml(Element el) {
+    final textDiv = el.querySelector('.text');
+    if (textDiv == null) return null;
+    final clone = textDiv.clone(true);
+    clone.querySelector('.tags')?.remove();
+    for (final img in clone.querySelectorAll('img')) { img.remove(); }
+    for (final video in clone.querySelectorAll('video')) { video.remove(); }
+    final html = clone.innerHtml.trim();
+    return html.isEmpty ? null : html;
   }
 
   static CommentsPaginationInfo _parseCommentsPagination(Document doc) {
