@@ -58,6 +58,7 @@ class _AboutScreenState extends State<AboutScreen> {
             _InfoRow(label: 'Билд', value: buildHash),
           if (buildDate.isNotEmpty)
             _InfoRow(label: 'Дата сборки', value: buildDate),
+          const _InfoRow(label: 'Автор', value: 'bzdno'),
           const SizedBox(height: 8),
           const Divider(),
           const SizedBox(height: 8),
