@@ -151,19 +151,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             tooltip: s.refresh,
             onPressed: state.isRefreshing ? null : ctrl.refresh,
           ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'settings') {
-                Navigator.of(context).pushNamed('/settings');
-              } else if (value == 'logs') {
-                Navigator.of(context).pushNamed('/logs');
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'settings', child: Text('Настройки')),
-              PopupMenuItem(value: 'logs', child: Text('Логи')),
-            ],
-          ),
         ],
       ),
       body: Stack(
