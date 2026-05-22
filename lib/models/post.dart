@@ -30,6 +30,7 @@ class Post {
     required this.commentCount,
     this.text,
     this.rating,
+    this.borodaCount,
     this.approvedBy,
     this.textLength,
     this.sheepCount,
@@ -44,6 +45,7 @@ class Post {
   final List<String> externalLinks;
   final List<Tag> tags;
   final PostRating? rating;
+  final int? borodaCount;
   final int commentCount;
   final String? approvedBy;
   final int? textLength;

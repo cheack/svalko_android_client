@@ -11,6 +11,7 @@ import '../../../ui/widgets/linked_text.dart';
 import '../../../ui/widgets/post_tags.dart';
 import '../../../ui/widgets/video_link_card.dart';
 import '../../../ui/widgets/video_player_widget.dart';
+import '../../../ui/widgets/post_vote_section.dart';
 
 
 class PostCard extends ConsumerWidget {
@@ -77,29 +78,20 @@ class PostCard extends ConsumerWidget {
                 child: PostTagsRow(tags: post.tags),
               ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
               child: Row(
                 children: [
-                  if (post.rating != null) ...[
-                    Icon(Icons.thumb_up_outlined,
-                        size: 14, color: colorScheme.primary),
-                    const SizedBox(width: 2),
-                    Text('${post.rating!.plus}',
-                        style: theme.textTheme.bodySmall),
-                    const SizedBox(width: 8),
-                    Icon(Icons.thumb_down_outlined,
-                        size: 14, color: colorScheme.error),
-                    const SizedBox(width: 2),
-                    Text('${post.rating!.minus}',
-                        style: theme.textTheme.bodySmall),
-                    const SizedBox(width: 12),
-                  ],
                   const Icon(Icons.comment_outlined, size: 14),
                   const SizedBox(width: 2),
                   Text(s.commentsTooltip(post.commentCount),
                       style: theme.textTheme.bodySmall),
                 ],
               ),
+            ),
+            PostVoteSection(
+              postId: post.id,
+              rating: post.rating,
+              borodaCount: post.borodaCount,
             ),
           ],
         ),

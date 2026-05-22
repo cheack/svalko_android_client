@@ -55,6 +55,11 @@ PostRating? parseRating(Element el, int id) {
   );
 }
 
+int? parseBorodaCount(Element el, int id) {
+  final span = el.querySelector('#cur_boroda_span_$id');
+  return int.tryParse(span?.text.trim() ?? '');
+}
+
 String? parseApprovedBy(Element el) =>
     el.querySelector('.info small a')?.text.trim();
 

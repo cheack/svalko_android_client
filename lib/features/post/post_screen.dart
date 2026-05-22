@@ -8,6 +8,7 @@ import '../../ui/widgets/image_carousel.dart';
 import '../../ui/widgets/linked_text.dart';
 import '../../ui/widgets/media_actions.dart';
 import '../../ui/widgets/post_tags.dart';
+import '../../ui/widgets/post_vote_section.dart';
 import '../../ui/widgets/video_embed_player.dart';
 import '../../ui/widgets/video_link_card.dart';
 import '../../ui/widgets/video_player_widget.dart';
@@ -201,15 +202,11 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: PostTagsRow(tags: post.tags),
             ),
-          // Rating
-          if (post.rating != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-              child: Text(
-                '${s.rating}: +${post.rating!.plus} | ${post.rating!.neutral} | ${post.rating!.minus} = ${post.rating!.percentage}%',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
+          PostVoteSection(
+            postId: post.id,
+            rating: post.rating,
+            borodaCount: post.borodaCount,
+          ),
           const Divider(height: 24),
           // Comments section header — anchor for scroll
           Padding(

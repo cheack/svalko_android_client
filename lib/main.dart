@@ -25,6 +25,7 @@ void main() {
 
       await Hive.initFlutter();
       final settings = await Hive.openBox<String>('settings');
+      final votes = await Hive.openBox<String>('votes');
 
       final cacheDir = await getApplicationCacheDirectory();
       final cacheStore = FileCacheStore('${cacheDir.path}/http_cache');
@@ -34,6 +35,7 @@ void main() {
           overrides: [
             apiProvider.overrideWithValue(SvalkoApi(cacheStore: cacheStore)),
             settingsBoxProvider.overrideWithValue(settings),
+            votesBoxProvider.overrideWithValue(votes),
           ],
           child: const SvalkoApp(),
         ),

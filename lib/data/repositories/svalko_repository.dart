@@ -114,6 +114,12 @@ class SvalkoRepository {
     }
   }
 
+  Future<Result<String, AppError>> vote(int postId, int vote) =>
+      _api.vote(postId, vote);
+
+  Future<Result<String, AppError>> boroda(int postId, int dbl) =>
+      _api.boroda(postId, dbl);
+
   Result<List<Tag>, AppError> _parseTags(String html) {
     try {
       return Ok(TagsParser.parse(html));

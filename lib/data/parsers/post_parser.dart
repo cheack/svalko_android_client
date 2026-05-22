@@ -57,6 +57,7 @@ abstract final class PostParser {
     if (publishedAt == null) return null;
 
     final rating = parseRating(el, postId);
+    final borodaCount = parseBorodaCount(el, postId);
     final approvedBy = parseApprovedBy(el);
     final imageUrls = parseImageUrls(el);
     final videoUrls = parseVideoUrls(el);
@@ -74,6 +75,7 @@ abstract final class PostParser {
       externalLinks: externalLinks,
       tags: tags,
       rating: rating,
+      borodaCount: borodaCount,
       commentCount: 0,
       approvedBy: approvedBy,
     );

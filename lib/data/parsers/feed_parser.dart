@@ -54,6 +54,7 @@ abstract final class FeedParser {
     if (publishedAt == null) return null;
 
     final rating = parseRating(el, id);
+    final borodaCount = parseBorodaCount(el, id);
     final approvedBy = parseApprovedBy(el);
     final imageUrls = parseImageUrls(el);
     final videoUrls = parseVideoUrls(el);
@@ -75,6 +76,7 @@ abstract final class FeedParser {
       externalLinks: externalLinks,
       tags: tags,
       rating: rating,
+      borodaCount: borodaCount,
       commentCount: commentCount,
       approvedBy: approvedBy,
     );
