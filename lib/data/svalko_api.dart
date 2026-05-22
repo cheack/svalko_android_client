@@ -2,11 +2,25 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
+import 'package:html/parser.dart' as html_parser;
 import '../core/config.dart';
 import '../core/encoding.dart';
 import '../core/logging_interceptor.dart';
 import '../core/result.dart';
 import '../models/feed_source.dart';
+
+class CommentFormData {
+  const CommentFormData({
+    required this.uploadId,
+    required this.uploadKey,
+    required this.cookie,
+    required this.suggestedAuthor,
+  });
+  final String uploadId;
+  final String uploadKey;
+  final String cookie;
+  final String suggestedAuthor;
+}
 
 class SvalkoApi {
   SvalkoApi({FileCacheStore? cacheStore})
@@ -158,6 +172,75 @@ class SvalkoApi {
                 maxStale: const Duration(minutes: 15),
               );
     return _get(url, cacheOptions: cacheOptions);
+  }
+
+  Future<Result<CommentFormData, AppError>> fetchCommentForm(int postId) async {
+    try {
+      final url = '${Config.baseUrl}/update.html?comment=$postId';
+      final response = await _dio.get<dynamic>(
+        url,
+        options: Options(responseType: ResponseType.bytes, followRedirects: false),
+      );
+      final setCookies = response.headers['set-cookie'] ?? [];
+      final sessionCookie = setCookies
+          .map((h) => RegExp(r'PHPSESSID=[^;]+').firstMatch(h)?.group(0))
+          .whereType<String>()
+          .firstOrNull ?? '';
+      final data = response.data;
+      final bytes = data is Uint8List ? data : Uint8List.fromList(data as List<int>);
+      final html = await decodeWin1251(bytes);
+      final doc = html_parser.parse(html);
+      final uploadId = doc.querySelector('input[name="upload_id"]')?.attributes['value'] ?? '';
+      final uploadKey = doc.querySelector('input[name="upload_key"]')?.attributes['value'] ?? '';
+      final suggestedAuthor = doc.querySelector('input[name="author"]')?.attributes['value'] ?? 'Аноним';
+      if (uploadId.isEmpty || uploadKey.isEmpty) return const Err(AppError.parseFailure);
+      return Ok(CommentFormData(
+        uploadId: uploadId,
+        uploadKey: uploadKey,
+        cookie: sessionCookie,
+        suggestedAuthor: suggestedAuthor,
+      ));
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
+  Future<Result<void, AppError>> submitComment({
+    required int postId,
+    required String author,
+    required String text,
+    required CommentFormData form,
+  }) async {
+    try {
+      final encodedAuthor = await encodeQueryWin1251(author);
+      final encodedText = await encodeQueryWin1251(text);
+      final encodedSubmit = await encodeQueryWin1251('Да!');
+      final body = 'upload_id=${Uri.encodeQueryComponent(form.uploadId)}'
+          '&upload_key=${Uri.encodeQueryComponent(form.uploadKey)}'
+          '&comment=$postId'
+          '&pre_id=0'
+          '&author=$encodedAuthor'
+          '&article=$encodedText'
+          '&formsubmit=$encodedSubmit';
+      await _dio.post<dynamic>(
+        '${Config.baseUrl}/?mode=update',
+        data: body,
+        options: Options(
+          contentType: 'application/x-www-form-urlencoded',
+          headers: {if (form.cookie.isNotEmpty) 'Cookie': form.cookie},
+          followRedirects: true,
+          maxRedirects: 5,
+          responseType: ResponseType.bytes,
+        ),
+      );
+      return const Ok(null);
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
   }
 
   Future<Result<String, AppError>> vote(int postId, int vote) =>
