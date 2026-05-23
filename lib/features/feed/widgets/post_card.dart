@@ -102,6 +102,8 @@ class PostCard extends ConsumerWidget {
               postId: post.id,
               rating: post.rating,
               borodaCount: post.borodaCount,
+              parsedVote: post.parsedVote,
+              parsedBoroda: post.parsedBoroda,
             ),
           ],
         ),

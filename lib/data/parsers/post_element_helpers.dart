@@ -142,6 +142,43 @@ String? parsePostHtml(Element el) {
   return html.isEmpty ? null : html;
 }
 
+/// Parses the server-rendered vote state for [postId] from the rate div.
+/// Returns null fields when the state cannot be determined (e.g. not voted).
+({int? vote, bool? boroda}) parseVoteState(Element el, int postId) {
+  final rateDiv = el.querySelector('.rate');
+  if (rateDiv == null) return (vote: null, boroda: null);
+
+  // Collect <b> elements without an id (the id one is voted_area2_{id}).
+  // When voted: exactly one such <b> matching a vote label.
+  // When not voted: all three vote options are present as <b> elements.
+  final bs = rateDiv.querySelectorAll('b').where((b) => b.id.isEmpty).toList();
+  final voteMatches = bs.where((b) {
+    final t = b.text.toLowerCase();
+    return t.contains('чото п') || t.contains('зачот') || t.contains('кг/ам');
+  }).toList();
+
+  int? vote;
+  if (voteMatches.length == 1) {
+    final t = voteMatches.first.text.toLowerCase();
+    if (t.contains('чото п')) {
+      vote = 0;
+    } else if (t.contains('зачот')) {
+      vote = 1;
+    } else if (t.contains('кг/ам')) {
+      vote = -1;
+    }
+  }
+
+  final borodaSpan = rateDiv.querySelector('#boroda_voted_$postId');
+  bool? boroda;
+  if (borodaSpan != null) {
+    final hidden = borodaSpan.attributes['style']?.contains('display: none') ?? false;
+    boroda = !hidden && borodaSpan.text.trim().isNotEmpty;
+  }
+
+  return (vote: vote, boroda: boroda);
+}
+
 String resolveUrl(String url) {
   if (url.isEmpty) return '';
   if (url.startsWith('http')) return url;

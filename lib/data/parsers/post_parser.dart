@@ -65,6 +65,7 @@ abstract final class PostParser {
     final tags = parseTags(el);
     final text = parseText(el);
     final textHtml = parsePostHtml(el);
+    final voteState = parseVoteState(el, postId);
 
     return Post(
       id: postId,
@@ -80,6 +81,8 @@ abstract final class PostParser {
       borodaCount: borodaCount,
       commentCount: 0,
       approvedBy: approvedBy,
+      parsedVote: voteState.vote,
+      parsedBoroda: voteState.boroda,
     );
   }
 
