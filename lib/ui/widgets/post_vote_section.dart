@@ -11,11 +11,15 @@ class PostVoteSection extends ConsumerStatefulWidget {
     required this.postId,
     this.rating,
     this.borodaCount,
+    this.parsedVote,
+    this.parsedBoroda,
   });
 
   final int postId;
   final PostRating? rating;
   final int? borodaCount;
+  final int? parsedVote;
+  final bool? parsedBoroda;
 
   @override
   ConsumerState<PostVoteSection> createState() => _PostVoteSectionState();
@@ -43,8 +47,21 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
     final box = ref.read(votesBoxProvider);
     final v = box.get(_vKey);
     final b = box.get(_bKey);
-    if (v != null) _vote = int.tryParse(v);
-    if (b != null) _boroda = int.tryParse(b);
+    if (v != null) {
+      _vote = int.tryParse(v);
+    } else if (widget.parsedVote != null) {
+      _vote = widget.parsedVote;
+      box.put(_vKey, '${widget.parsedVote}');
+    }
+    if (widget.parsedBoroda == false) {
+      // Server explicitly says not voted — clear stale local entry
+      box.delete(_bKey);
+    } else if (b != null) {
+      _boroda = int.tryParse(b);
+    } else if (widget.parsedBoroda == true) {
+      _boroda = 0;
+      box.put(_bKey, '0');
+    }
   }
 
   Future<void> _doVote(int value) async {
@@ -117,17 +134,17 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               if (_vote == null) ...[
-                _Btn('? я чото п', _votingVote ? null : () => _doVote(0),  color),
-                _Btn('ЗАЧОТ',      _votingVote ? null : () => _doVote(1),  color),
-                _Btn('КГ/АМ',      _votingVote ? null : () => _doVote(-1), color),
+                _Btn('? я чото п',  null,                        _votingVote ? null : () => _doVote(0),  color),
+                _Btn('ЗАЧОТ',       'assets/icons/vote.png',     _votingVote ? null : () => _doVote(1),  color),
+                _Btn('КГ/АМ',       'assets/icons/vote.png',     _votingVote ? null : () => _doVote(-1), color),
               ] else
-                _VotedChip(_voteLabel(_vote!), primary),
+                _VotedChip(_voteLabel(_vote!), _vote != 0 ? 'assets/icons/vote.png' : null, primary),
               const SizedBox(width: 8),
               if (_boroda == null) ...[
-                _Btn('борода!',     _votingBoroda ? null : () => _doBoroda(0), color),
-                _Btn('МЕГАборода!', _votingBoroda ? null : () => _doBoroda(1), color),
+                _Btn('борода!',     'assets/icons/boroda.png',    _votingBoroda ? null : () => _doBoroda(0), color),
+                _Btn('МЕГАборода!', 'assets/icons/megaboroda.png', _votingBoroda ? null : () => _doBoroda(1), color),
               ] else
-                _VotedChip(_borodaLabel(_boroda!), primary),
+                _VotedChip(_borodaLabel(_boroda!), _boroda == 1 ? 'assets/icons/megaboroda.png' : 'assets/icons/boroda.png', primary),
             ],
           ),
         ],
@@ -155,9 +172,10 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
 }
 
 class _VotedChip extends StatelessWidget {
-  const _VotedChip(this.label, this.color);
+  const _VotedChip(this.label, this.iconAsset, this.color);
 
   final String label;
+  final String? iconAsset;
   final Color color;
 
   @override
@@ -168,19 +186,27 @@ class _VotedChip extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-            fontSize: 11, color: color, fontWeight: FontWeight.w600),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (iconAsset != null) ...[
+            Image.asset(iconAsset!, width: 14, height: 14),
+            const SizedBox(width: 4),
+          ],
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
 }
 
 class _Btn extends StatelessWidget {
-  const _Btn(this.label, this.onTap, this.color);
+  const _Btn(this.label, this.iconAsset, this.onTap, this.color);
 
   final String label;
+  final String? iconAsset;
   final VoidCallback? onTap;
   final Color color;
 
@@ -191,12 +217,24 @@ class _Btn extends StatelessWidget {
       borderRadius: BorderRadius.circular(4),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: onTap != null ? color : color.withValues(alpha: 0.4),
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (iconAsset != null) ...[
+              Opacity(
+                opacity: onTap != null ? 1.0 : 0.4,
+                child: Image.asset(iconAsset!, width: 14, height: 14),
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: onTap != null ? color : color.withValues(alpha: 0.4),
+              ),
+            ),
+          ],
         ),
       ),
     );

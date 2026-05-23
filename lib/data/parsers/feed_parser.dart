@@ -63,6 +63,7 @@ abstract final class FeedParser {
     final commentCount = _parseCommentCount(el);
     final text = parseText(el);
     final textHtml = parsePostHtml(el);
+    final voteState = parseVoteState(el, id);
 
     AppLogger.instance.info(
       'post $id: ${imageUrls.length} img, ${videoUrls.length} vid',
@@ -81,6 +82,8 @@ abstract final class FeedParser {
       borodaCount: borodaCount,
       commentCount: commentCount,
       approvedBy: approvedBy,
+      parsedVote: voteState.vote,
+      parsedBoroda: voteState.boroda,
     );
   }
 

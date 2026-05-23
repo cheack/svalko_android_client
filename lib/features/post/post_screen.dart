@@ -262,6 +262,8 @@ class _PostScreenState extends ConsumerState<PostScreen> {
             postId: post.id,
             rating: post.rating,
             borodaCount: post.borodaCount,
+            parsedVote: post.parsedVote,
+            parsedBoroda: post.parsedBoroda,
           ),
           const Divider(height: 24),
           // Comments section header — anchor for scroll

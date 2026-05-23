@@ -35,6 +35,8 @@ class Post {
     this.approvedBy,
     this.textLength,
     this.sheepCount,
+    this.parsedVote,
+    this.parsedBoroda,
   });
 
   final int id;
@@ -52,4 +54,6 @@ class Post {
   final String? approvedBy;
   final int? textLength;
   final int? sheepCount;
+  final int? parsedVote;
+  final bool? parsedBoroda;
 }
