@@ -134,6 +134,7 @@ abstract final class PostParser {
     clone.querySelector('.tags')?.remove();
     for (final img in clone.querySelectorAll('img')) { img.remove(); }
     for (final video in clone.querySelectorAll('video')) { video.remove(); }
+    stripHtmlComments(clone);
     final html = clone.innerHtml.trim();
     return html.isEmpty ? null : html;
   }

@@ -37,29 +37,48 @@ class _ImageCarouselState extends State<ImageCarousel> {
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [
-        ConstrainedBox(
-          constraints: BoxConstraints(minHeight: 120, maxHeight: widget.maxHeight),
+        if (single)
+          GestureDetector(
+            onTap: () => showFullscreenCarousel(context, urls, 0),
+            onLongPress: () => showMediaSheet(context, urls[0]),
+            child: Image.network(
+              urls[0],
+              width: double.infinity,
+              fit: BoxFit.fitWidth,
+              loadingBuilder: (_, child, progress) => progress == null
+                  ? child
+                  : const SizedBox(
+                      height: 300,
+                      width: double.infinity,
+                      child: ShimmerPlaceholder(),
+                    ),
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          )
+        else
+          ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: widget.maxHeight),
           child: PageView.builder(
-            controller: _pageController,
-            itemCount: urls.length,
-            onPageChanged: single ? null : (i) => setState(() => _current = i),
-            itemBuilder: (context, i) {
-              final url = urls[i];
-              return GestureDetector(
-                onTap: () => showFullscreenCarousel(context, urls, i),
-                onLongPress: () => showMediaSheet(context, url),
-                child: Image.network(
-                  url,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                  alignment: Alignment.center,
-                  loadingBuilder: (_, child, progress) =>
-                      progress == null ? child : const ShimmerPlaceholder(),
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  controller: _pageController,
+                  itemCount: urls.length,
+                  onPageChanged: (i) => setState(() => _current = i),
+                  itemBuilder: (context, i) {
+                    final url = urls[i];
+                    return GestureDetector(
+                      onTap: () => showFullscreenCarousel(context, urls, i),
+                      onLongPress: () => showMediaSheet(context, url),
+                      child: Image.network(
+                        url,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.center,
+                        loadingBuilder: (_, child, progress) =>
+                            progress == null ? child : const ShimmerPlaceholder(),
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
         if (!single) ...[
           Positioned(
