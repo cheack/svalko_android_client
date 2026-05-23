@@ -117,6 +117,12 @@ String? parseText(Element el) {
   return raw.isEmpty ? null : raw;
 }
 
+void stripHtmlComments(Element el) {
+  for (final node in el.nodes.toList()) {
+    if (node.nodeType == Node.COMMENT_NODE) node.remove();
+  }
+}
+
 String? parsePostHtml(Element el) {
   final textDiv = el.querySelector('.text');
   if (textDiv == null) return null;
@@ -128,15 +134,11 @@ String? parsePostHtml(Element el) {
   for (final video in clone.querySelectorAll('video')) {
     video.remove();
   }
-  // Remove gifplayer wrappers left empty after img removal
   for (final a in clone.querySelectorAll('a.gifplayer')) {
     a.remove();
   }
-  final html = clone.innerHtml
-      .trim()
-      .replaceAll(RegExp(r'^(<br\s*/?>|\s)+', caseSensitive: false), '')
-      .replaceAll(RegExp(r'(<br\s*/?>|\s)+$', caseSensitive: false), '')
-      .trim();
+  stripHtmlComments(clone);
+  final html = clone.innerHtml.trim();
   return html.isEmpty ? null : html;
 }
 
