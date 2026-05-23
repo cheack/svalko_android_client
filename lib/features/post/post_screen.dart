@@ -32,13 +32,27 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   double? _commentsTarget;
   bool _didScrollToHighlight = false;
   bool _pendingScrollToBottom = false;
+  bool _fabVisible = true;
+  double _lastScrollOffset = 0;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     if (widget.highlightCommentId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _tryScrollToHighlight());
     }
+  }
+
+  void _onScroll() {
+    final offset = _scrollController.offset;
+    final diff = offset - _lastScrollOffset;
+    if (diff > 4 && _fabVisible) {
+      setState(() => _fabVisible = false);
+    } else if (diff < -4 && !_fabVisible) {
+      setState(() => _fabVisible = true);
+    }
+    _lastScrollOffset = offset;
   }
 
   @override
@@ -152,16 +166,25 @@ class _PostScreenState extends ConsumerState<PostScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(post.author.name)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final sent = await showCommentSheet(context, api, settingsBox, post.id);
-          if (sent && mounted) {
-            _pendingScrollToBottom = true;
-            ctrl.loadLastPage();
-          }
-        },
-        icon: const Icon(Icons.edit_outlined),
-        label: const Text('Написать'),
+      floatingActionButton: AnimatedSlide(
+        offset: _fabVisible ? Offset.zero : const Offset(0, 2),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: AnimatedOpacity(
+          opacity: _fabVisible ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          child: FloatingActionButton.extended(
+            onPressed: () async {
+              final sent = await showCommentSheet(context, api, settingsBox, post.id);
+              if (sent && mounted) {
+                _pendingScrollToBottom = true;
+                ctrl.loadLastPage();
+              }
+            },
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Написать'),
+          ),
+        ),
       ),
       body: SelectionArea(
         child: Scrollbar(
