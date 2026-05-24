@@ -207,6 +207,80 @@ class SvalkoApi {
     }
   }
 
+  /// Fetches the list of already-uploaded files for a given upload session.
+  Future<Result<String, AppError>> fetchUploadedFilesList({
+    required String uploadId,
+    required String uploadKey,
+  }) =>
+      _get(
+        '${Config.baseUrl}/upload_area_handler.php'
+        '?upload_id=$uploadId&upload_key=$uploadKey',
+      );
+
+  /// Uploads an image to the comment upload area.
+  /// Returns the HTML listing of all uploaded files on success.
+  Future<Result<String, AppError>> uploadCommentImage({
+    required String uploadId,
+    required String uploadKey,
+    required String cookie,
+    required String filePath,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'upload_id': uploadId,
+        'upload_key': uploadKey,
+        'file': await MultipartFile.fromFile(filePath),
+      });
+      final response = await _dio.post<dynamic>(
+        '${Config.baseUrl}/upload_area_handler.php',
+        data: formData,
+        options: Options(
+          headers: {if (cookie.isNotEmpty) 'Cookie': cookie},
+          responseType: ResponseType.bytes,
+        ),
+        onSendProgress: onProgress,
+      );
+      final data = response.data;
+      final Uint8List bytes = data is Uint8List
+          ? data
+          : Uint8List.fromList(data as List<int>);
+      return Ok(await decodeWin1251(bytes));
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
+  /// Deletes a previously uploaded file from the upload area.
+  Future<Result<void, AppError>> deleteUploadedFile({
+    required String uploadId,
+    required String uploadKey,
+    required String cookie,
+    required String deleteParam,
+  }) async {
+    try {
+      await _dio.get<dynamic>(
+        '${Config.baseUrl}/upload_area_handler.php',
+        queryParameters: {
+          'upload_id': uploadId,
+          'upload_key': uploadKey,
+          'delete': deleteParam,
+        },
+        options: Options(
+          headers: {if (cookie.isNotEmpty) 'Cookie': cookie},
+          responseType: ResponseType.bytes,
+        ),
+      );
+      return const Ok(null);
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
   Future<Result<void, AppError>> submitComment({
     required int postId,
     required String author,

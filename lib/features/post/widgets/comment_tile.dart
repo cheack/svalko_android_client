@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/config.dart';
@@ -144,15 +143,14 @@ class CommentTile extends StatelessWidget {
               onLongPress: () => showMediaSheet(context, url),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 360),
-                child: CachedNetworkImage(
-                  imageUrl: url,
+                child: Image.network(
+                  url,
                   width: double.infinity,
                   fit: BoxFit.contain,
                   alignment: Alignment.topCenter,
-                  placeholder: (_, _) => const ShimmerPlaceholder(),
-                  fadeInDuration: Duration.zero,
-                  fadeOutDuration: Duration.zero,
-                  errorWidget: (_, _, _) => const SizedBox.shrink(),
+                  loadingBuilder: (_, child, progress) =>
+                      progress == null ? child : const ShimmerPlaceholder(),
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),
             ),
