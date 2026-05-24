@@ -306,7 +306,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + inset),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _AuthorLabel(controller: _authorCtrl, theme: theme),
