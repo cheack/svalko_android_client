@@ -13,6 +13,8 @@ import 'models/feed_source.dart';
 import 'models/tag.dart';
 import 'ui/theme.dart';
 
+final navigatorKey = GlobalKey<NavigatorState>();
+
 class SvalkoApp extends ConsumerWidget {
   const SvalkoApp({super.key});
 
@@ -21,6 +23,7 @@ class SvalkoApp extends ConsumerWidget {
     final skin = ref.watch(skinProvider);
 
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Свалко',
       theme: themeForSkin(skin),
       localizationsDelegates: const [
