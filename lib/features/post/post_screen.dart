@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
+import '../favorites/favorites_storage.dart';
 import '../feed/feed_controller.dart';
 import 'post_controller.dart';
 import 'widgets/comment_tile.dart';
@@ -164,8 +165,34 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     final api = ref.read(apiProvider);
     final settingsBox = ref.read(settingsBoxProvider);
 
+    final isFav = ref.watch(
+      favoritesProvider.select((list) => list.any((f) => f.id == post.id)),
+    );
+    final favNotifier = ref.read(favoritesProvider.notifier);
+
     return Scaffold(
-      appBar: AppBar(title: Text(post.author.name)),
+      appBar: AppBar(
+        title: Text(post.author.name),
+        actions: [
+          IconButton(
+            icon: Icon(isFav ? Icons.bookmark : Icons.bookmark_outline),
+            tooltip: isFav ? 'Убрать из избранного' : 'В избранное',
+            onPressed: () => favNotifier.toggle(
+              FavoritePost(
+                id: post.id,
+                authorName: post.author.name,
+                publishedAt: post.publishedAt,
+                addedAt: DateTime.now(),
+                firstImageUrl: post.imageUrls.firstOrNull,
+                previewText: post.text != null && post.text!.isNotEmpty
+                    ? post.text!.substring(
+                        0, post.text!.length.clamp(0, 120))
+                    : null,
+              ),
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: AnimatedSlide(
         offset: _fabVisible ? Offset.zero : const Offset(0, 2),
         duration: const Duration(milliseconds: 200),
