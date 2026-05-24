@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:app_links/app_links.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,7 +47,27 @@ void main() {
           child: const SvalkoApp(),
         ),
       );
+
+      _initDeepLinks();
     },
     (error, stack) => CrashReporter.instance.report(error, stack),
   );
+}
+
+void _initDeepLinks() {
+  final appLinks = AppLinks();
+
+  appLinks.getInitialLink().then((uri) {
+    if (uri != null) _handleDeepLink(uri);
+  });
+
+  appLinks.uriLinkStream.listen(_handleDeepLink);
+}
+
+void _handleDeepLink(Uri uri) {
+  final match = RegExp(r'^/(\d+)\.html$').firstMatch(uri.path);
+  if (match == null) return;
+  final postId = int.tryParse(match.group(1)!);
+  if (postId == null) return;
+  navigatorKey.currentState?.pushNamed('/post', arguments: postId);
 }
