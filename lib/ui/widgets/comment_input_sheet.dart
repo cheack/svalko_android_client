@@ -219,6 +219,26 @@ class _CommentSheetState extends State<_CommentSheet> {
     );
   }
 
+  void _wrapSelection(String tag) {
+    final text = _textCtrl.text;
+    final sel = _textCtrl.selection;
+    final start = sel.start.clamp(0, text.length);
+    final end = sel.end.clamp(0, text.length);
+    final selected = text.substring(start, end);
+    final open = '[$tag]';
+    final close = '[/$tag]';
+    _textCtrl.value = TextEditingValue(
+      text: text.replaceRange(start, end, '$open$selected$close'),
+      selection: selected.isEmpty
+          ? TextSelection.collapsed(offset: start + open.length)
+          : TextSelection(
+              baseOffset: start + open.length,
+              extentOffset: start + open.length + selected.length,
+            ),
+    );
+    _focusNode.requestFocus();
+  }
+
   void _insertCode(String code) {
     final text = _textCtrl.text;
     final sel = _textCtrl.selection;
@@ -291,13 +311,35 @@ class _CommentSheetState extends State<_CommentSheet> {
         children: [
           _AuthorLabel(controller: _authorCtrl, theme: theme),
           const SizedBox(height: 8),
-          TextField(
-            controller: _textCtrl,
-            focusNode: _focusNode,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            minLines: 4,
-            maxLines: 10,
-            textInputAction: TextInputAction.newline,
+          Row(
+            children: [
+              for (final (tag, label, style) in [
+                ('b', 'B', TextStyle(fontWeight: FontWeight.bold)),
+                ('i', 'I', TextStyle(fontStyle: FontStyle.italic)),
+                ('u', 'U', TextStyle(decoration: TextDecoration.underline)),
+                ('s', 'S', TextStyle(decoration: TextDecoration.lineThrough)),
+              ])
+                SizedBox(
+                  width: 36,
+                  height: 32,
+                  child: TextButton(
+                    onPressed: () => _wrapSelection(tag),
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    child: Text(label, style: style),
+                  ),
+                ),
+            ],
+          ),
+          Flexible(
+            child: TextField(
+              controller: _textCtrl,
+              focusNode: _focusNode,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              minLines: 4,
+              maxLines: null,
+              textInputAction: TextInputAction.newline,
+              expands: false,
+            ),
           ),
           if (_submitError != null) ...[
             const SizedBox(height: 6),
