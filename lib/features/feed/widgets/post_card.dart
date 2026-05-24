@@ -8,6 +8,7 @@ import '../../../core/settings_storage.dart';
 import '../../../models/post.dart';
 import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/comment_html.dart';
+import '../../../ui/widgets/post_action_buttons.dart';
 import '../../../ui/widgets/post_tags.dart';
 import '../../../ui/widgets/video_link_card.dart';
 import '../../../ui/widgets/video_player_widget.dart';
@@ -47,9 +48,9 @@ class PostCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Author + date above media
+            // Author + date + actions
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+              padding: const EdgeInsets.fromLTRB(12, 6, 4, 0),
               child: Row(
                 children: [
                   Text(
@@ -63,6 +64,9 @@ class PostCard extends ConsumerWidget {
                     _formatDate(post.publishedAt),
                     style: theme.textTheme.bodySmall,
                   ),
+                  const Spacer(),
+                  PostShareButton(postId: post.id, iconSize: 18, visualDensity: VisualDensity.compact),
+                  PostFavButton(post: post, iconSize: 18, visualDensity: VisualDensity.compact),
                 ],
               ),
             ),
@@ -149,3 +153,4 @@ class PostCard extends ConsumerWidget {
     );
   }
 }
+
