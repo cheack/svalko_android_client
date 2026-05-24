@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/config.dart';
+import '../../../core/open_url.dart';
 import '../../../core/l10n.dart';
 import '../../../core/settings_storage.dart';
 import '../../../models/post.dart';
@@ -130,17 +130,9 @@ class PostCard extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.open_in_browser_outlined),
               title: Text(s.openInBrowser),
-              onTap: () async {
+              onTap: () {
                 Navigator.pop(sheetCtx);
-                final uri = Uri.parse(postUrl);
-                if (!await launchUrl(uri,
-                    mode: LaunchMode.externalApplication)) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(s.unknownError)),
-                    );
-                  }
-                }
+                openInBrowser(context, postUrl);
               },
             ),
             ListTile(

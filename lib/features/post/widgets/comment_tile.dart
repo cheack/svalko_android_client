@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/config.dart';
+import '../../../core/open_url.dart';
 import '../../../models/comment.dart';
 import '../../../ui/widgets/image_viewer.dart';
 import '../../../ui/widgets/comment_html.dart';
@@ -34,7 +34,7 @@ class CommentTile extends StatelessWidget {
               title: const Text('Открыть в браузере'),
               onTap: () {
                 Navigator.pop(ctx);
-                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                openInBrowser(context, url);
               },
             ),
             ListTile(
@@ -70,7 +70,7 @@ class CommentTile extends StatelessWidget {
               title: const Text('Открыть в браузере'),
               onTap: () {
                 Navigator.pop(ctx);
-                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                openInBrowser(context, url);
               },
             ),
           ],

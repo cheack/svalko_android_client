@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../core/open_url.dart';
 
 final _urlRegex = RegExp(
   r'https?://[^\s<>"\)]+',
@@ -47,7 +47,7 @@ class LinkedText extends StatelessWidget {
 
     for (final m in _inlineTagRegex.allMatches(text)) {
       if (m.start > cursor) {
-        _addUrlSpans(text.substring(cursor, m.start), defaultStyle, linkStyle, spans, onSvalkoPost);
+        _addUrlSpans(context, text.substring(cursor, m.start), defaultStyle, linkStyle, spans, onSvalkoPost);
       }
       final tag = m.group(1)!.toLowerCase();
       final inner = m.group(2)!;
@@ -63,12 +63,12 @@ class LinkedText extends StatelessWidget {
             : TextDecoration.underline,
         decorationColor: Theme.of(context).colorScheme.primary,
       );
-      _addUrlSpans(inner, tagStyle, tagLinkStyle, spans, onSvalkoPost);
+      _addUrlSpans(context, inner, tagStyle, tagLinkStyle, spans, onSvalkoPost);
       cursor = m.end;
     }
 
     if (cursor < text.length) {
-      _addUrlSpans(text.substring(cursor), defaultStyle, linkStyle, spans, onSvalkoPost);
+      _addUrlSpans(context, text.substring(cursor), defaultStyle, linkStyle, spans, onSvalkoPost);
     }
 
     return Text.rich(
@@ -79,6 +79,7 @@ class LinkedText extends StatelessWidget {
   }
 
   static void _addUrlSpans(
+    BuildContext context,
     String text,
     TextStyle baseStyle,
     TextStyle linkStyle,
@@ -100,7 +101,7 @@ class LinkedText extends StatelessWidget {
             if (postId != null && onSvalkoPost != null) {
               onSvalkoPost(postId);
             } else {
-              launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+              openInBrowser(context, url);
             }
           },
       ));
