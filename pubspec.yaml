@@ -39,6 +39,9 @@ dependencies:
   # Deep links (App Links)
   app_links: ^6.4.0
 
+  # File picker (for favorites import)
+  file_picker: ^8.1.7
+
   # Video playback
   video_player: ^2.9.2
   chewie: ^1.10.0

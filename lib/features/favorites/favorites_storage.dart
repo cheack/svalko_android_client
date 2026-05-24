@@ -80,6 +80,38 @@ class FavoritesNotifier extends Notifier<List<FavoritePost>> {
       add(post);
     }
   }
+
+  /// Returns JSON string with all favorites.
+  String exportJson() =>
+      jsonEncode(state.map((f) => f.toJson()).toList());
+
+  /// Merges favorites from a JSON string. Returns count of newly added items.
+  int importJson(String json) {
+    final list = jsonDecode(json) as List<dynamic>;
+    final incoming = list
+        .map((e) {
+          try {
+            return FavoritePost.fromJson(e as Map<String, dynamic>);
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<FavoritePost>()
+        .toList();
+
+    final existingIds = state.map((f) => f.id).toSet();
+    final newItems = incoming.where((f) => !existingIds.contains(f.id)).toList();
+
+    final box = ref.read(favoritesBoxProvider);
+    for (final f in newItems) {
+      box.put('${f.id}', jsonEncode(f.toJson()));
+    }
+    if (newItems.isNotEmpty) {
+      state = [...newItems, ...state]
+        ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
+    }
+    return newItems.length;
+  }
 }
 
 final favoritesProvider =

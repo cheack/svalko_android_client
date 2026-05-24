@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'favorites_storage.dart';
 
 class FavoritesScreen extends ConsumerWidget {
@@ -12,13 +16,84 @@ class FavoritesScreen extends ConsumerWidget {
       '${dt.hour.toString().padLeft(2, '0')}:'
       '${dt.minute.toString().padLeft(2, '0')}';
 
+  Future<void> _export(BuildContext context, FavoritesNotifier notifier) async {
+    final json = notifier.exportJson();
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/svalko_favorites.json');
+    await file.writeAsString(json);
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'application/json')],
+      subject: 'Избранное Свалочки',
+    );
+  }
+
+  Future<void> _import(BuildContext context, FavoritesNotifier notifier) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+    if (result == null || result.files.single.path == null) return;
+
+    try {
+      final content = await File(result.files.single.path!).readAsString();
+      final added = notifier.importJson(content);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(added == 0
+                ? 'Новых постов не найдено'
+                : 'Добавлено: $added'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось прочитать файл')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final favorites = ref.watch(favoritesProvider);
     final notifier = ref.read(favoritesProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Избранное')),
+      appBar: AppBar(
+        title: const Text('Избранное'),
+        actions: [
+          PopupMenuButton<_MenuAction>(
+            onSelected: (action) {
+              switch (action) {
+                case _MenuAction.export:
+                  _export(context, notifier);
+                case _MenuAction.import:
+                  _import(context, notifier);
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: _MenuAction.export,
+                child: ListTile(
+                  leading: Icon(Icons.upload_outlined),
+                  title: Text('Экспорт'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: _MenuAction.import,
+                child: ListTile(
+                  leading: Icon(Icons.download_outlined),
+                  title: Text('Импорт'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: favorites.isEmpty
           ? const Center(
               child: Column(
@@ -75,7 +150,8 @@ class FavoritesScreen extends ConsumerWidget {
                           _fmt(fav.publishedAt),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
-                        if (fav.previewText != null && fav.previewText!.isNotEmpty)
+                        if (fav.previewText != null &&
+                            fav.previewText!.isNotEmpty)
                           Text(
                             fav.previewText!,
                             maxLines: 2,
@@ -84,9 +160,10 @@ class FavoritesScreen extends ConsumerWidget {
                           ),
                       ],
                     ),
-                    isThreeLine: fav.previewText != null && fav.previewText!.isNotEmpty,
-                    onTap: () =>
-                        Navigator.of(context).pushNamed('/post', arguments: fav.id),
+                    isThreeLine: fav.previewText != null &&
+                        fav.previewText!.isNotEmpty,
+                    onTap: () => Navigator.of(context)
+                        .pushNamed('/post', arguments: fav.id),
                   ),
                 );
               },
@@ -94,3 +171,5 @@ class FavoritesScreen extends ConsumerWidget {
     );
   }
 }
+
+enum _MenuAction { export, import }
