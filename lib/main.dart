@@ -10,6 +10,7 @@ import 'app.dart';
 import 'core/crash_reporter.dart';
 import 'core/settings_storage.dart';
 import 'data/svalko_api.dart';
+import 'features/favorites/favorites_storage.dart';
 import 'features/feed/feed_controller.dart';
 
 void main() {
@@ -34,6 +35,8 @@ void main() {
       final settings = await Hive.openBox<String>('settings');
       final votes = await Hive.openBox<String>('votes');
 
+      final favorites = await Hive.openBox<String>('favorites');
+
       final cacheDir = await getApplicationCacheDirectory();
       final cacheStore = FileCacheStore('${cacheDir.path}/http_cache');
 
@@ -43,6 +46,7 @@ void main() {
             apiProvider.overrideWithValue(SvalkoApi(cacheStore: cacheStore)),
             settingsBoxProvider.overrideWithValue(settings),
             votesBoxProvider.overrideWithValue(votes),
+            favoritesBoxProvider.overrideWithValue(favorites),
           ],
           child: const SvalkoApp(),
         ),

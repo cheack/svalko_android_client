@@ -76,6 +76,14 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                 Navigator.of(context).pushNamed('/images');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.bookmark_outline),
+              title: const Text('Избранное'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/favorites');
+              },
+            ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.settings_outlined),
