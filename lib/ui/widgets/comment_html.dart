@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/config.dart';
+import '../../core/open_url.dart';
 
 class CommentHtml extends StatelessWidget {
   const CommentHtml(this.html, {super.key, this.onSvalkoPost});
@@ -47,15 +47,12 @@ class CommentHtml extends StatelessWidget {
           return true;
         }
         if (url.startsWith('http')) {
-          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+          openInBrowser(context, url);
           return true;
         }
         // Relative URL
         if (!url.startsWith('javascript')) {
-          launchUrl(
-            Uri.parse('${Config.baseUrl}/$url'),
-            mode: LaunchMode.externalApplication,
-          );
+          openInBrowser(context, '${Config.baseUrl}/$url');
           return true;
         }
         return false;
