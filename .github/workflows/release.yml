@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -39,7 +42,13 @@ jobs:
 
       - name: Build APKs
         run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          BUILD_HASH=$(git rev-parse --short HEAD)
+          BUILD_DATE=$(date +%Y-%m-%d)
           flutter build apk --release --split-per-abi \
+            --build-name=$VERSION \
+            --dart-define=BUILD_HASH=$BUILD_HASH \
+            --dart-define=BUILD_DATE=$BUILD_DATE \
             --dart-define=APP_SECRET=${{ secrets.APP_SECRET }} \
             --dart-define=CRASH_WORKER_URL=${{ secrets.CRASH_WORKER_URL }}
 
