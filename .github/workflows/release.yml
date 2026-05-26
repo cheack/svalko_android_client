@@ -45,20 +45,23 @@ jobs:
           VERSION=${GITHUB_REF_NAME#v}
           BUILD_HASH=$(git rev-parse --short HEAD)
           BUILD_DATE=$(date +%Y-%m-%d)
-          flutter build apk --release --split-per-abi \
-            --build-name=$VERSION \
+          DEFINES="--build-name=$VERSION \
             --dart-define=BUILD_HASH=$BUILD_HASH \
             --dart-define=BUILD_DATE=$BUILD_DATE \
             --dart-define=APP_SECRET=${{ secrets.APP_SECRET }} \
-            --dart-define=CRASH_WORKER_URL=${{ secrets.CRASH_WORKER_URL }}
+            --dart-define=CRASH_WORKER_URL=${{ secrets.CRASH_WORKER_URL }}"
+          flutter build apk --release --split-per-abi $DEFINES
+          flutter build apk --release $DEFINES
 
       - name: Rename APKs
         run: |
           VERSION=${GITHUB_REF_NAME}
           cd build/app/outputs/flutter-apk
-          mv app-arm64-v8a-release.apk   svalko-client-${VERSION}-arm64.apk
-          mv app-armeabi-v7a-release.apk svalko-client-${VERSION}-arm32.apk
-          mv app-x86_64-release.apk      svalko-client-${VERSION}-x64.apk
+          mv app-arm64-v8a-release.apk   svalko-client-${VERSION}-arm64-v8a.apk
+          mv app-armeabi-v7a-release.apk svalko-client-${VERSION}-armeabi-v7a.apk
+          mv app-x86_64-release.apk      svalko-client-${VERSION}-x86_64.apk
+          mv app-x86-release.apk         svalko-client-${VERSION}-x86.apk
+          mv app-release.apk             svalko-client-${VERSION}-universal.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
