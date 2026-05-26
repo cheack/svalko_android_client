@@ -60,7 +60,6 @@ jobs:
           mv app-arm64-v8a-release.apk   svalko-client-${VERSION}-arm64-v8a.apk
           mv app-armeabi-v7a-release.apk svalko-client-${VERSION}-armeabi-v7a.apk
           mv app-x86_64-release.apk      svalko-client-${VERSION}-x86_64.apk
-          mv app-x86-release.apk         svalko-client-${VERSION}-x86.apk
           mv app-release.apk             svalko-client-${VERSION}-universal.apk
 
       - name: Create GitHub Release
