@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'image_viewer.dart';
 import 'media_actions.dart';
@@ -29,6 +30,30 @@ class _ImageCarouselState extends State<ImageCarousel> {
     super.dispose();
   }
 
+  Widget _image(String url, {required BoxFit fit, Alignment alignment = Alignment.topCenter, Widget? loadingWidget}) {
+    if (url.toLowerCase().contains('.gif')) {
+      return Image.network(
+        url,
+        width: double.infinity,
+        fit: fit,
+        alignment: alignment,
+        loadingBuilder: (_, child, progress) =>
+            progress == null ? child : (loadingWidget ?? const ShimmerPlaceholder()),
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: url,
+      width: double.infinity,
+      fit: fit,
+      alignment: alignment,
+      placeholder: (_, _) => loadingWidget ?? const ShimmerPlaceholder(),
+      errorWidget: (_, _, _) => const SizedBox.shrink(),
+      fadeOutDuration: Duration.zero,
+      fadeInDuration: const Duration(milliseconds: 250),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final urls = widget.urls;
@@ -41,18 +66,14 @@ class _ImageCarouselState extends State<ImageCarousel> {
           GestureDetector(
             onTap: () => showFullscreenCarousel(context, urls, 0),
             onLongPress: () => showMediaSheet(context, urls[0]),
-            child: Image.network(
+            child: _image(
               urls[0],
-              width: double.infinity,
               fit: BoxFit.fitWidth,
-              loadingBuilder: (_, child, progress) => progress == null
-                  ? child
-                  : const SizedBox(
-                      height: 300,
-                      width: double.infinity,
-                      child: ShimmerPlaceholder(),
-                    ),
-              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              loadingWidget: const SizedBox(
+                height: 300,
+                width: double.infinity,
+                child: ShimmerPlaceholder(),
+              ),
             ),
           )
         else
@@ -67,15 +88,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
                     return GestureDetector(
                       onTap: () => showFullscreenCarousel(context, urls, i),
                       onLongPress: () => showMediaSheet(context, url),
-                      child: Image.network(
-                        url,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
-                        alignment: Alignment.center,
-                        loadingBuilder: (_, child, progress) =>
-                            progress == null ? child : const ShimmerPlaceholder(),
-                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                      ),
+                      child: _image(url, fit: BoxFit.contain, alignment: Alignment.center),
                     );
                   },
                 ),
