@@ -139,6 +139,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return Scaffold(
       drawer: const AppDrawer(),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width / 2,
       appBar: AppBar(
         title: Text(switch (widget.source) {
           MainFeed() => s.appTitle,
