@@ -18,10 +18,11 @@ import '../../ui/widgets/video_player_widget.dart';
 import '../../core/result.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
-  const PostScreen({super.key, required this.postId, this.highlightCommentId});
+  const PostScreen({super.key, required this.postId, this.highlightCommentId, this.showShuffle = false});
 
   final int postId;
   final int? highlightCommentId;
+  final bool showShuffle;
 
   @override
   ConsumerState<PostScreen> createState() => _PostScreenState();
@@ -55,7 +56,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     setState(() => _loadingRandom = false);
     switch (result) {
       case Ok(:final value):
-        Navigator.of(context).pushReplacementNamed('/post', arguments: value);
+        Navigator.of(context).pushReplacementNamed('/random-post', arguments: value);
       case Err(:final error):
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(error.toString())));
@@ -186,16 +187,17 @@ class _PostScreenState extends ConsumerState<PostScreen> {
       appBar: AppBar(
         title: Text(post.author.name),
         actions: [
-          if (_loadingRandom)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.shuffle),
-              onPressed: _openRandom,
-            ),
+          if (widget.showShuffle)
+            if (_loadingRandom)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+              )
+            else
+              IconButton(
+                icon: const Icon(Icons.shuffle),
+                onPressed: _openRandom,
+              ),
           PostShareButton(postId: post.id),
           PostFavButton(post: post),
         ],

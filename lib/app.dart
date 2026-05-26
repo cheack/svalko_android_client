@@ -39,7 +39,7 @@ class SvalkoApp extends ConsumerWidget {
         if (settings.name == '/') {
           return MaterialPageRoute(builder: (_) => const FeedScreen());
         }
-        if (settings.name == '/post') {
+        if (settings.name == '/post' || settings.name == '/random-post') {
           final args = settings.arguments;
           final int postId;
           final int? commentId;
@@ -51,7 +51,11 @@ class SvalkoApp extends ConsumerWidget {
             commentId = null;
           }
           return MaterialPageRoute(
-            builder: (_) => PostScreen(postId: postId, highlightCommentId: commentId),
+            builder: (_) => PostScreen(
+              postId: postId,
+              highlightCommentId: commentId,
+              showShuffle: settings.name == '/random-post',
+            ),
           );
         }
         if (settings.name == '/tag') {

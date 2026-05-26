@@ -36,7 +36,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     switch (result) {
       case Ok(:final value):
         Navigator.of(context).pop();
-        Navigator.of(context).pushNamed('/post', arguments: value);
+        Navigator.of(context).pushNamed('/random-post', arguments: value);
       case Err(:final error):
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(error.toString())));
