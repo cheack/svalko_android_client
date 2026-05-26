@@ -15,6 +15,7 @@ import '../../ui/widgets/post_vote_section.dart';
 import '../../ui/widgets/video_embed_player.dart';
 import '../../ui/widgets/video_link_card.dart';
 import '../../ui/widgets/video_player_widget.dart';
+import '../../core/result.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
   const PostScreen({super.key, required this.postId, this.highlightCommentId});
@@ -35,6 +36,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   bool _pendingScrollToBottom = false;
   bool _fabVisible = true;
   double _lastScrollOffset = 0;
+  bool _loadingRandom = false;
 
   @override
   void initState() {
@@ -42,6 +44,21 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     _scrollController.addListener(_onScroll);
     if (widget.highlightCommentId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _tryScrollToHighlight());
+    }
+  }
+
+  Future<void> _openRandom() async {
+    if (_loadingRandom) return;
+    setState(() => _loadingRandom = true);
+    final result = await ref.read(repositoryProvider).getRandomPostId();
+    if (!mounted) return;
+    setState(() => _loadingRandom = false);
+    switch (result) {
+      case Ok(:final value):
+        Navigator.of(context).pushReplacementNamed('/post', arguments: value);
+      case Err(:final error):
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
     }
   }
 
@@ -169,6 +186,16 @@ class _PostScreenState extends ConsumerState<PostScreen> {
       appBar: AppBar(
         title: Text(post.author.name),
         actions: [
+          if (_loadingRandom)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.shuffle),
+              onPressed: _openRandom,
+            ),
           PostShareButton(postId: post.id),
           PostFavButton(post: post),
         ],
