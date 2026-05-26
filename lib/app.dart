@@ -9,6 +9,7 @@ import 'features/images/images_screen.dart';
 import 'features/logs/logs_screen.dart';
 import 'features/post/post_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/trends/trends_screen.dart';
 import 'models/author.dart';
 import 'models/feed_source.dart';
 import 'models/tag.dart';
@@ -86,6 +87,9 @@ class SvalkoApp extends ConsumerWidget {
         }
         if (settings.name == '/favorites') {
           return MaterialPageRoute(builder: (_) => const FavoritesScreen());
+        }
+        if (settings.name == '/trends') {
+          return MaterialPageRoute(builder: (_) => const TrendsScreen());
         }
         return null;
       },

@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/config.dart';
 import '../../core/l10n.dart';
 import '../../core/result.dart';
 import '../../core/settings_storage.dart';
@@ -140,6 +142,35 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                       },
                     );
                   },
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            InkWell(
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/trends');
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: '${Config.baseUrl}/trends_images.php?informer=1',
+                      width: 110,
+                      height: 38,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, _, _) => const SizedBox(width: 110, height: 38),
+                    ),
+                    const SizedBox(width: 4),
+                    CachedNetworkImage(
+                      imageUrl: '${Config.baseUrl}/trends_images.php?informer=1&mode=1',
+                      width: 60,
+                      height: 38,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, _, _) => const SizedBox(width: 60, height: 38),
+                    ),
+                  ],
                 ),
               ),
             ),

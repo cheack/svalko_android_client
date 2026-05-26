@@ -110,6 +110,9 @@ class SvalkoApi {
   Future<Result<String, AppError>> fetchImagesPage() =>
       _get(Config.imagesUrl);
 
+  Future<Result<String, AppError>> fetchTrendsPage() =>
+      _get('${Config.baseUrl}/trends.html');
+
   // Returns (postId, commentId?) — commentId from ?high=N in the redirect URL.
   Future<Result<(int, int?), AppError>> fetchImagePostId(String filename) async {
     try {
