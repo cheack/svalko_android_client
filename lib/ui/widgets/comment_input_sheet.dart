@@ -339,6 +339,27 @@ class _CommentSheetState extends State<_CommentSheet> {
               maxLines: null,
               textInputAction: TextInputAction.newline,
               expands: false,
+              contextMenuBuilder: (context, editableTextState) {
+                final selection = editableTextState.textEditingValue.selection;
+                final hasSelection = selection.isValid && !selection.isCollapsed;
+                final items = [
+                  if (hasSelection) ...[
+                    for (final (tag, label) in [('b', 'Жирный'), ('i', 'Курсив'), ('u', 'Подчёрк'), ('s', 'Зачёрк')])
+                      ContextMenuButtonItem(
+                        label: label,
+                        onPressed: () {
+                          ContextMenuController.removeAny();
+                          _wrapSelection(tag);
+                        },
+                      ),
+                  ],
+                  ...editableTextState.contextMenuButtonItems,
+                ];
+                return AdaptiveTextSelectionToolbar.buttonItems(
+                  anchors: editableTextState.contextMenuAnchors,
+                  buttonItems: items,
+                );
+              },
             ),
           ),
           if (_submitError != null) ...[
