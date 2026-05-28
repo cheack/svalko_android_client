@@ -227,7 +227,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         controller: _scrollController,
         child: ListView(
         controller: _scrollController,
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).padding.bottom),
         children: [
           // Post header
           Padding(

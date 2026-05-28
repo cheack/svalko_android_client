@@ -193,7 +193,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ),
           if (visiblePage != null)
             Positioned(
-              bottom: 16,
+              bottom: 16 + MediaQuery.of(context).padding.bottom,
               left: 0,
               right: 0,
               child: Center(
