@@ -36,7 +36,7 @@ class TrendsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text('Ошибка загрузки')),
         data: (blocks) => ListView.builder(
-          padding: const EdgeInsets.only(bottom: 24),
+          padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).padding.bottom),
           itemCount: blocks.length,
           itemBuilder: (context, i) {
             final block = blocks[i];
