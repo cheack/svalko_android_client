@@ -49,9 +49,17 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     final s = AppStrings.of(ref.watch(languageProvider));
     final theme = Theme.of(context);
 
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Drawer(
-      child: SafeArea(
-        child: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            color: theme.colorScheme.primary,
+            height: topPadding,
+          ),
+          Expanded(child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ListTile(
@@ -175,7 +183,8 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
               ),
             ),
           ],
-        ),
+          )),
+        ],
       ),
     );
   }
