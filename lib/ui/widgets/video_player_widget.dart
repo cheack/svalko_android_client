@@ -1,6 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import '../../core/app_logger.dart';
 
 class VideoPlayerWidget extends StatefulWidget {
   const VideoPlayerWidget({super.key, required this.url});
@@ -23,9 +24,15 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   }
 
   Future<void> _init() async {
-    _vpc = VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    final url = widget.url;
+    final name = Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
+    AppLogger.instance.network('video start: $name');
+    _vpc = VideoPlayerController.networkUrl(Uri.parse(url));
+    final sw = Stopwatch()..start();
     try {
       await _vpc.initialize();
+      sw.stop();
+      AppLogger.instance.network('video ready: ${sw.elapsedMilliseconds}ms $name');
       if (!mounted) return;
       setState(() {
         _chewie = ChewieController(
@@ -37,7 +44,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           allowMuting: true,
         );
       });
-    } catch (_) {
+    } catch (e) {
+      AppLogger.instance.error('video error: $name', detail: e.toString());
       if (mounted) setState(() => _error = true);
     }
   }

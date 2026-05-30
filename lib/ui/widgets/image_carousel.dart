@@ -1,5 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/app_logger.dart';
 import 'image_viewer.dart';
 import 'media_actions.dart';
 import 'shimmer_placeholder.dart';
@@ -30,29 +31,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
     super.dispose();
   }
 
-  Widget _image(String url, {required BoxFit fit, Alignment alignment = Alignment.topCenter, Widget? loadingWidget}) {
-    if (url.toLowerCase().contains('.gif')) {
-      return Image.network(
-        url,
-        width: double.infinity,
-        fit: fit,
-        alignment: alignment,
-        loadingBuilder: (_, child, progress) =>
-            progress == null ? child : (loadingWidget ?? const ShimmerPlaceholder()),
-        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-      );
-    }
-    return CachedNetworkImage(
-      imageUrl: url,
-      width: double.infinity,
-      fit: fit,
-      alignment: alignment,
-      placeholder: (_, _) => loadingWidget ?? const ShimmerPlaceholder(),
-      errorWidget: (_, _, _) => const SizedBox.shrink(),
-      fadeOutDuration: Duration.zero,
-      fadeInDuration: const Duration(milliseconds: 250),
-    );
-  }
+  Widget _image(String url, {required BoxFit fit, Alignment alignment = Alignment.topCenter, Widget? loadingWidget}) =>
+      _MediaImage(url: url, fit: fit, alignment: alignment, loadingWidget: loadingWidget);
 
   @override
   Widget build(BuildContext context) {
@@ -176,6 +156,91 @@ class _NavArrow extends StatelessWidget {
           child: Icon(icon, color: Colors.white, size: 20),
         ),
       ),
+    );
+  }
+}
+
+class _MediaImage extends StatefulWidget {
+  const _MediaImage({
+    required this.url,
+    required this.fit,
+    this.alignment = Alignment.topCenter,
+    this.loadingWidget,
+  });
+
+  final String url;
+  final BoxFit fit;
+  final Alignment alignment;
+  final Widget? loadingWidget;
+
+  @override
+  State<_MediaImage> createState() => _MediaImageState();
+}
+
+class _MediaImageState extends State<_MediaImage> {
+  bool _readyLogged = false;
+
+  static String _name(String url) =>
+      Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
+
+  @override
+  void initState() {
+    super.initState();
+    final type = widget.url.toLowerCase().contains('.gif') ? 'gif' : 'img';
+    AppLogger.instance.network('$type start: ${_name(widget.url)}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final url = widget.url;
+    final name = _name(url);
+
+    if (url.toLowerCase().contains('.gif')) {
+      return Image.network(
+        url,
+        width: double.infinity,
+        fit: widget.fit,
+        alignment: widget.alignment,
+        loadingBuilder: (_, child, progress) {
+          if (progress == null && !_readyLogged) {
+            _readyLogged = true;
+            AppLogger.instance.network('gif ready: $name');
+          }
+          return progress == null
+              ? child
+              : (widget.loadingWidget ?? const ShimmerPlaceholder());
+        },
+        errorBuilder: (_, error, _) {
+          AppLogger.instance.error('gif error: $name', detail: error.toString());
+          return const SizedBox.shrink();
+        },
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: url,
+      width: double.infinity,
+      fit: widget.fit,
+      alignment: widget.alignment,
+      placeholder: (_, _) => widget.loadingWidget ?? const ShimmerPlaceholder(),
+      imageBuilder: (_, imageProvider) {
+        if (!_readyLogged) {
+          _readyLogged = true;
+          AppLogger.instance.network('img ready: $name');
+        }
+        return Image(
+          image: imageProvider,
+          width: double.infinity,
+          fit: widget.fit,
+          alignment: widget.alignment,
+        );
+      },
+      errorWidget: (_, _, error) {
+        AppLogger.instance.error('img error: $name', detail: error.toString());
+        return const SizedBox.shrink();
+      },
+      fadeOutDuration: Duration.zero,
+      fadeInDuration: const Duration(milliseconds: 250),
     );
   }
 }
