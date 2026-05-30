@@ -42,7 +42,24 @@ class _LogsScreenState extends State<LogsScreen> {
     super.dispose();
   }
 
-  void _clear() {
+  Future<void> _clear() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Очистить логи?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Очистить'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     AppLogger.instance.clear();
     setState(() => _entries.clear());
   }
