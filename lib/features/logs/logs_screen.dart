@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/app_logger.dart';
 
 class LogsScreen extends StatefulWidget {
@@ -42,6 +45,25 @@ class _LogsScreenState extends State<LogsScreen> {
     setState(() => _entries.clear());
   }
 
+  Future<void> _share() async {
+    final buf = StringBuffer();
+    for (final e in _entries) {
+      final time =
+          '${_p(e.time.hour)}:${_p(e.time.minute)}:${_p(e.time.second)}.${e.time.millisecond.toString().padLeft(3, '0')}';
+      final level = e.level.name.toUpperCase().padRight(7);
+      buf.writeln('$time $level ${e.message}');
+      if (e.detail != null && e.detail!.isNotEmpty) {
+        buf.writeln('        ${e.detail}');
+      }
+    }
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/svalko_logs.txt');
+    await file.writeAsString(buf.toString());
+    await Share.shareXFiles([XFile(file.path)], subject: 'svalko logs');
+  }
+
+  String _p(int v) => v.toString().padLeft(2, '0');
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,9 +71,14 @@ class _LogsScreenState extends State<LogsScreen> {
         title: const Text('Логи'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.share_outlined),
+            tooltip: 'Поделиться',
+            onPressed: _entries.isEmpty ? null : _share,
+          ),
+          IconButton(
             icon: const Icon(Icons.delete_outline),
             tooltip: 'Очистить',
-            onPressed: _clear,
+            onPressed: _entries.isEmpty ? null : _clear,
           ),
         ],
       ),
