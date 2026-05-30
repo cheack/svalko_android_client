@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - '[0-9]*'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -42,7 +42,7 @@ jobs:
 
       - name: Build APKs
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
+          VERSION=${GITHUB_REF_NAME}
           BUILD_HASH=$(git rev-parse --short HEAD)
           BUILD_DATE=$(date +%Y-%m-%d)
           DEFINES="--build-name=$VERSION \
