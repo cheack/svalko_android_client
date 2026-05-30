@@ -320,6 +320,35 @@ class SvalkoApi {
     }
   }
 
+  Future<Result<String, AppError>> submitBanAnswer({
+    required int riddleId,
+    required String answer,
+  }) async {
+    try {
+      final encodedAnswer = await encodeQueryWin1251(answer);
+      final body = 'q=$riddleId&a=$encodedAnswer';
+      final response = await _dio.post<dynamic>(
+        Config.baseUrl,
+        data: body,
+        options: Options(
+          contentType: 'application/x-www-form-urlencoded',
+          followRedirects: true,
+          maxRedirects: 5,
+          responseType: ResponseType.bytes,
+        ),
+      );
+      final data = response.data;
+      final Uint8List bytes = data is Uint8List
+          ? data
+          : Uint8List.fromList(data as List<int>);
+      return Ok(await decodeWin1251(bytes));
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
   Future<Result<String, AppError>> vote(int postId, int vote) =>
       _action('${Config.baseUrl}/vote.php?post_id=$postId&vote=$vote&dynamic=1');
 
