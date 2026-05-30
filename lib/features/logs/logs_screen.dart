@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/app_logger.dart';
@@ -47,6 +49,22 @@ class _LogsScreenState extends State<LogsScreen> {
 
   Future<void> _share() async {
     final buf = StringBuffer();
+
+    // Device & app info header
+    final packageInfo = await PackageInfo.fromPlatform();
+    buf.writeln('app: ${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
+    final deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final a = await deviceInfo.androidInfo;
+      buf.writeln('device: ${a.manufacturer} ${a.model} (Android ${a.version.release}, SDK ${a.version.sdkInt})');
+    } else if (Platform.isIOS) {
+      final i = await deviceInfo.iosInfo;
+      buf.writeln('device: ${i.name} ${i.systemName} ${i.systemVersion}');
+    } else {
+      buf.writeln('device: ${Platform.operatingSystem}');
+    }
+    buf.writeln('─' * 40);
+
     for (final e in _entries) {
       final time =
           '${_p(e.time.hour)}:${_p(e.time.minute)}:${_p(e.time.second)}.${e.time.millisecond.toString().padLeft(3, '0')}';
@@ -56,6 +74,7 @@ class _LogsScreenState extends State<LogsScreen> {
         buf.writeln('        ${e.detail}');
       }
     }
+
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/svalko_logs.txt');
     await file.writeAsString(buf.toString());
