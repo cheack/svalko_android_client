@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/svalko_repository.dart';
 import '../../data/svalko_api.dart';
+import '../../models/ban_page_data.dart';
 import '../../models/feed_source.dart';
 import '../../models/post.dart';
 import '../../core/result.dart';
@@ -27,6 +28,7 @@ class FeedState {
     this.isRefreshing = false,
     this.isLoadingMore = false,
     this.error,
+    this.banData,
     this.currentPage,
     this.maxPage,
     this.hasMore = true,
@@ -38,6 +40,7 @@ class FeedState {
   final bool isRefreshing;
   final bool isLoadingMore;
   final AppError? error;
+  final BanPageData? banData;
   final int? currentPage;
   final int? maxPage;
   final bool hasMore;
@@ -50,11 +53,13 @@ class FeedState {
     bool? isRefreshing,
     bool? isLoadingMore,
     AppError? error,
+    BanPageData? banData,
     int? currentPage,
     int? maxPage,
     bool? hasMore,
     Map<int, int>? pageFirstIndex,
     bool clearError = false,
+    bool clearBanData = false,
   }) =>
       FeedState(
         posts: posts ?? this.posts,
@@ -62,6 +67,7 @@ class FeedState {
         isRefreshing: isRefreshing ?? this.isRefreshing,
         isLoadingMore: isLoadingMore ?? this.isLoadingMore,
         error: clearError ? null : (error ?? this.error),
+        banData: clearBanData ? null : (banData ?? this.banData),
         currentPage: currentPage ?? this.currentPage,
         maxPage: maxPage ?? this.maxPage,
         hasMore: hasMore ?? this.hasMore,
@@ -97,30 +103,35 @@ class FeedController extends StateNotifier<FeedState> {
         },
       );
 
+  FeedState _stateFromResult(FeedResult result) => switch (result) {
+        FeedSuccess(:final page) => _stateFromFeedPage(page),
+        FeedBanned(:final data) => FeedState(banData: data),
+        FeedFailure(:final error) => FeedState(error: error),
+      };
+
   Future<void> loadInitial() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isLoading: true, clearError: true, clearBanData: true);
     final result = await _repo.getFeed(source: _source);
-    state = switch (result) {
-      Ok(:final value) => _stateFromFeedPage(value),
-      Err(:final error) => FeedState(error: error),
-    };
+    state = _stateFromResult(result);
   }
 
   Future<void> refresh() async {
-    state = state.copyWith(isRefreshing: true, clearError: true);
+    state = state.copyWith(isRefreshing: true, clearError: true, clearBanData: true);
     final result = await _repo.getFeed(source: _source);
     state = switch (result) {
-      Ok(:final value) => _stateFromFeedPage(value),
-      Err(:final error) => state.copyWith(isRefreshing: false, error: error),
+      FeedSuccess(:final page) => _stateFromFeedPage(page),
+      FeedBanned(:final data) => FeedState(banData: data),
+      FeedFailure(:final error) => state.copyWith(isRefreshing: false, error: error),
     };
   }
 
   Future<void> loadPage(int page) async {
-    state = state.copyWith(isRefreshing: true, clearError: true);
+    state = state.copyWith(isRefreshing: true, clearError: true, clearBanData: true);
     final result = await _repo.getFeed(page: page, source: _source);
     state = switch (result) {
-      Ok(:final value) => _stateFromFeedPage(value),
-      Err(:final error) => state.copyWith(isRefreshing: false, error: error),
+      FeedSuccess(:final page) => _stateFromFeedPage(page),
+      FeedBanned(:final data) => FeedState(banData: data),
+      FeedFailure(:final error) => state.copyWith(isRefreshing: false, error: error),
     };
   }
 
@@ -134,13 +145,36 @@ class FeedController extends StateNotifier<FeedState> {
     state = state.copyWith(isLoadingMore: true);
     final result = await _repo.getFeed(page: nextPage, source: _source);
     state = switch (result) {
-      Ok(:final value) => _stateFromFeedPage(
-          value,
+      FeedSuccess(:final page) => _stateFromFeedPage(
+          page,
           existingPosts: state.posts,
           existingPageIndex: state.pageFirstIndex,
         ).copyWith(isLoadingMore: false),
-      Err(:final error) => state.copyWith(isLoadingMore: false, error: error),
+      FeedBanned(:final data) => FeedState(banData: data),
+      FeedFailure(:final error) => state.copyWith(isLoadingMore: false, error: error),
     };
+  }
+
+  Future<void> submitBanAnswer(int riddleId, String answer) async {
+    state = state.copyWith(isLoading: true, clearBanData: true);
+
+    const maxAttempts = 4;
+    const retryDelay = Duration(seconds: 2);
+
+    var result = await _repo.submitBanAnswer(
+      riddleId: riddleId,
+      answer: answer,
+    );
+
+    for (var attempt = 1; attempt < maxAttempts; attempt++) {
+      if (result is! FeedFailure) break;
+      final error = result.error;
+      if (error != AppError.network && error != AppError.timeout) break;
+      await Future.delayed(retryDelay);
+      result = await _repo.submitBanAnswer(riddleId: riddleId, answer: answer);
+    }
+
+    state = _stateFromResult(result);
   }
 }
 

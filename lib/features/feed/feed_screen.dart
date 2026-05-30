@@ -4,7 +4,9 @@ import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
 import '../../models/feed_source.dart';
 import '../navigation/app_drawer.dart';
+import 'ban_screen.dart';
 import 'feed_controller.dart';
+import 'widgets/page_nav_panel.dart';
 import 'widgets/post_card.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -43,7 +45,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final S = _scrollController.offset;
     final appBarH = kToolbarHeight + MediaQuery.of(context).padding.top;
 
-    // Update stored offsets for any page markers currently in the render tree.
     for (final entry in _pageKeys.entries) {
       final box =
           entry.value.currentContext?.findRenderObject() as RenderBox?;
@@ -52,8 +53,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           S + box.localToGlobal(Offset.zero).dy - appBarH;
     }
 
-    // Visible page = the highest-offset page whose start is at or above the
-    // top of the viewport (offset <= current scroll).
     int? best;
     double bestOff = double.negativeInfinity;
     for (final entry in _pageScrollOffsets.entries) {
@@ -68,6 +67,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     }
   }
 
+  String _title(AppStrings s) => switch (widget.source) {
+        MainFeed() => s.appTitle,
+        TagFeed(:final tagName) => '#$tagName',
+        AuthorFeed(:final authorName) => authorName,
+      };
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(feedControllerProvider(widget.source));
@@ -76,7 +81,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     // After loadPage/refresh: reset offsets, update page, jump to top.
     ref.listen<FeedState>(feedControllerProvider(widget.source), (prev, next) {
-      if (prev?.isRefreshing == true && !next.isRefreshing &&
+      if (prev?.isRefreshing == true &&
+          !next.isRefreshing &&
           next.currentPage != null) {
         _pageScrollOffsets
           ..clear()
@@ -88,15 +94,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       }
     });
 
-    // Initialise on first data load.
     if (_visiblePage == null && state.currentPage != null) {
       _visiblePage = state.currentPage;
       _pageScrollOffsets[state.currentPage!] = 0;
     }
-
-    final indexToPage = <int, int>{
-      for (final e in state.pageFirstIndex.entries) e.value: e.key,
-    };
 
     if (state.isLoading) {
       return const Scaffold(
@@ -104,16 +105,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       );
     }
 
-    if (state.error == null && state.posts.isEmpty && !state.hasMore) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(switch (widget.source) {
-            MainFeed() => s.appTitle,
-            TagFeed(:final tagName) => '#$tagName',
-            AuthorFeed(:final authorName) => authorName,
-          }),
-        ),
-        body: Center(child: Text(s.noPostsFound)),
+    if (state.banData != null) {
+      return BanScreen(
+        banData: state.banData!,
+        isLoading: state.isLoading,
+        onSubmit: ctrl.submitBanAnswer,
       );
     }
 
@@ -135,17 +131,23 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       );
     }
 
+    if (state.error == null && state.posts.isEmpty && !state.hasMore) {
+      return Scaffold(
+        appBar: AppBar(title: Text(_title(s))),
+        body: Center(child: Text(s.noPostsFound)),
+      );
+    }
+
+    final indexToPage = <int, int>{
+      for (final e in state.pageFirstIndex.entries) e.value: e.key,
+    };
     final visiblePage = _visiblePage;
 
     return Scaffold(
       drawer: const AppDrawer(),
       drawerEdgeDragWidth: 80,
       appBar: AppBar(
-        title: Text(switch (widget.source) {
-          MainFeed() => s.appTitle,
-          TagFeed(:final tagName) => '#$tagName',
-          AuthorFeed(:final authorName) => authorName,
-        }),
+        title: Text(_title(s)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -168,8 +170,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               },
               child: ListView.builder(
                 controller: _scrollController,
-                itemCount:
-                    state.posts.length + (state.isLoadingMore ? 1 : 0),
+                itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
                 itemBuilder: (ctx, i) {
                   if (i == state.posts.length) {
                     return const Padding(
@@ -197,7 +198,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               left: 0,
               right: 0,
               child: Center(
-                child: _PageNavPanel(
+                child: PageNavPanel(
                   currentPage: visiblePage,
                   canGoNewer: visiblePage < (state.maxPage ?? visiblePage),
                   canGoOlder: visiblePage > 0,
@@ -208,69 +209,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _PageNavPanel extends StatelessWidget {
-  const _PageNavPanel({
-    required this.currentPage,
-    required this.canGoNewer,
-    required this.canGoOlder,
-    required this.isLoading,
-    required this.onNewer,
-    required this.onOlder,
-  });
-
-  final int currentPage;
-  final bool canGoNewer;
-  final bool canGoOlder;
-  final bool isLoading;
-  final VoidCallback onNewer;
-  final VoidCallback onOlder;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.93),
-      borderRadius: BorderRadius.circular(24),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_upward, size: 18),
-              tooltip: 'Новее',
-              visualDensity: VisualDensity.compact,
-              onPressed: (!isLoading && canGoNewer) ? onNewer : null,
-            ),
-            SizedBox(
-              width: 72,
-              child: Center(
-                child: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        'стр. $currentPage',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.arrow_downward, size: 18),
-              tooltip: 'Старее',
-              visualDensity: VisualDensity.compact,
-              onPressed: (!isLoading && canGoOlder) ? onOlder : null,
-            ),
-          ],
-        ),
       ),
     );
   }
