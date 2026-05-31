@@ -334,7 +334,7 @@ class MediaImageState extends ConsumerState<MediaImage>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.download_rounded, size: 28, color: Colors.white),
+              const Icon(Icons.play_arrow_rounded, size: 36, color: Colors.white),
               const SizedBox(height: 4),
               Text(
                 _remoteSize != null ? 'GIF · ${_formatBytes(_remoteSize!)}' : 'GIF',

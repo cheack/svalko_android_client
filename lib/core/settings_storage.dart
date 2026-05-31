@@ -73,3 +73,22 @@ class AutoLoadMediaNotifier extends Notifier<bool> {
 
 final autoLoadMediaProvider =
     NotifierProvider<AutoLoadMediaNotifier, bool>(AutoLoadMediaNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Auto-load video
+// ---------------------------------------------------------------------------
+
+class AutoLoadVideoNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    final box = ref.watch(settingsBoxProvider);
+    final v = box.get('autoLoadVideo');
+    listenSelf((_, next) => box.put('autoLoadVideo', next.toString()));
+    return v == null ? false : v == 'true';
+  }
+
+  void set(bool value) => state = value;
+}
+
+final autoLoadVideoProvider =
+    NotifierProvider<AutoLoadVideoNotifier, bool>(AutoLoadVideoNotifier.new);
