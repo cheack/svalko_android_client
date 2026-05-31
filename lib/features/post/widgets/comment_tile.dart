@@ -6,6 +6,7 @@ import '../../../models/comment.dart';
 import '../../../ui/widgets/image_viewer.dart';
 import '../../../ui/widgets/comment_html.dart';
 import '../../../ui/widgets/media_actions.dart';
+import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/shimmer_placeholder.dart';
 import '../../../ui/widgets/video_player_widget.dart';
 
@@ -143,14 +144,10 @@ class CommentTile extends StatelessWidget {
               onLongPress: () => showMediaSheet(context, url),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 360),
-                child: Image.network(
-                  url,
-                  width: double.infinity,
+                child: MediaImage(
+                  url: url,
                   fit: BoxFit.contain,
-                  alignment: Alignment.topCenter,
-                  loadingBuilder: (_, child, progress) =>
-                      progress == null ? child : const ShimmerPlaceholder(),
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  loadingWidget: const ShimmerPlaceholder(),
                 ),
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:gif/gif.dart';
 import '../../core/app_logger.dart';
 import 'image_viewer.dart';
 import 'media_actions.dart';
@@ -32,7 +33,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
   }
 
   Widget _image(String url, {required BoxFit fit, Alignment alignment = Alignment.topCenter, Widget? loadingWidget}) =>
-      _MediaImage(url: url, fit: fit, alignment: alignment, loadingWidget: loadingWidget);
+      MediaImage(url: url, fit: fit, alignment: alignment, loadingWidget: loadingWidget);
 
   @override
   Widget build(BuildContext context) {
@@ -160,8 +161,9 @@ class _NavArrow extends StatelessWidget {
   }
 }
 
-class _MediaImage extends StatefulWidget {
-  const _MediaImage({
+class MediaImage extends StatefulWidget {
+  const MediaImage({
+    super.key,
     required this.url,
     required this.fit,
     this.alignment = Alignment.topCenter,
@@ -174,11 +176,13 @@ class _MediaImage extends StatefulWidget {
   final Widget? loadingWidget;
 
   @override
-  State<_MediaImage> createState() => _MediaImageState();
+  State<MediaImage> createState() => MediaImageState();
 }
 
-class _MediaImageState extends State<_MediaImage> {
+class MediaImageState extends State<MediaImage>
+    with SingleTickerProviderStateMixin {
   bool _readyLogged = false;
+  late final GifController? _gifController;
 
   static String _name(String url) =>
       Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
@@ -186,8 +190,15 @@ class _MediaImageState extends State<_MediaImage> {
   @override
   void initState() {
     super.initState();
-    final type = widget.url.toLowerCase().contains('.gif') ? 'gif' : 'img';
-    AppLogger.instance.network('$type start: ${_name(widget.url)}');
+    final isGif = widget.url.toLowerCase().contains('.gif');
+    _gifController = isGif ? GifController(vsync: this) : null;
+    AppLogger.instance.network('${isGif ? 'gif' : 'img'} start: ${_name(widget.url)}');
+  }
+
+  @override
+  void dispose() {
+    _gifController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -196,23 +207,18 @@ class _MediaImageState extends State<_MediaImage> {
     final name = _name(url);
 
     if (url.toLowerCase().contains('.gif')) {
-      return Image.network(
-        url,
-        width: double.infinity,
+      return Gif(
+        image: NetworkImage(url),
+        controller: _gifController!,
+        autostart: Autostart.loop,
         fit: widget.fit,
         alignment: widget.alignment,
-        loadingBuilder: (_, child, progress) {
-          if (progress == null && !_readyLogged) {
+        placeholder: (_) => widget.loadingWidget ?? const ShimmerPlaceholder(),
+        onFetchCompleted: () {
+          if (!_readyLogged) {
             _readyLogged = true;
             AppLogger.instance.network('gif ready: $name');
           }
-          return progress == null
-              ? child
-              : (widget.loadingWidget ?? const ShimmerPlaceholder());
-        },
-        errorBuilder: (_, error, _) {
-          AppLogger.instance.error('gif error: $name', detail: error.toString());
-          return const SizedBox.shrink();
         },
       );
     }
