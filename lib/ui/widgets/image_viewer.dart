@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gif/gif.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
 import 'media_actions.dart';
@@ -120,17 +121,59 @@ class _FullscreenCarouselPageState
         controller: _pageController,
         itemCount: widget.urls.length,
         onPageChanged: (i) => setState(() => _current = i),
-        itemBuilder: (_, i) {
-          final url = widget.urls[i];
-          return LayoutBuilder(
-            builder: (_, constraints) => InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 8,
-              child: SizedBox(
-                width: constraints.maxWidth,
-                height: constraints.maxHeight,
-                child: Image.network(
-                  url,
+        itemBuilder: (_, i) => _FullscreenImageItem(url: widget.urls[i]),
+      ),
+    );
+  }
+}
+
+class _FullscreenImageItem extends StatefulWidget {
+  const _FullscreenImageItem({required this.url});
+  final String url;
+
+  @override
+  State<_FullscreenImageItem> createState() => _FullscreenImageItemState();
+}
+
+class _FullscreenImageItemState extends State<_FullscreenImageItem>
+    with SingleTickerProviderStateMixin {
+  late final GifController? _gifController;
+
+  bool get _isGif => widget.url.toLowerCase().contains('.gif');
+
+  @override
+  void initState() {
+    super.initState();
+    _gifController = _isGif ? GifController(vsync: this) : null;
+  }
+
+  @override
+  void dispose() {
+    _gifController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (_, constraints) => InteractiveViewer(
+        minScale: 0.5,
+        maxScale: 8,
+        child: SizedBox(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          child: _isGif
+              ? Gif(
+                  image: NetworkImage(widget.url),
+                  controller: _gifController!,
+                  autostart: Autostart.loop,
+                  fit: BoxFit.contain,
+                  placeholder: (_) => const Center(
+                    child: CircularProgressIndicator(color: Colors.white54),
+                  ),
+                )
+              : Image.network(
+                  widget.url,
                   fit: BoxFit.contain,
                   loadingBuilder: (_, child, progress) {
                     if (progress == null) return child;
@@ -149,10 +192,7 @@ class _FullscreenCarouselPageState
                     size: 64,
                   ),
                 ),
-              ),
-            ),
-          );
-        },
+        ),
       ),
     );
   }
