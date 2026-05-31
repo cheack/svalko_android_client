@@ -25,6 +25,38 @@ class AppDrawer extends ConsumerStatefulWidget {
 
 class _AppDrawerState extends ConsumerState<AppDrawer> {
   bool _loadingRandom = false;
+  late final ScrollController _tagsScrollController;
+  List<Tag>? _tags;
+
+  @override
+  void initState() {
+    super.initState();
+    final savedOffset = ref.read(drawerTagsScrollOffsetProvider);
+    _tagsScrollController = ScrollController(initialScrollOffset: savedOffset);
+    _tagsScrollController.addListener(() {
+      ref.read(drawerTagsScrollOffsetProvider.notifier).state =
+          _tagsScrollController.offset;
+    });
+  }
+
+  @override
+  void dispose() {
+    _tagsScrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToActiveTag(String activeTag) {
+    final tags = _tags;
+    if (tags == null || !_tagsScrollController.hasClients) return;
+    final index = tags.indexWhere((t) => t.name == activeTag);
+    if (index < 0) return;
+    const itemHeight = 48.0;
+    final target = (index * itemHeight).clamp(
+      0.0,
+      _tagsScrollController.position.maxScrollExtent,
+    );
+    _tagsScrollController.jumpTo(target);
+  }
 
   Future<void> _openRandom() async {
     if (_loadingRandom) return;
@@ -46,7 +78,13 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
   @override
   Widget build(BuildContext context) {
     final tagsAsync = ref.watch(tagsProvider);
+    final activeTag = ref.watch(activeTagProvider);
     final s = AppStrings.of(ref.watch(languageProvider));
+    ref.listen<String?>(activeTagProvider, (_, tag) {
+      if (tag != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToActiveTag(tag));
+      }
+    });
     final theme = Theme.of(context);
 
     final topPadding = MediaQuery.of(context).padding.top;
@@ -127,30 +165,41 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                 loading: () =>
                     const Center(child: CircularProgressIndicator()),
                 error: (_, _) => const Center(child: Text('Ошибка загрузки')),
-                data: (tags) => ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: tags.length,
-                  itemBuilder: (ctx, i) {
-                    final tag = tags[i];
-                    return ListTile(
-                      dense: true,
-                      title: Text('#${tag.name}'),
-                      trailing: tag.count != null
-                          ? Text(
-                              '${tag.count}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.outline,
-                              ),
-                            )
-                          : null,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context)
-                            .pushNamed('/tag', arguments: tag);
-                      },
-                    );
-                  },
-                ),
+                data: (tags) {
+                  _tags = tags;
+                  return ListView.builder(
+                    controller: _tagsScrollController,
+                    padding: EdgeInsets.zero,
+                    itemCount: tags.length,
+                    itemBuilder: (ctx, i) {
+                      final tag = tags[i];
+                      final isActive = tag.name == activeTag;
+                      return ListTile(
+                        dense: true,
+                        selected: isActive,
+                        title: Text(
+                          '#${tag.name}',
+                          style: isActive
+                              ? const TextStyle(fontWeight: FontWeight.bold)
+                              : null,
+                        ),
+                        trailing: tag.count != null
+                            ? Text(
+                                '${tag.count}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.outline,
+                                ),
+                              )
+                            : null,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context)
+                              .pushNamed('/tag', arguments: tag);
+                        },
+                      );
+                    },
+                  );
+                },
               ),
             ),
             const Divider(height: 1),

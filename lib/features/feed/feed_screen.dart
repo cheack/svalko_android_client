@@ -30,11 +30,19 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final source = widget.source;
+      ref.read(activeTagProvider.notifier).state =
+          source is TagFeed ? source.tagName : null;
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    if (widget.source is TagFeed) {
+      ref.read(activeTagProvider.notifier).state = null;
+    }
     super.dispose();
   }
 

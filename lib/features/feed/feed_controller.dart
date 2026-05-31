@@ -13,6 +13,12 @@ import '../../core/result.dart';
 /// Overridden in main.dart with a cache-enabled instance.
 final apiProvider = Provider<SvalkoApi>((_) => SvalkoApi());
 
+/// Currently active tag name shown in the drawer, null when not in a tag feed.
+final activeTagProvider = StateProvider<String?>((ref) => null);
+
+/// Persists drawer tags list scroll offset across open/close.
+final drawerTagsScrollOffsetProvider = StateProvider<double>((ref) => 0);
+
 final repositoryProvider = Provider<SvalkoRepository>(
   (ref) => SvalkoRepository(api: ref.watch(apiProvider)),
 );
