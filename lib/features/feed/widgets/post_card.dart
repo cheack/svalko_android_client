@@ -58,7 +58,6 @@ class _PostCardState extends ConsumerState<PostCard> {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: widget.onTap,
         onLongPress: () => _showPostSheet(context, s, widget.post.id),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,6 +67,7 @@ class _PostCardState extends ConsumerState<PostCard> {
               publishedAt: widget.post.publishedAt,
               rating: _rating,
               borodaCount: _borodaCount,
+              onAuthorTap: widget.onTap,
             ),
             if (widget.post.imageUrls.isNotEmpty)
               ImageCarousel(urls: widget.post.imageUrls),
@@ -77,12 +77,15 @@ class _PostCardState extends ConsumerState<PostCard> {
               if (VideoLinkCard.isSupported(link))
                 VideoLinkCard(url: link, onTap: widget.onTap),
             if (widget.post.textHtml != null && widget.post.textHtml!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                child: CommentHtml(
-                  widget.post.textHtml!,
-                  onSvalkoPost: (id) => Navigator.of(context)
-                      .pushNamed('/post', arguments: id),
+              InkWell(
+                onTap: widget.onTap,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                  child: CommentHtml(
+                    widget.post.textHtml!,
+                    onSvalkoPost: (id) => Navigator.of(context)
+                        .pushNamed('/post', arguments: id),
+                  ),
                 ),
               ),
             if (widget.post.tags.isNotEmpty)
