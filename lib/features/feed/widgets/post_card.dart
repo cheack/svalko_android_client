@@ -13,19 +13,34 @@ import '../../../ui/widgets/post_tags.dart';
 import '../../../ui/widgets/video_link_card.dart';
 import '../../../ui/widgets/video_player_widget.dart';
 import '../../../ui/widgets/post_vote_section.dart';
+import '../../../ui/widgets/post_header.dart';
 
 
-class PostCard extends ConsumerWidget {
+class PostCard extends ConsumerStatefulWidget {
   const PostCard({super.key, required this.post, required this.onTap});
 
   final Post post;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends ConsumerState<PostCard> {
+  PostRating? _rating;
+  int? _borodaCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _rating = widget.post.rating;
+    _borodaCount = widget.post.borodaCount;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final s = AppStrings.of(ref.watch(languageProvider));
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -43,71 +58,68 @@ class PostCard extends ConsumerWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onTap,
-        onLongPress: () => _showPostSheet(context, s, post.id),
+        onTap: widget.onTap,
+        onLongPress: () => _showPostSheet(context, s, widget.post.id),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Author + date + actions
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 4, 0),
-              child: Row(
-                children: [
-                  Text(
-                    post.author.name,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _formatDate(post.publishedAt),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  const Spacer(),
-                  PostShareButton(postId: post.id, iconSize: 18, visualDensity: VisualDensity.compact),
-                  PostFavButton(post: post, iconSize: 18, visualDensity: VisualDensity.compact),
-                ],
-              ),
+            PostHeader(
+              author: widget.post.author.name,
+              publishedAt: widget.post.publishedAt,
+              rating: _rating,
+              borodaCount: _borodaCount,
             ),
-            if (post.imageUrls.isNotEmpty)
-              ImageCarousel(urls: post.imageUrls),
-            if (post.imageUrls.isEmpty && post.videoUrls.isNotEmpty)
-              VideoPlayerWidget(url: post.videoUrls.first),
-            for (final link in post.externalLinks)
+            if (widget.post.imageUrls.isNotEmpty)
+              ImageCarousel(urls: widget.post.imageUrls),
+            if (widget.post.imageUrls.isEmpty && widget.post.videoUrls.isNotEmpty)
+              VideoPlayerWidget(url: widget.post.videoUrls.first),
+            for (final link in widget.post.externalLinks)
               if (VideoLinkCard.isSupported(link))
-                VideoLinkCard(url: link, onTap: onTap),
-            if (post.textHtml != null && post.textHtml!.isNotEmpty)
+                VideoLinkCard(url: link, onTap: widget.onTap),
+            if (widget.post.textHtml != null && widget.post.textHtml!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
                 child: CommentHtml(
-                  post.textHtml!,
+                  widget.post.textHtml!,
                   onSvalkoPost: (id) => Navigator.of(context)
                       .pushNamed('/post', arguments: id),
                 ),
               ),
-            if (post.tags.isNotEmpty)
+            if (widget.post.tags.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-                child: PostTagsRow(tags: post.tags),
+                child: PostTagsRow(tags: widget.post.tags),
               ),
+            PostVoteSection(
+              postId: widget.post.id,
+              rating: widget.post.rating,
+              borodaCount: widget.post.borodaCount,
+              parsedVote: widget.post.parsedVote,
+              parsedBoroda: widget.post.parsedBoroda,
+              onRatingChanged: (r, bc) => setState(() {
+                _rating = r;
+                _borodaCount = bc;
+              }),
+            ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+              padding: const EdgeInsets.fromLTRB(4, 2, 12, 10),
               child: Row(
                 children: [
-                  const Icon(Icons.comment_outlined, size: 14),
-                  const SizedBox(width: 2),
-                  Text(s.commentsTooltip(post.commentCount),
-                      style: theme.textTheme.bodySmall),
+                  PostFavButton(post: widget.post, iconSize: 18, visualDensity: VisualDensity.compact),
+                  PostShareButton(postId: widget.post.id, iconSize: 18, visualDensity: VisualDensity.compact),
+                  const Spacer(),
+                  OutlinedButton.icon(
+                    onPressed: widget.onTap,
+                    icon: const Icon(Icons.comment_outlined, size: 14),
+                    label: Text(s.commentsTooltip(widget.post.commentCount)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: theme.textTheme.bodySmall,
+                    ),
+                  ),
                 ],
               ),
-            ),
-            PostVoteSection(
-              postId: post.id,
-              rating: post.rating,
-              borodaCount: post.borodaCount,
-              parsedVote: post.parsedVote,
-              parsedBoroda: post.parsedBoroda,
             ),
           ],
         ),
@@ -115,11 +127,6 @@ class PostCard extends ConsumerWidget {
     ));
   }
 
-  static String _formatDate(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
-      '${dt.day.toString().padLeft(2, '0')} '
-      '${dt.hour.toString().padLeft(2, '0')}:'
-      '${dt.minute.toString().padLeft(2, '0')}';
 
 
   static Future<void> _showPostSheet(
@@ -153,4 +160,3 @@ class PostCard extends ConsumerWidget {
     );
   }
 }
-
