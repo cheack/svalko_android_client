@@ -200,7 +200,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ),
             ),
           ),
-          if (visiblePage != null)
+          if (visiblePage != null &&
+              (visiblePage < (state.maxPage ?? visiblePage) ||
+                  visiblePage > 0))
             Positioned(
               bottom: 16 + MediaQuery.of(context).padding.bottom,
               left: 0,
