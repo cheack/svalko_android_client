@@ -7,6 +7,7 @@ import '../../core/result.dart';
 import '../../core/settings_storage.dart';
 import '../../features/feed/feed_controller.dart';
 import '../../models/tag.dart';
+import '../../ui/widgets/new_post_sheet.dart';
 
 final tagsProvider = FutureProvider<List<Tag>>((ref) async {
   final result = await ref.watch(repositoryProvider).getTags();
@@ -111,6 +112,22 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
               onTap: () {
                 ref.read(activeTagProvider.notifier).state = null;
                 Navigator.of(context).popUntil((r) => r.isFirst);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Написать!'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                final api = ref.read(apiProvider);
+                final settingsBox = ref.read(settingsBoxProvider);
+                if (!context.mounted) return;
+                final sent = await showNewPostSheet(context, api, settingsBox);
+                if (sent && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Пост отправлен')),
+                  );
+                }
               },
             ),
             ListTile(
