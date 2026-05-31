@@ -160,7 +160,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                 Navigator.of(context).pushNamed('/trends');
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: EdgeInsets.fromLTRB(16, 10, 16, 10 + MediaQuery.of(context).padding.bottom),
                 child: Row(
                   children: [
                     CachedNetworkImage(
