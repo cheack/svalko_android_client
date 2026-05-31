@@ -54,3 +54,22 @@ class LanguageNotifier extends Notifier<AppLanguage> {
 
 final languageProvider =
     NotifierProvider<LanguageNotifier, AppLanguage>(LanguageNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Auto-load media (GIF)
+// ---------------------------------------------------------------------------
+
+class AutoLoadMediaNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    final box = ref.watch(settingsBoxProvider);
+    final v = box.get('autoLoadMedia');
+    listenSelf((_, next) => box.put('autoLoadMedia', next.toString()));
+    return v == null ? true : v == 'true';
+  }
+
+  void set(bool value) => state = value;
+}
+
+final autoLoadMediaProvider =
+    NotifierProvider<AutoLoadMediaNotifier, bool>(AutoLoadMediaNotifier.new);

@@ -13,7 +13,7 @@ class VideoPlayerWidget extends StatefulWidget {
 }
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
-  late VideoPlayerController _vpc;
+  VideoPlayerController? _vpc;
   ChewieController? _chewie;
   bool _error = false;
 
@@ -27,17 +27,18 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     final url = widget.url;
     final name = Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
     AppLogger.instance.network('video start: $name');
-    _vpc = VideoPlayerController.networkUrl(Uri.parse(url));
+    final vpc = VideoPlayerController.networkUrl(Uri.parse(url));
+    _vpc = vpc;
     final sw = Stopwatch()..start();
     try {
-      await _vpc.initialize();
+      await vpc.initialize();
       sw.stop();
       AppLogger.instance.network('video ready: ${sw.elapsedMilliseconds}ms $name');
       if (!mounted) return;
       setState(() {
         _chewie = ChewieController(
-          videoPlayerController: _vpc,
-          aspectRatio: _vpc.value.aspectRatio,
+          videoPlayerController: vpc,
+          aspectRatio: vpc.value.aspectRatio,
           autoPlay: false,
           looping: false,
           allowFullScreen: true,
@@ -53,20 +54,23 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   @override
   void dispose() {
     _chewie?.dispose();
-    _vpc.dispose();
+    _vpc?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     if (_error) {
       return Container(
         height: 80,
         alignment: Alignment.center,
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        color: cs.surfaceContainerHigh,
         child: const Icon(Icons.videocam_off_outlined),
       );
     }
+
     if (_chewie == null) {
       return const SizedBox(
         height: 180,
