@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -190,21 +191,16 @@ class _FullscreenImageItemState extends State<_FullscreenImageItem>
                     );
                   },
                 )
-              : Image.network(
-                  widget.url,
+              : CachedNetworkImage(
+                  imageUrl: widget.url,
                   fit: BoxFit.contain,
-                  loadingBuilder: (_, child, progress) {
-                    if (progress == null) return child;
-                    final total = progress.expectedTotalBytes;
-                    final loaded = progress.cumulativeBytesLoaded;
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.white54,
-                        value: total != null ? loaded / total : null,
-                      ),
-                    );
-                  },
-                  errorBuilder: (_, _, _) => const Icon(
+                  progressIndicatorBuilder: (_, _, progress) => Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white54,
+                      value: progress.progress,
+                    ),
+                  ),
+                  errorWidget: (_, _, _) => const Icon(
                     Icons.broken_image,
                     color: Colors.white54,
                     size: 64,
