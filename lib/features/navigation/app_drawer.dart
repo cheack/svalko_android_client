@@ -27,6 +27,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
   bool _loadingRandom = false;
   late final ScrollController _tagsScrollController;
   List<Tag>? _tags;
+  String? _lastScrolledTag;
 
   @override
   void initState() {
@@ -45,12 +46,16 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     super.dispose();
   }
 
-  void _scrollToActiveTag(String activeTag) {
+  void _scrollToTag(String? tag) {
+    if (tag == null) {
+      if (_tagsScrollController.hasClients) _tagsScrollController.jumpTo(0);
+      return;
+    }
     final tags = _tags;
     if (tags == null || !_tagsScrollController.hasClients) return;
-    final index = tags.indexWhere((t) => t.name == activeTag);
+    final index = tags.indexWhere((t) => t.name == tag);
     if (index < 0) return;
-    const itemHeight = 48.0;
+    const itemHeight = 40.0;
     final target = (index * itemHeight).clamp(
       0.0,
       _tagsScrollController.position.maxScrollExtent,
@@ -80,12 +85,12 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     final tagsAsync = ref.watch(tagsProvider);
     final activeTag = ref.watch(activeTagProvider);
     final s = AppStrings.of(ref.watch(languageProvider));
-    ref.listen<String?>(activeTagProvider, (_, tag) {
-      if (tag != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToActiveTag(tag));
-      }
-    });
     final theme = Theme.of(context);
+
+    if (activeTag != _lastScrolledTag) {
+      _lastScrolledTag = activeTag;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToTag(activeTag));
+    }
 
     final topPadding = MediaQuery.of(context).padding.top;
 
@@ -162,6 +167,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                       final isActive = tag.name == activeTag;
                       return ListTile(
                         dense: true,
+                        visualDensity: const VisualDensity(vertical: -2),
                         selected: isActive,
                         title: Text(
                           '#${tag.name}',
