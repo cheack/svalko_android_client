@@ -211,6 +211,7 @@ class MediaImageState extends State<MediaImage>
         image: NetworkImage(url),
         controller: _gifController!,
         autostart: Autostart.loop,
+        width: double.infinity,
         fit: widget.fit,
         alignment: widget.alignment,
         placeholder: (_) => widget.loadingWidget ?? const ShimmerPlaceholder(),
