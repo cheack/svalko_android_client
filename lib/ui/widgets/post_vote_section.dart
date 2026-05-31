@@ -157,6 +157,24 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
   static String _borodaLabel(int v) => v == 1 ? 'МЕГАборода!' : 'борода!';
 }
 
+Widget _iconAsset(BuildContext context, String asset, double size, {double opacity = 1.0}) {
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  Widget img = Image.asset(asset, width: size, height: size);
+  if (dark) {
+    img = ColorFiltered(
+      colorFilter: const ColorFilter.matrix([
+        -1,  0,  0, 0, 255,
+         0, -1,  0, 0, 255,
+         0,  0, -1, 0, 255,
+         0,  0,  0, 1,   0,
+      ]),
+      child: img,
+    );
+  }
+  if (opacity != 1.0) img = Opacity(opacity: opacity, child: img);
+  return img;
+}
+
 class _VotedChip extends StatelessWidget {
   const _VotedChip(this.label, this.iconAsset, this.color);
 
@@ -176,7 +194,7 @@ class _VotedChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (iconAsset != null) ...[
-            Image.asset(iconAsset!, width: 14, height: 14),
+            _iconAsset(context, iconAsset!, 14),
             const SizedBox(width: 4),
           ],
           Text(label,
@@ -207,10 +225,7 @@ class _Btn extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (iconAsset != null) ...[
-              Opacity(
-                opacity: onTap != null ? 1.0 : 0.4,
-                child: Image.asset(iconAsset!, width: 12, height: 12),
-              ),
+              _iconAsset(context, iconAsset!, 12, opacity: onTap != null ? 1.0 : 0.4),
               const SizedBox(width: 3),
             ],
             Text(
