@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gif/gif.dart';
 import '../../core/l10n.dart';
@@ -138,13 +140,19 @@ class _FullscreenImageItem extends StatefulWidget {
 class _FullscreenImageItemState extends State<_FullscreenImageItem>
     with SingleTickerProviderStateMixin {
   late final GifController? _gifController;
+  Future<File>? _gifFile;
 
   bool get _isGif => widget.url.toLowerCase().contains('.gif');
 
   @override
   void initState() {
     super.initState();
-    _gifController = _isGif ? GifController(vsync: this) : null;
+    if (_isGif) {
+      _gifController = GifController(vsync: this);
+      _gifFile = DefaultCacheManager().getSingleFile(widget.url);
+    } else {
+      _gifController = null;
+    }
   }
 
   @override
@@ -163,14 +171,24 @@ class _FullscreenImageItemState extends State<_FullscreenImageItem>
           width: constraints.maxWidth,
           height: constraints.maxHeight,
           child: _isGif
-              ? Gif(
-                  image: NetworkImage(widget.url),
-                  controller: _gifController!,
-                  autostart: Autostart.loop,
-                  fit: BoxFit.contain,
-                  placeholder: (_) => const Center(
-                    child: CircularProgressIndicator(color: Colors.white54),
-                  ),
+              ? FutureBuilder<File>(
+                  future: _gifFile,
+                  builder: (_, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white54),
+                      );
+                    }
+                    return Gif(
+                      image: FileImage(snapshot.data!),
+                      controller: _gifController!,
+                      autostart: Autostart.loop,
+                      fit: BoxFit.contain,
+                      placeholder: (_) => const Center(
+                        child: CircularProgressIndicator(color: Colors.white54),
+                      ),
+                    );
+                  },
                 )
               : Image.network(
                   widget.url,

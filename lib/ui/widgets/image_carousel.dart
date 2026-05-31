@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:gif/gif.dart';
 import '../../core/app_logger.dart';
 import 'image_viewer.dart';
@@ -183,6 +185,8 @@ class MediaImageState extends State<MediaImage>
     with SingleTickerProviderStateMixin {
   bool _readyLogged = false;
   late final GifController? _gifController;
+  File? _gifFile;
+  double? _downloadProgress;
 
   static String _name(String url) =>
       Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
@@ -191,7 +195,21 @@ class MediaImageState extends State<MediaImage>
   void initState() {
     super.initState();
     final isGif = widget.url.toLowerCase().contains('.gif');
-    _gifController = isGif ? GifController(vsync: this) : null;
+    if (isGif) {
+      _gifController = GifController(vsync: this);
+      DefaultCacheManager().getFileStream(widget.url, withProgress: true).listen(
+        (event) {
+          if (!mounted) return;
+          if (event is DownloadProgress) {
+            setState(() => _downloadProgress = event.progress);
+          } else if (event is FileInfo) {
+            setState(() => _gifFile = event.file);
+          }
+        },
+      );
+    } else {
+      _gifController = null;
+    }
     AppLogger.instance.network('${isGif ? 'gif' : 'img'} start: ${_name(widget.url)}');
   }
 
@@ -201,40 +219,46 @@ class MediaImageState extends State<MediaImage>
     super.dispose();
   }
 
+  Widget _loadingPlaceholder(double? progress) => Stack(
+    alignment: Alignment.center,
+    children: [
+      widget.loadingWidget ?? const ShimmerPlaceholder(),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          progress != null ? '${(progress * 100).round()}%' : 'Загрузка...',
+          style: const TextStyle(fontSize: 13, color: Colors.white),
+        ),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     final url = widget.url;
     final name = _name(url);
 
     if (url.toLowerCase().contains('.gif')) {
+      if (_gifFile == null) return _loadingPlaceholder(_downloadProgress);
       return Gif(
-        image: NetworkImage(url),
-        controller: _gifController!,
-        autostart: Autostart.loop,
-        width: double.infinity,
-        fit: widget.fit,
-        alignment: widget.alignment,
-        placeholder: (_) => Stack(
-          alignment: Alignment.center,
-          children: [
-            widget.loadingWidget ?? const ShimmerPlaceholder(),
-            const Text(
-              'Загрузка...',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white,
-                shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-              ),
-            ),
-          ],
-        ),
-        onFetchCompleted: () {
-          if (!_readyLogged) {
-            _readyLogged = true;
-            AppLogger.instance.network('gif ready: $name');
-          }
-        },
-      );
+            image: FileImage(_gifFile!),
+            controller: _gifController!,
+            autostart: Autostart.loop,
+            width: double.infinity,
+            fit: widget.fit,
+            alignment: widget.alignment,
+            placeholder: (_) => _loadingPlaceholder(null),
+            onFetchCompleted: () {
+              if (!_readyLogged) {
+                _readyLogged = true;
+                AppLogger.instance.network('gif ready: $name');
+              }
+            },
+          );
     }
 
     return CachedNetworkImage(
