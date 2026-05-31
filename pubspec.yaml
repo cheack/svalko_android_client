@@ -64,6 +64,7 @@ dependencies:
   flutter_launcher_icons: ^0.14.3
   flutter_widget_from_html: ^0.17.2
   gif: ^2.3.0
+  flutter_cache_manager: ^3.4.1
 
 dev_dependencies:
   flutter_test:
