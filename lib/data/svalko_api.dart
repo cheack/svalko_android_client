@@ -177,9 +177,14 @@ class SvalkoApi {
     return _get(url, cacheOptions: cacheOptions);
   }
 
-  Future<Result<CommentFormData, AppError>> fetchCommentForm(int postId) async {
+  Future<Result<CommentFormData, AppError>> fetchPostForm() =>
+      _fetchForm('${Config.baseUrl}/update.html');
+
+  Future<Result<CommentFormData, AppError>> fetchCommentForm(int postId) =>
+      _fetchForm('${Config.baseUrl}/update.html?comment=$postId');
+
+  Future<Result<CommentFormData, AppError>> _fetchForm(String url) async {
     try {
-      final url = '${Config.baseUrl}/update.html?comment=$postId';
       final response = await _dio.get<dynamic>(
         url,
         options: Options(responseType: ResponseType.bytes, followRedirects: false),
@@ -284,26 +289,40 @@ class SvalkoApi {
     }
   }
 
+  Future<Result<void, AppError>> submitPost({
+    required String author,
+    required String text,
+    required CommentFormData form,
+  }) => _submitUpdate(author: author, text: text, form: form);
+
   Future<Result<void, AppError>> submitComment({
     required int postId,
     required String author,
     required String text,
     required CommentFormData form,
+  }) => _submitUpdate(author: author, text: text, form: form, postId: postId);
+
+  Future<Result<void, AppError>> _submitUpdate({
+    required String author,
+    required String text,
+    required CommentFormData form,
+    int? postId,
   }) async {
     try {
       final encodedAuthor = await encodeQueryWin1251(author);
       final encodedText = await encodeQueryWin1251(text);
       final encodedSubmit = await encodeQueryWin1251('Да!');
-      final body = 'upload_id=${Uri.encodeQueryComponent(form.uploadId)}'
-          '&upload_key=${Uri.encodeQueryComponent(form.uploadKey)}'
-          '&comment=$postId'
-          '&pre_id=0'
-          '&author=$encodedAuthor'
-          '&article=$encodedText'
-          '&formsubmit=$encodedSubmit';
+      final body = StringBuffer()
+        ..write('upload_id=${Uri.encodeQueryComponent(form.uploadId)}')
+        ..write('&upload_key=${Uri.encodeQueryComponent(form.uploadKey)}')
+        ..write('&comment=${postId ?? 0}')
+        ..write('&pre_id=0')
+        ..write('&author=$encodedAuthor')
+        ..write('&article=$encodedText')
+        ..write('&formsubmit=$encodedSubmit');
       await _dio.post<dynamic>(
         '${Config.baseUrl}/?mode=update',
-        data: body,
+        data: body.toString(),
         options: Options(
           contentType: 'application/x-www-form-urlencoded',
           headers: {if (form.cookie.isNotEmpty) 'Cookie': form.cookie},
