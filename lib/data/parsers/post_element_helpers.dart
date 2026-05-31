@@ -68,6 +68,7 @@ List<String> parseImageUrls(Element el) {
   if (textDiv == null) return const [];
   return textDiv.querySelectorAll('img').map((img) {
     final parent = img.parent;
+    if (parent?.classes.contains('video') == true) return '';
     final href = parent?.attributes['href'] ?? '';
     final imageViewMatch = _imageViewRe.firstMatch(href);
     if (imageViewMatch != null) return '${Config.baseUrl}/data/${imageViewMatch.group(1)}';
