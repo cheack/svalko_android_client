@@ -180,14 +180,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   }
                   final post = state.posts[i];
                   final pageAtIndex = indexToPage[i];
-                  return PostCard(
-                    key: pageAtIndex != null ? _keyFor(pageAtIndex) : null,
+                  final card = PostCard(
+                    key: ValueKey(post.id),
                     post: post,
                     onTap: () => Navigator.of(ctx).pushNamed(
                       '/post',
                       arguments: post.id,
                     ),
                   );
+                  return pageAtIndex != null
+                      ? KeyedSubtree(key: _keyFor(pageAtIndex), child: card)
+                      : card;
                 },
               ),
             ),
