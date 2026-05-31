@@ -12,10 +12,12 @@ import '../../ui/widgets/comment_input_sheet.dart';
 import '../../ui/widgets/media_actions.dart';
 import '../../ui/widgets/post_tags.dart';
 import '../../ui/widgets/post_vote_section.dart';
+import '../../ui/widgets/post_header.dart';
 import '../../ui/widgets/video_embed_player.dart';
 import '../../ui/widgets/video_link_card.dart';
 import '../../ui/widgets/video_player_widget.dart';
 import '../../core/result.dart';
+import '../../models/post.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
   const PostScreen({super.key, required this.postId, this.highlightCommentId, this.showShuffle = false});
@@ -38,6 +40,8 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   bool _fabVisible = true;
   double _lastScrollOffset = 0;
   bool _loadingRandom = false;
+  PostRating? _rating;
+  int? _borodaCount;
 
   @override
   void initState() {
@@ -125,11 +129,6 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     );
   }
 
-  String _fmt(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
-      '${dt.day.toString().padLeft(2, '0')} '
-      '${dt.hour.toString().padLeft(2, '0')}:'
-      '${dt.minute.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -229,27 +228,13 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         controller: _scrollController,
         padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).padding.bottom),
         children: [
-          // Post header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.of(context)
-                      .pushNamed('/author', arguments: post.author),
-                  child: Text(
-                    post.author.name,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                  ),
-                ),
-                Text(
-                  '  ${_fmt(post.publishedAt)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
+          PostHeader(
+            author: post.author.name,
+            publishedAt: post.publishedAt,
+            rating: _rating ?? post.rating,
+            borodaCount: _borodaCount ?? post.borodaCount,
+            onAuthorTap: () => Navigator.of(context)
+                .pushNamed('/author', arguments: post.author),
           ),
           // Post images
           if (post.imageUrls.isNotEmpty)
@@ -300,6 +285,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
             borodaCount: post.borodaCount,
             parsedVote: post.parsedVote,
             parsedBoroda: post.parsedBoroda,
+            onRatingChanged: (r, bc) => setState(() {
+              _rating = r;
+              _borodaCount = bc;
+            }),
           ),
           const Divider(height: 24),
           // Comments section header — anchor for scroll

@@ -13,6 +13,7 @@ class PostVoteSection extends ConsumerStatefulWidget {
     this.borodaCount,
     this.parsedVote,
     this.parsedBoroda,
+    this.onRatingChanged,
   });
 
   final int postId;
@@ -20,14 +21,14 @@ class PostVoteSection extends ConsumerStatefulWidget {
   final int? borodaCount;
   final int? parsedVote;
   final bool? parsedBoroda;
+  final void Function(PostRating rating, int? borodaCount)? onRatingChanged;
 
   @override
   ConsumerState<PostVoteSection> createState() => _PostVoteSectionState();
 }
 
 class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
-  static final _ratingRe =
-      RegExp(r'([+-]?\d+)\|(\d+)\|([+-]?\d+)\s*=\s*([+-]?\d+)%');
+  static final _ratingRe = RegExp(r'([+-]?\d+)\|(\d+)\|([+-]?\d+)\s*=\s*([+-]?\d+)%');
 
   PostRating? _rating;
   int? _borodaCount;
@@ -67,17 +68,18 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
   Future<void> _doVote(int value) async {
     if (_vote != null || _votingVote) return;
     setState(() => _votingVote = true);
-    final result =
-        await ref.read(repositoryProvider).vote(widget.postId, value);
+    final result = await ref.read(repositoryProvider).vote(widget.postId, value);
     if (!mounted) return;
-    final updated = result.valueOrNull;
-    final newRating = updated != null ? _parseRating(updated) : null;
     if (result.isOk) await ref.read(votesBoxProvider).put(_vKey, '$value');
+    final newRating = result.valueOrNull != null ? _parseRating(result.valueOrNull!) : null;
     setState(() {
       _votingVote = false;
       if (result.isOk) {
         _vote = value;
-        if (newRating != null) _rating = newRating;
+        if (newRating != null) {
+          _rating = newRating;
+          widget.onRatingChanged?.call(_rating!, _borodaCount);
+        }
       }
     });
   }
@@ -85,16 +87,18 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
   Future<void> _doBoroda(int value) async {
     if (_boroda != null || _votingBoroda) return;
     setState(() => _votingBoroda = true);
-    final result =
-        await ref.read(repositoryProvider).boroda(widget.postId, value);
+    final result = await ref.read(repositoryProvider).boroda(widget.postId, value);
     if (!mounted) return;
-    final newCount = int.tryParse(result.valueOrNull?.trim() ?? '');
     if (result.isOk) await ref.read(votesBoxProvider).put(_bKey, '$value');
+    final newCount = int.tryParse(result.valueOrNull?.trim() ?? '');
     setState(() {
       _votingBoroda = false;
       if (result.isOk) {
         _boroda = value;
-        if (newCount != null) _borodaCount = newCount;
+        if (newCount != null) {
+          _borodaCount = newCount;
+          if (_rating != null) widget.onRatingChanged?.call(_rating!, _borodaCount);
+        }
       }
     });
   }
@@ -121,17 +125,7 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_rating != null || _borodaCount != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-              child: Text(
-                _ratingText(),
-                style: theme.textTheme.bodySmall?.copyWith(color: color),
-              ),
-            ),
-          Wrap(
-            spacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          Row(
             children: [
               if (_vote == null) ...[
                 _Btn('? я чото п',  null,                        _votingVote ? null : () => _doVote(0),  color),
@@ -145,6 +139,7 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
                 _Btn('МЕГАборода!', 'assets/icons/megaboroda.png', _votingBoroda ? null : () => _doBoroda(1), color),
               ] else
                 _VotedChip(_borodaLabel(_boroda!), _boroda == 1 ? 'assets/icons/megaboroda.png' : 'assets/icons/boroda.png', primary),
+              const Spacer(),
             ],
           ),
         ],
@@ -152,15 +147,6 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
     );
   }
 
-  String _ratingText() {
-    final parts = <String>[];
-    if (_rating != null) {
-      final r = _rating!;
-      parts.add('+${r.plus} | ${r.neutral} | ${r.minus} = ${r.percentage}%');
-    }
-    if (_borodaCount != null) parts.add('бород: $_borodaCount');
-    return parts.join('  ·  ');
-  }
 
   static String _voteLabel(int v) => switch (v) {
         1  => 'зачот',
@@ -216,21 +202,21 @@ class _Btn extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (iconAsset != null) ...[
               Opacity(
                 opacity: onTap != null ? 1.0 : 0.4,
-                child: Image.asset(iconAsset!, width: 14, height: 14),
+                child: Image.asset(iconAsset!, width: 12, height: 12),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 3),
             ],
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 color: onTap != null ? color : color.withValues(alpha: 0.4),
               ),
             ),
