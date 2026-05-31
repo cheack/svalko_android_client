@@ -65,6 +65,7 @@ dependencies:
   flutter_widget_from_html: ^0.17.2
   gif: ^2.3.0
   flutter_cache_manager: ^3.4.1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

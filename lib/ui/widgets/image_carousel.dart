@@ -3,8 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gif/gif.dart';
+import 'package:http/http.dart' as http;
 import '../../core/app_logger.dart';
+import '../../core/settings_storage.dart';
 import 'image_viewer.dart';
 import 'media_actions.dart';
 import 'shimmer_placeholder.dart';
@@ -164,7 +167,7 @@ class _NavArrow extends StatelessWidget {
   }
 }
 
-class MediaImage extends StatefulWidget {
+class MediaImage extends ConsumerStatefulWidget {
   const MediaImage({
     super.key,
     required this.url,
@@ -179,43 +182,82 @@ class MediaImage extends StatefulWidget {
   final Widget? loadingWidget;
 
   @override
-  State<MediaImage> createState() => MediaImageState();
+  ConsumerState<MediaImage> createState() => MediaImageState();
 }
 
 // Keep at most this many decoded GIF frame-sets in memory at once.
 const int _kMaxCachedGifs = 4;
 
-class MediaImageState extends State<MediaImage>
+class MediaImageState extends ConsumerState<MediaImage>
     with SingleTickerProviderStateMixin {
   bool _readyLogged = false;
   late final GifController? _gifController;
   File? _gifFile;
   double? _downloadProgress;
   StreamSubscription<FileResponse>? _downloadSub;
+  // null = unknown, 0 = not cached, >0 = bytes
+  int? _remoteSize;
+  bool _manuallyTriggered = false;
 
   static String _name(String url) =>
       Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
 
+  bool get _isGif => widget.url.toLowerCase().contains('.gif');
+
+  /// Derives the server-generated static preview URL from the full GIF URL.
+  static String? _gifPreviewUrl(String url) {
+    const marker = '/data/';
+    final idx = url.indexOf(marker);
+    if (idx < 0) return null;
+    return '${url.substring(0, idx)}/data/gif-previews/${url.substring(idx + marker.length)}';
+  }
+
   @override
   void initState() {
     super.initState();
-    final isGif = widget.url.toLowerCase().contains('.gif');
-    if (isGif) {
+    if (_isGif) {
       _gifController = GifController(vsync: this);
-      _downloadSub = DefaultCacheManager()
-          .getFileStream(widget.url, withProgress: true)
-          .listen((event) {
+      final autoLoad = ref.read(autoLoadMediaProvider);
+      // Check if already cached on disk — always load from cache regardless of setting.
+      DefaultCacheManager().getFileFromCache(widget.url).then((info) {
         if (!mounted) return;
-        if (event is DownloadProgress) {
-          setState(() => _downloadProgress = event.progress);
-        } else if (event is FileInfo) {
-          setState(() => _gifFile = event.file);
+        if (info != null) {
+          _startDownload();
+        } else if (autoLoad) {
+          _startDownload();
+        } else {
+          _fetchRemoteSize();
         }
       });
     } else {
       _gifController = null;
     }
-    AppLogger.instance.network('${isGif ? 'gif' : 'img'} start: ${_name(widget.url)}');
+    AppLogger.instance.network('${_isGif ? 'gif' : 'img'} start: ${_name(widget.url)}');
+  }
+
+  void _startDownload() {
+    if (_downloadSub != null) return;
+    setState(() => _manuallyTriggered = true);
+    _downloadSub = DefaultCacheManager()
+        .getFileStream(widget.url, withProgress: true)
+        .listen((event) {
+      if (!mounted) return;
+      if (event is DownloadProgress) {
+        setState(() => _downloadProgress = event.progress);
+      } else if (event is FileInfo) {
+        setState(() => _gifFile = event.file);
+      }
+    });
+  }
+
+  Future<void> _fetchRemoteSize() async {
+    try {
+      final response = await http.head(Uri.parse(widget.url));
+      final cl = response.headers['content-length'];
+      if (mounted && cl != null) {
+        setState(() => _remoteSize = int.tryParse(cl));
+      }
+    } catch (_) {}
   }
 
   @override
@@ -239,10 +281,30 @@ class MediaImageState extends State<MediaImage>
     }
   }
 
+  String _formatBytes(int bytes) {
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).round()} КБ';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} МБ';
+  }
+
+  Widget _gifBackground() {
+    final preview = _gifPreviewUrl(widget.url);
+    if (preview == null) return widget.loadingWidget ?? const ShimmerPlaceholder();
+    return CachedNetworkImage(
+      imageUrl: preview,
+      width: double.infinity,
+      fit: widget.fit,
+      alignment: widget.alignment,
+      placeholder: (_, _) => widget.loadingWidget ?? const ShimmerPlaceholder(),
+      errorWidget: (_, _, _) => widget.loadingWidget ?? const ShimmerPlaceholder(),
+      fadeInDuration: const Duration(milliseconds: 200),
+      fadeOutDuration: Duration.zero,
+    );
+  }
+
   Widget _loadingPlaceholder(double? progress) => Stack(
     alignment: Alignment.center,
     children: [
-      widget.loadingWidget ?? const ShimmerPlaceholder(),
+      _gifBackground(),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
@@ -257,12 +319,43 @@ class MediaImageState extends State<MediaImage>
     ],
   );
 
+  Widget _manualLoadPlaceholder() => GestureDetector(
+    onTap: _startDownload,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        _gifBackground(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.download_rounded, size: 28, color: Colors.white),
+              const SizedBox(height: 4),
+              Text(
+                _remoteSize != null ? 'GIF · ${_formatBytes(_remoteSize!)}' : 'GIF',
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final url = widget.url;
     final name = _name(url);
 
     if (url.toLowerCase().contains('.gif')) {
+      if (_gifFile == null && !_manuallyTriggered) {
+        return _manualLoadPlaceholder();
+      }
       if (_gifFile == null) return _loadingPlaceholder(_downloadProgress);
       return Gif(
             image: FileImage(_gifFile!),

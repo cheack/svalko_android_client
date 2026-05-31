@@ -65,6 +65,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = ref.watch(languageProvider);
     final skin = ref.watch(skinProvider);
+    final autoLoadMedia = ref.watch(autoLoadMediaProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
@@ -114,6 +115,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ],
             ),
+          ),
+
+          // ── Медиа ─────────────────────────────────────────────────────────
+          const _SectionHeader('Медиа'),
+          SwitchListTile(
+            title: const Text('Автозагрузка GIF'),
+            subtitle: const Text('При отключении — загрузка по кнопке'),
+            value: autoLoadMedia,
+            onChanged: (v) => ref.read(autoLoadMediaProvider.notifier).set(v),
           ),
 
           // ── Кэш ───────────────────────────────────────────────────────────
