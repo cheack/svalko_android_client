@@ -40,9 +40,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    if (widget.source is TagFeed) {
-      ref.read(activeTagProvider.notifier).state = null;
-    }
     super.dispose();
   }
 

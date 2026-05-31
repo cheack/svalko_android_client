@@ -103,7 +103,10 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
             ListTile(
               leading: const Icon(Icons.home_outlined),
               title: Text(s.navHome),
-              onTap: () => Navigator.of(context).popUntil((r) => r.isFirst),
+              onTap: () {
+                ref.read(activeTagProvider.notifier).state = null;
+                Navigator.of(context).popUntil((r) => r.isFirst);
+              },
             ),
             ListTile(
               leading: _loadingRandom
@@ -130,23 +133,6 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).pushNamed('/favorites');
-              },
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: const Text('Настройки'),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/settings');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('О приложении'),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/about');
               },
             ),
             const Divider(height: 1),
@@ -201,6 +187,23 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                   );
                 },
               ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Настройки'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/settings');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('О приложении'),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/about');
+              },
             ),
             const Divider(height: 1),
             InkWell(
