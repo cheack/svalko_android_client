@@ -26,14 +26,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _loadCacheSize() async {
-    final dir = await _cacheDir();
-    if (dir == null) {
-      if (mounted) setState(() => _cacheBytes = 0);
-      return;
-    }
     int total = 0;
-    await for (final entity in dir.list(recursive: true)) {
-      if (entity is File) total += await entity.length();
+    final dirs = [
+      await _cacheDir(),
+      await getTemporaryDirectory().then((t) {
+        final d = Directory('${t.path}/video_thumbs');
+        return d.existsSync() ? d : null;
+      }),
+    ];
+    for (final dir in dirs) {
+      if (dir == null) continue;
+      await for (final entity in dir.list(recursive: true)) {
+        if (entity is File) total += await entity.length();
+      }
     }
     if (mounted) setState(() => _cacheBytes = total);
   }
@@ -46,13 +51,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _clearCache() async {
     setState(() => _clearing = true);
-    await DefaultCacheManager().emptyCache();
-    final dir = await _cacheDir();
-    if (dir != null) await dir.delete(recursive: true);
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
-    Gif.cache.clear();
-    if (mounted) setState(() { _cacheBytes = 0; _clearing = false; });
+    try {
+      await DefaultCacheManager().emptyCache();
+      final dir = await _cacheDir();
+      if (dir != null) await dir.delete(recursive: true);
+      final tmp = await getTemporaryDirectory();
+      final videoThumbsDir = Directory('${tmp.path}/video_thumbs');
+      if (videoThumbsDir.existsSync()) await videoThumbsDir.delete(recursive: true);
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+      Gif.cache.clear();
+      if (mounted) setState(() { _cacheBytes = 0; _clearing = false; });
+    } catch (e) {
+      if (mounted) setState(() => _clearing = false);
+    }
   }
 
   String _formatBytes(int bytes) {
@@ -66,6 +78,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final lang = ref.watch(languageProvider);
     final skin = ref.watch(skinProvider);
     final autoLoadMedia = ref.watch(autoLoadMediaProvider);
+    final autoLoadVideo = ref.watch(autoLoadVideoProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
@@ -124,6 +137,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             subtitle: const Text('При отключении — загрузка по кнопке'),
             value: autoLoadMedia,
             onChanged: (v) => ref.read(autoLoadMediaProvider.notifier).set(v),
+          ),
+          SwitchListTile(
+            title: const Text('Автозагрузка видео'),
+            subtitle: const Text('При отключении — превью с кнопкой Play'),
+            value: autoLoadVideo,
+            onChanged: (v) => ref.read(autoLoadVideoProvider.notifier).set(v),
           ),
 
           // ── Кэш ───────────────────────────────────────────────────────────
