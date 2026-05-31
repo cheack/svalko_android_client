@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -181,12 +182,16 @@ class MediaImage extends StatefulWidget {
   State<MediaImage> createState() => MediaImageState();
 }
 
+// Keep at most this many decoded GIF frame-sets in memory at once.
+const int _kMaxCachedGifs = 4;
+
 class MediaImageState extends State<MediaImage>
     with SingleTickerProviderStateMixin {
   bool _readyLogged = false;
   late final GifController? _gifController;
   File? _gifFile;
   double? _downloadProgress;
+  StreamSubscription<FileResponse>? _downloadSub;
 
   static String _name(String url) =>
       Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
@@ -197,16 +202,16 @@ class MediaImageState extends State<MediaImage>
     final isGif = widget.url.toLowerCase().contains('.gif');
     if (isGif) {
       _gifController = GifController(vsync: this);
-      DefaultCacheManager().getFileStream(widget.url, withProgress: true).listen(
-        (event) {
-          if (!mounted) return;
-          if (event is DownloadProgress) {
-            setState(() => _downloadProgress = event.progress);
-          } else if (event is FileInfo) {
-            setState(() => _gifFile = event.file);
-          }
-        },
-      );
+      _downloadSub = DefaultCacheManager()
+          .getFileStream(widget.url, withProgress: true)
+          .listen((event) {
+        if (!mounted) return;
+        if (event is DownloadProgress) {
+          setState(() => _downloadProgress = event.progress);
+        } else if (event is FileInfo) {
+          setState(() => _gifFile = event.file);
+        }
+      });
     } else {
       _gifController = null;
     }
@@ -215,8 +220,23 @@ class MediaImageState extends State<MediaImage>
 
   @override
   void dispose() {
+    _downloadSub?.cancel();
     _gifController?.dispose();
+    _evictGifCacheIfNeeded(widget.url);
     super.dispose();
+  }
+
+  static void _evictGifCacheIfNeeded(String url) {
+    final cache = Gif.cache.caches;
+    if (cache.length > _kMaxCachedGifs) {
+      final toRemove = cache.keys
+          .where((k) => k != url)
+          .take(cache.length - _kMaxCachedGifs)
+          .toList();
+      for (final key in toRemove) {
+        cache.remove(key);
+      }
+    }
   }
 
   Widget _loadingPlaceholder(double? progress) => Stack(
