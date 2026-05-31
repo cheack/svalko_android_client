@@ -214,7 +214,20 @@ class MediaImageState extends State<MediaImage>
         width: double.infinity,
         fit: widget.fit,
         alignment: widget.alignment,
-        placeholder: (_) => widget.loadingWidget ?? const ShimmerPlaceholder(),
+        placeholder: (_) => Stack(
+          alignment: Alignment.center,
+          children: [
+            widget.loadingWidget ?? const ShimmerPlaceholder(),
+            const Text(
+              'Загрузка...',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.white,
+                shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+              ),
+            ),
+          ],
+        ),
         onFetchCompleted: () {
           if (!_readyLogged) {
             _readyLogged = true;
