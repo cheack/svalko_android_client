@@ -25,11 +25,42 @@ class PostHeader extends StatefulWidget {
     return buf.toString();
   }
 
-  static String formatDate(DateTime dt) =>
+  static String formatExactDate(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
       '${dt.day.toString().padLeft(2, '0')} '
       '${dt.hour.toString().padLeft(2, '0')}:'
       '${dt.minute.toString().padLeft(2, '0')}';
+
+  static String _pluralize(int n, String one, String few, String many) {
+    final mod10 = n % 10;
+    final mod100 = n % 100;
+    if (mod10 == 1 && mod100 != 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+    return many;
+  }
+
+  static String formatRelativeTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'только что';
+    if (diff.inHours < 1) {
+      final m = diff.inMinutes;
+      return '$m ${_pluralize(m, 'минуту', 'минуты', 'минут')} назад';
+    }
+    if (diff.inDays < 1) {
+      final h = diff.inHours;
+      return '$h ${_pluralize(h, 'час', 'часа', 'часов')} назад';
+    }
+    if (diff.inDays < 30) {
+      final d = diff.inDays;
+      return '$d ${_pluralize(d, 'день', 'дня', 'дней')} назад';
+    }
+    final months = diff.inDays ~/ 30;
+    if (months < 12) {
+      return '$months ${_pluralize(months, 'месяц', 'месяца', 'месяцев')} назад';
+    }
+    final years = months ~/ 12;
+    return '$years ${_pluralize(years, 'год', 'года', 'лет')} назад';
+  }
 
   @override
   State<PostHeader> createState() => _PostHeaderState();
@@ -37,6 +68,7 @@ class PostHeader extends StatefulWidget {
 
 class _PostHeaderState extends State<PostHeader> {
   final _ratingKey = GlobalKey();
+  final _dateKey = GlobalKey();
   OverlayEntry? _overlay;
 
   @override
@@ -50,16 +82,16 @@ class _PostHeaderState extends State<PostHeader> {
     _overlay = null;
   }
 
-  void _showRatingPopup() {
-    final r = widget.rating;
-    if (r == null) return;
+  void _showPopup(GlobalKey anchorKey, Widget content) {
     _dismiss();
-
-    final box = _ratingKey.currentContext?.findRenderObject() as RenderBox?;
+    final box = anchorKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return;
     final offset = box.localToGlobal(Offset.zero);
     final size = box.size;
     final screenWidth = MediaQuery.of(context).size.width;
+
+    final bool anchorLeft = offset.dx < screenWidth / 2;
+    final double edgeMargin = 8;
 
     _overlay = OverlayEntry(builder: (ctx) {
       return Stack(
@@ -72,33 +104,27 @@ class _PostHeaderState extends State<PostHeader> {
           ),
           Positioned(
             top: offset.dy + size.height + 4,
-            right: screenWidth - offset.dx - size.width,
+            left: anchorLeft
+                ? offset.dx.clamp(edgeMargin, screenWidth - edgeMargin)
+                : null,
+            right: anchorLeft
+                ? null
+                : (screenWidth - offset.dx - size.width)
+                    .clamp(edgeMargin, screenWidth - edgeMargin),
             child: Material(
-              elevation: 6,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: DefaultTextStyle(
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface,
-                    height: 1.6,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('ЗАЧОТ: +${r.plus}'),
-                      Text('? я чото п: ${r.neutral}'),
-                      Text('КГ/АМ: ${r.minus}'),
-                      const Divider(height: 10),
-                      Text('ИТОГО: ${r.percentage}%'),
-                      if (widget.borodaCount != null && widget.borodaCount! > 0)
-                        Text('Бород: ${widget.borodaCount}'),
-                    ],
+                elevation: 6,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: DefaultTextStyle(
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      height: 1.6,
+                    ),
+                    child: content,
                   ),
                 ),
-              ),
             ),
           ),
         ],
@@ -108,6 +134,34 @@ class _PostHeaderState extends State<PostHeader> {
     Overlay.of(context).insert(_overlay!);
   }
 
+  void _showRatingPopup() {
+    final r = widget.rating;
+    if (r == null) return;
+    _showPopup(
+      _ratingKey,
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('ЗАЧОТ: +${r.plus}'),
+          Text('? я чото п: ${r.neutral}'),
+          Text('КГ/АМ: ${r.minus}'),
+          const Divider(height: 10),
+          Text('ИТОГО: ${r.percentage}%'),
+          if (widget.borodaCount != null && widget.borodaCount! > 0)
+            Text('Бород: ${widget.borodaCount}'),
+        ],
+      ),
+    );
+  }
+
+  void _showDatePopup() {
+    _showPopup(
+      _dateKey,
+      Text(PostHeader.formatExactDate(widget.publishedAt)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -115,36 +169,54 @@ class _PostHeaderState extends State<PostHeader> {
 
     return Padding(
       padding: widget.padding,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          GestureDetector(
-            onTap: widget.onAuthorTap,
-            child: Text(
-              widget.author,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: cs.primary,
-                fontWeight: FontWeight.w900,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxAuthorWidth = constraints.maxWidth * 0.75;
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxAuthorWidth),
+                    child: GestureDetector(
+                      onTap: widget.onAuthorTap,
+                      child: Text(
+                        widget.author,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    key: _dateKey,
+                    onTap: _showDatePopup,
+                    child: Text(
+                      PostHeader.formatRelativeTime(widget.publishedAt),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            PostHeader.formatDate(widget.publishedAt),
-            style: theme.textTheme.bodySmall,
-          ),
-          const Spacer(),
-          if (widget.rating != null)
-            GestureDetector(
-              key: _ratingKey,
-              onTap: _showRatingPopup,
-              child: Text(
-                PostHeader.formatRating(widget.rating!, widget.borodaCount),
-                style: theme.textTheme.bodySmall?.copyWith(color: cs.outline),
-              ),
-            ),
-        ],
+              const Spacer(),
+              if (widget.rating != null)
+                GestureDetector(
+                  key: _ratingKey,
+                  onTap: _showRatingPopup,
+                  child: Text(
+                    PostHeader.formatRating(widget.rating!, widget.borodaCount),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: cs.outline),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
