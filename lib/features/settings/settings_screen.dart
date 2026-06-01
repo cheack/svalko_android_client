@@ -119,12 +119,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 RadioListTile(
                   value: AppSkin.blue,
                   title: Text('Синий (спасибо Татьяне)'),
-                  subtitle: Text('Светлая тема, как на сайте'),
+                ),
+                RadioListTile(
+                  value: AppSkin.pink,
+                  title: Text('Розовый'),
                 ),
                 RadioListTile(
                   value: AppSkin.dark,
                   title: Text('Тёмный'),
-                  subtitle: Text('Для чтения ночью'),
                 ),
               ],
             ),

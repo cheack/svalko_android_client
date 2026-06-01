@@ -1,1 +1,1 @@
-enum AppSkin { blue, dark }
+enum AppSkin { blue, dark, pink }
