@@ -108,6 +108,7 @@ class _PostCardState extends ConsumerState<PostCard> {
               borodaCount: widget.post.borodaCount,
               parsedVote: widget.post.parsedVote,
               parsedBoroda: widget.post.parsedBoroda,
+              availableVotes: widget.post.availableVotes,
               onRatingChanged: (r, bc) => setState(() {
                 _rating = r;
                 _borodaCount = bc;

@@ -37,6 +37,7 @@ class Post {
     this.sheepCount,
     this.parsedVote,
     this.parsedBoroda,
+    this.availableVotes,
   });
 
   final int id;
@@ -56,4 +57,5 @@ class Post {
   final int? sheepCount;
   final int? parsedVote;
   final bool? parsedBoroda;
+  final List<int>? availableVotes;
 }

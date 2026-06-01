@@ -64,6 +64,7 @@ abstract final class FeedParser {
     final text = parseText(el);
     final textHtml = parsePostHtml(el);
     final voteState = parseVoteState(el, id);
+    final availableVotes = parseAvailableVotes(el, id);
 
     AppLogger.instance.info(
       'post $id: ${imageUrls.length} img, ${videoUrls.length} vid',
@@ -84,6 +85,7 @@ abstract final class FeedParser {
       approvedBy: approvedBy,
       parsedVote: voteState.vote,
       parsedBoroda: voteState.boroda,
+      availableVotes: availableVotes.isEmpty ? null : availableVotes,
     );
   }
 
