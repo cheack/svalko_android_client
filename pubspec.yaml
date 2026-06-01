@@ -99,3 +99,4 @@ flutter:
   assets:
     - assets/splash.png
     - assets/icons/
+    - assets/heart-bg.png

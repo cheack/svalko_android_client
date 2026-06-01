@@ -5,6 +5,7 @@ import '../../../core/config.dart';
 import '../../../core/open_url.dart';
 import '../../../core/l10n.dart';
 import '../../../core/settings_storage.dart';
+import '../../../ui/skin_ext.dart';
 import '../../../models/post.dart';
 import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/comment_html.dart';
@@ -59,7 +60,15 @@ class _PostCardState extends ConsumerState<PostCard> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onLongPress: () => _showPostSheet(context, s, widget.post.id),
-        child: Column(
+        child: Stack(
+          children: [
+            if (Theme.of(context).extension<SvalkoSkinExt>()?.cardPattern case final pattern?)
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(image: pattern),
+                ),
+              ),
+            Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             PostHeader(
@@ -125,6 +134,8 @@ class _PostCardState extends ConsumerState<PostCard> {
               ),
             ),
           ],
+          ),
+        ],
         ),
       ),
     ));

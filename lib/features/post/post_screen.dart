@@ -18,6 +18,7 @@ import '../../ui/widgets/video_link_card.dart';
 import '../../ui/widgets/video_player_widget.dart';
 import '../../core/result.dart';
 import '../../models/post.dart';
+import '../../ui/skin_ext.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
   const PostScreen({super.key, required this.postId, this.highlightCommentId, this.showShuffle = false});
@@ -228,67 +229,82 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         controller: _scrollController,
         padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).padding.bottom),
         children: [
-          PostHeader(
-            author: post.author.name,
-            publishedAt: post.publishedAt,
-            rating: _rating ?? post.rating,
-            borodaCount: _borodaCount ?? post.borodaCount,
-            onAuthorTap: () => Navigator.of(context)
-                .pushNamed('/author', arguments: post.author),
-          ),
-          // Post images
-          if (post.imageUrls.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: ImageCarousel(urls: post.imageUrls, maxHeight: 480),
-            ),
-          // Post videos
-          for (final url in post.videoUrls)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: GestureDetector(
-                onLongPress: () => showMediaSheet(context, url, isVideo: true),
-                child: VideoPlayerWidget(url: url),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainer,
+                image: Theme.of(context).extension<SvalkoSkinExt>()?.cardPattern,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  PostHeader(
+                    author: post.author.name,
+                    publishedAt: post.publishedAt,
+                    rating: _rating ?? post.rating,
+                    borodaCount: _borodaCount ?? post.borodaCount,
+                    onAuthorTap: () => Navigator.of(context)
+                        .pushNamed('/author', arguments: post.author),
+                  ),
+                  if (post.imageUrls.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: ImageCarousel(urls: post.imageUrls, maxHeight: 480),
+                    ),
+                  for (final url in post.videoUrls)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: GestureDetector(
+                        onLongPress: () => showMediaSheet(context, url, isVideo: true),
+                        child: VideoPlayerWidget(url: url),
+                      ),
+                    ),
+                  for (final link in post.externalLinks)
+                    if (VideoEmbedPlayer.isSupported(link))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: VideoEmbedPlayer(url: link),
+                      )
+                    else if (VideoLinkCard.isSupported(link))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: VideoLinkCard(url: link),
+                      ),
+                  if (post.textHtml != null && post.textHtml!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                      child: CommentHtml(
+                        post.textHtml!,
+                        onSvalkoPost: (id) =>
+                            Navigator.of(context).pushNamed('/post', arguments: id),
+                      ),
+                    ),
+                  if (post.tags.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: PostTagsRow(tags: post.tags),
+                    ),
+                  PostVoteSection(
+                    postId: post.id,
+                    rating: post.rating,
+                    borodaCount: post.borodaCount,
+                    parsedVote: post.parsedVote,
+                    parsedBoroda: post.parsedBoroda,
+                    onRatingChanged: (r, bc) => setState(() {
+                      _rating = r;
+                      _borodaCount = bc;
+                    }),
+                  ),
+                ],
               ),
             ),
-          // External video embeds
-          for (final link in post.externalLinks)
-            if (VideoEmbedPlayer.isSupported(link))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: VideoEmbedPlayer(url: link),
-              )
-            else if (VideoLinkCard.isSupported(link))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: VideoLinkCard(url: link),
-              ),
-          // Post text
-          if (post.textHtml != null && post.textHtml!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-              child: CommentHtml(
-                post.textHtml!,
-                onSvalkoPost: (id) =>
-                    Navigator.of(context).pushNamed('/post', arguments: id),
-              ),
-            ),
-          // Tags
-          if (post.tags.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: PostTagsRow(tags: post.tags),
-            ),
-          PostVoteSection(
-            postId: post.id,
-            rating: post.rating,
-            borodaCount: post.borodaCount,
-            parsedVote: post.parsedVote,
-            parsedBoroda: post.parsedBoroda,
-            onRatingChanged: (r, bc) => setState(() {
-              _rating = r;
-              _borodaCount = bc;
-            }),
           ),
           const Divider(height: 24),
           // Comments section header — anchor for scroll
