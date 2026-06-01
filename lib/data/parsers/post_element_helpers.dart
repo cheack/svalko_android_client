@@ -143,6 +143,22 @@ String? parsePostHtml(Element el) {
   return html.isEmpty ? null : html;
 }
 
+/// Parses which vote values are available for [postId] from the vote span.
+/// Returns an empty list when the span is absent (e.g. post already voted or no voting).
+List<int> parseAvailableVotes(Element el, int postId) {
+  final voteSpan = el.querySelector('#vote_form_$postId');
+  if (voteSpan == null) return const [];
+  final re = RegExp(r'vote\(\d+,\s*(-?\d+)\)');
+  return voteSpan
+      .querySelectorAll('a[href]')
+      .map((a) {
+        final m = re.firstMatch(a.attributes['href'] ?? '');
+        return m != null ? int.tryParse(m.group(1)!) : null;
+      })
+      .whereType<int>()
+      .toList();
+}
+
 /// Parses the server-rendered vote state for [postId] from the rate div.
 /// Returns null fields when the state cannot be determined (e.g. not voted).
 ({int? vote, bool? boroda}) parseVoteState(Element el, int postId) {

@@ -13,6 +13,7 @@ class PostVoteSection extends ConsumerStatefulWidget {
     this.borodaCount,
     this.parsedVote,
     this.parsedBoroda,
+    this.availableVotes,
     this.onRatingChanged,
   });
 
@@ -21,6 +22,7 @@ class PostVoteSection extends ConsumerStatefulWidget {
   final int? borodaCount;
   final int? parsedVote;
   final bool? parsedBoroda;
+  final List<int>? availableVotes;
   final void Function(PostRating rating, int? borodaCount)? onRatingChanged;
 
   @override
@@ -63,6 +65,11 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
       _boroda = 0;
       box.put(_bKey, '0');
     }
+  }
+
+  bool _canVote(int value) {
+    final av = widget.availableVotes;
+    return av == null || av.contains(value);
   }
 
   Future<void> _doVote(int value) async {
@@ -128,9 +135,9 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
           Row(
             children: [
               if (_vote == null) ...[
-                _Btn('? я чото п',  null,                        _votingVote ? null : () => _doVote(0),  color),
-                _Btn('ЗАЧОТ',       'assets/icons/vote.png',     _votingVote ? null : () => _doVote(1),  color),
-                _Btn('КГ/АМ',       'assets/icons/vote.png',     _votingVote ? null : () => _doVote(-1), color),
+                if (_canVote(0)) _Btn('? я чото п', null,                    _votingVote ? null : () => _doVote(0),  color),
+                if (_canVote(1)) _Btn('ЗАЧОТ',      'assets/icons/vote.png', _votingVote ? null : () => _doVote(1),  color),
+                if (_canVote(-1)) _Btn('КГ/АМ',     'assets/icons/vote.png', _votingVote ? null : () => _doVote(-1), color),
               ] else
                 _VotedChip(_voteLabel(_vote!), _vote != 0 ? 'assets/icons/vote.png' : null, primary),
               const SizedBox(width: 8),

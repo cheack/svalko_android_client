@@ -297,6 +297,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                     borodaCount: post.borodaCount,
                     parsedVote: post.parsedVote,
                     parsedBoroda: post.parsedBoroda,
+                    availableVotes: post.availableVotes,
                     onRatingChanged: (r, bc) => setState(() {
                       _rating = r;
                       _borodaCount = bc;
