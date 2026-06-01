@@ -11,6 +11,10 @@ final settingsBoxProvider =
 final votesBoxProvider =
     Provider<Box<String>>((_) => throw UnimplementedError());
 
+/// Stores calendar month data: key = month path (e.g. '/2025/10/1/'), value = JSON.
+final calendarBoxProvider =
+    Provider<Box<String>>((_) => throw UnimplementedError());
+
 // ---------------------------------------------------------------------------
 // Skin
 // ---------------------------------------------------------------------------

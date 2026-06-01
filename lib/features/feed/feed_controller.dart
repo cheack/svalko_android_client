@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/result.dart';
+import '../../core/settings_storage.dart';
 import '../../data/repositories/svalko_repository.dart';
 import '../../data/svalko_api.dart';
 import '../../models/ban_page_data.dart';
+import '../../models/calendar.dart';
 import '../../models/feed_source.dart';
 import '../../models/post.dart';
-import '../../core/result.dart';
 
 // ---------------------------------------------------------------------------
 // Providers
@@ -19,8 +21,16 @@ final activeTagProvider = StateProvider<String?>((ref) => null);
 /// Persists drawer tags list scroll offset across open/close.
 final drawerTagsScrollOffsetProvider = StateProvider<double>((ref) => 0);
 
+/// Last-viewed month in the calendar sheet + last selected day path.
+final calendarStateProvider = StateProvider<({CalendarMonth? month, String? selectedPath})>(
+  (ref) => (month: null, selectedPath: null),
+);
+
 final repositoryProvider = Provider<SvalkoRepository>(
-  (ref) => SvalkoRepository(api: ref.watch(apiProvider)),
+  (ref) => SvalkoRepository(
+    api: ref.watch(apiProvider),
+    calendarBox: ref.watch(calendarBoxProvider),
+  ),
 );
 
 // ---------------------------------------------------------------------------
@@ -39,6 +49,7 @@ class FeedState {
     this.maxPage,
     this.hasMore = true,
     this.pageFirstIndex = const {},
+    this.calendar,
   });
 
   final List<Post> posts;
@@ -52,6 +63,7 @@ class FeedState {
   final bool hasMore;
   /// Maps page number → index of its first post in [posts].
   final Map<int, int> pageFirstIndex;
+  final CalendarMonth? calendar;
 
   FeedState copyWith({
     List<Post>? posts,
@@ -64,6 +76,7 @@ class FeedState {
     int? maxPage,
     bool? hasMore,
     Map<int, int>? pageFirstIndex,
+    CalendarMonth? calendar,
     bool clearError = false,
     bool clearBanData = false,
   }) =>
@@ -78,6 +91,7 @@ class FeedState {
         maxPage: maxPage ?? this.maxPage,
         hasMore: hasMore ?? this.hasMore,
         pageFirstIndex: pageFirstIndex ?? this.pageFirstIndex,
+        calendar: calendar ?? this.calendar,
       );
 }
 
@@ -98,6 +112,7 @@ class FeedController extends StateNotifier<FeedState> {
     List<Post> existingPosts = const [],
     Map<int, int> existingPageIndex = const {},
     int? existingMaxPage,
+    CalendarMonth? existingCalendar,
   }) {
     final newMax = value.pagination.maxPage;
     return FeedState(
@@ -111,6 +126,7 @@ class FeedController extends StateNotifier<FeedState> {
         ...existingPageIndex,
         value.pagination.currentPage: existingPosts.length,
       },
+      calendar: value.calendar ?? existingCalendar,
     );
   }
 
@@ -162,6 +178,7 @@ class FeedController extends StateNotifier<FeedState> {
           existingPosts: state.posts,
           existingPageIndex: state.pageFirstIndex,
           existingMaxPage: state.maxPage,
+          existingCalendar: state.calendar,
         ).copyWith(isLoadingMore: false),
       FeedBanned(:final data) => FeedState(banData: data),
       FeedFailure(:final error) => state.copyWith(isLoadingMore: false, error: error),

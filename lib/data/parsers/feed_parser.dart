@@ -1,7 +1,9 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html_parser;
 import '../../core/app_logger.dart';
+import '../../models/calendar.dart';
 import '../../models/post.dart';
+import 'calendar_parser.dart';
 import 'post_element_helpers.dart';
 
 class FeedPaginationInfo {
@@ -12,10 +14,15 @@ class FeedPaginationInfo {
 }
 
 class FeedParseResult {
-  const FeedParseResult({required this.posts, required this.pagination});
+  const FeedParseResult({
+    required this.posts,
+    required this.pagination,
+    this.calendar,
+  });
 
   final List<Post> posts;
   final FeedPaginationInfo pagination;
+  final CalendarMonth? calendar;
 }
 
 abstract final class FeedParser {
@@ -23,7 +30,8 @@ abstract final class FeedParser {
     final doc = html_parser.parse(htmlContent);
     final posts = _parsePosts(doc);
     final pagination = _parsePagination(doc);
-    return FeedParseResult(posts: posts, pagination: pagination);
+    final calendar = CalendarParser.parse(doc);
+    return FeedParseResult(posts: posts, pagination: pagination, calendar: calendar);
   }
 
   static List<Post> _parsePosts(Document doc) {

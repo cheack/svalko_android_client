@@ -41,3 +41,19 @@ class AuthorFeed extends FeedSource {
   @override
   int get hashCode => authorName.hashCode;
 }
+
+class DateFeed extends FeedSource {
+  const DateFeed({required this.path, required this.label});
+
+  /// Server-relative path, e.g. "/2026/04/13/"
+  final String path;
+
+  /// Human-readable label shown in the AppBar, e.g. "13 апреля 2026"
+  final String label;
+
+  @override
+  bool operator ==(Object other) => other is DateFeed && other.path == path;
+
+  @override
+  int get hashCode => path.hashCode;
+}
