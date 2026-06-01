@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/result.dart';
+import '../../../data/parsers/calendar_parser.dart';
 import '../../../models/calendar.dart';
 import '../../../models/feed_source.dart';
 import '../feed_controller.dart';
@@ -39,6 +40,59 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
   }
 
   String? get _selectedPath => ref.read(calendarStateProvider).selectedPath;
+
+  static const _firstYear = 2003;
+  static const _firstMonth = 8; // August 2003
+
+  Future<void> _pickMonth(BuildContext context) async {
+    final now = DateTime.now();
+    final maxMonth = _calendar.year == now.year ? now.month : 12;
+    final minMonth = _calendar.year == _firstYear ? _firstMonth : 1;
+    final box = context.findRenderObject() as RenderBox;
+    final offset = box.localToGlobal(Offset.zero);
+    final selected = await showMenu<int>(
+      context: context,
+      position: RelativeRect.fromLTRB(offset.dx, offset.dy + box.size.height, offset.dx + box.size.width, 0),
+      items: List.generate(maxMonth - minMonth + 1, (i) => minMonth + i)
+          .map((m) => PopupMenuItem(
+                value: m,
+                child: Text(_monthNames[m],
+                    style: m == _calendar.month
+                        ? TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)
+                        : null),
+              ))
+          .toList(),
+    );
+    if (selected != null && selected != _calendar.month) {
+      _changeMonth(CalendarParser.monthPath(_calendar.year, selected));
+    }
+  }
+
+  Future<void> _pickYear(BuildContext context) async {
+    final now = DateTime.now();
+    final box = context.findRenderObject() as RenderBox;
+    final offset = box.localToGlobal(Offset.zero);
+    final selected = await showMenu<int>(
+      context: context,
+      position: RelativeRect.fromLTRB(offset.dx, offset.dy + box.size.height, offset.dx + box.size.width, 0),
+      items: List.generate(now.year - _firstYear + 1, (i) => _firstYear + i)
+          .map((y) => PopupMenuItem(
+                value: y,
+                child: Text('$y',
+                    style: y == _calendar.year
+                        ? TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)
+                        : null),
+              ))
+          .toList(),
+    );
+    if (selected != null && selected != _calendar.year) {
+      final now2 = DateTime.now();
+      var month = _calendar.month;
+      if (selected == now2.year && month > now2.month) month = now2.month;
+      if (selected == _firstYear && month < _firstMonth) month = _firstMonth;
+      _changeMonth(CalendarParser.monthPath(selected, month));
+    }
+  }
 
   Future<void> _changeMonth(String? path) async {
     if (path == null || _loading) return;
@@ -100,9 +154,31 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(
-                            '${_monthNames[c.month]} ${c.year}',
-                            style: theme.textTheme.titleMedium,
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Builder(builder: (ctx) => GestureDetector(
+                                onTap: () => _pickMonth(ctx),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(_monthNames[c.month], style: theme.textTheme.titleMedium),
+                                    Icon(Icons.arrow_drop_down, size: 16, color: theme.colorScheme.outline),
+                                  ],
+                                ),
+                              )),
+                              const SizedBox(width: 4),
+                              Builder(builder: (ctx) => GestureDetector(
+                                onTap: () => _pickYear(ctx),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('${c.year}', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary)),
+                                    Icon(Icons.arrow_drop_down, size: 16, color: theme.colorScheme.primary.withValues(alpha: 0.7)),
+                                  ],
+                                ),
+                              )),
+                            ],
                           ),
                   ),
                 ),
