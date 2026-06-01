@@ -6,6 +6,7 @@ import '../../models/feed_source.dart';
 import '../navigation/app_drawer.dart';
 import 'ban_screen.dart';
 import 'feed_controller.dart';
+import 'widgets/calendar_sheet.dart';
 import 'widgets/page_nav_panel.dart';
 import 'widgets/post_card.dart';
 
@@ -76,6 +77,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         MainFeed() => s.appTitle,
         TagFeed(:final tagName) => '#$tagName',
         AuthorFeed(:final authorName) => authorName,
+        DateFeed(:final label) => label,
       };
 
   @override
@@ -154,6 +156,24 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       appBar: AppBar(
         title: Text(_title(s)),
         actions: [
+          if (state.calendar != null)
+            IconButton(
+              icon: const Icon(Icons.calendar_month_outlined),
+              tooltip: 'Календарь',
+              onPressed: () async {
+                final source = await showModalBottomSheet<DateFeed>(
+                  context: context,
+                  builder: (_) => CalendarSheet(
+                    fallbackMonth: state.calendar!,
+                  ),
+                );
+                if (source == null || !mounted) return;
+                // ignore: use_build_context_synchronously
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => FeedScreen(source: source)),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: s.refresh,

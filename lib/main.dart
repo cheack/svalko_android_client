@@ -38,6 +38,7 @@ void main() {
       final votes = await Hive.openBox<String>('votes');
 
       final favorites = await Hive.openBox<String>('favorites');
+      final calendarCache = await Hive.openBox<String>('calendar');
 
       final cacheDir = await getApplicationCacheDirectory();
       final cacheStore = FileCacheStore('${cacheDir.path}/http_cache');
@@ -49,6 +50,7 @@ void main() {
             settingsBoxProvider.overrideWithValue(settings),
             votesBoxProvider.overrideWithValue(votes),
             favoritesBoxProvider.overrideWithValue(favorites),
+            calendarBoxProvider.overrideWithValue(calendarCache),
           ],
           child: const SvalkoApp(),
         ),

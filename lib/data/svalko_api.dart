@@ -81,6 +81,9 @@ class SvalkoApi {
                   : '';
               return '${Config.baseUrl}/page/$page?author=$authorParam';
             }(),
+      DateFeed(:final path) => page == null
+          ? '${Config.baseUrl}$path'
+          : '${Config.baseUrl}$path?page=$page',
     };
     return _get(url);
   }
@@ -355,6 +358,26 @@ class SvalkoApi {
           maxRedirects: 5,
           responseType: ResponseType.bytes,
         ),
+      );
+      final data = response.data;
+      final Uint8List bytes = data is Uint8List
+          ? data
+          : Uint8List.fromList(data as List<int>);
+      return Ok(await decodeWin1251(bytes));
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
+  Future<Result<String, AppError>> fetchPath(String path) async {
+    // Do NOT follow redirects: a redirect means the archive page doesn't exist
+    // (e.g. the server sends the browser to the homepage for months with no posts).
+    try {
+      final response = await _dio.get<dynamic>(
+        '${Config.baseUrl}$path',
+        options: Options(followRedirects: false, responseType: ResponseType.bytes),
       );
       final data = response.data;
       final Uint8List bytes = data is Uint8List
