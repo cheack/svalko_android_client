@@ -210,11 +210,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               child: Center(
                 child: PageNavPanel(
                   currentPage: visiblePage,
+                  maxPage: state.maxPage ?? visiblePage,
                   canGoNewer: visiblePage < (state.maxPage ?? visiblePage),
                   canGoOlder: visiblePage > 0,
                   isLoading: state.isRefreshing,
                   onNewer: () => ctrl.loadPage(visiblePage + 1),
                   onOlder: () => ctrl.loadPage(visiblePage - 1),
+                  onPageSelected: ctrl.loadPage,
                 ),
               ),
             ),

@@ -97,17 +97,22 @@ class FeedController extends StateNotifier<FeedState> {
     FeedPage value, {
     List<Post> existingPosts = const [],
     Map<int, int> existingPageIndex = const {},
-  }) =>
-      FeedState(
-        posts: [...existingPosts, ...value.posts],
-        currentPage: value.pagination.currentPage,
-        maxPage: value.pagination.maxPage,
-        hasMore: value.pagination.currentPage > 0,
-        pageFirstIndex: {
-          ...existingPageIndex,
-          value.pagination.currentPage: existingPosts.length,
-        },
-      );
+    int? existingMaxPage,
+  }) {
+    final newMax = value.pagination.maxPage;
+    return FeedState(
+      posts: [...existingPosts, ...value.posts],
+      currentPage: value.pagination.currentPage,
+      maxPage: (existingMaxPage != null && existingMaxPage > newMax)
+          ? existingMaxPage
+          : newMax,
+      hasMore: value.pagination.currentPage > 0,
+      pageFirstIndex: {
+        ...existingPageIndex,
+        value.pagination.currentPage: existingPosts.length,
+      },
+    );
+  }
 
   FeedState _stateFromResult(FeedResult result) => switch (result) {
         FeedSuccess(:final page) => _stateFromFeedPage(page),
@@ -132,10 +137,11 @@ class FeedController extends StateNotifier<FeedState> {
   }
 
   Future<void> loadPage(int page) async {
+    final prevMaxPage = state.maxPage;
     state = state.copyWith(isRefreshing: true, clearError: true, clearBanData: true);
     final result = await _repo.getFeed(page: page, source: _source);
     state = switch (result) {
-      FeedSuccess(:final page) => _stateFromFeedPage(page),
+      FeedSuccess(:final page) => _stateFromFeedPage(page, existingMaxPage: prevMaxPage),
       FeedBanned(:final data) => FeedState(banData: data),
       FeedFailure(:final error) => state.copyWith(isRefreshing: false, error: error),
     };
@@ -155,6 +161,7 @@ class FeedController extends StateNotifier<FeedState> {
           page,
           existingPosts: state.posts,
           existingPageIndex: state.pageFirstIndex,
+          existingMaxPage: state.maxPage,
         ).copyWith(isLoadingMore: false),
       FeedBanned(:final data) => FeedState(banData: data),
       FeedFailure(:final error) => state.copyWith(isLoadingMore: false, error: error),
