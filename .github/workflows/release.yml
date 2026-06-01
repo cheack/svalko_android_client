@@ -40,6 +40,8 @@ jobs:
 
       - run: flutter pub get
 
+      - run: flutter test
+
       - name: Build APKs
         run: |
           VERSION=${GITHUB_REF_NAME}
