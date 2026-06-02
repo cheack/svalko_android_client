@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 enum LogLevel { info, cache, network, error }
 
@@ -38,6 +39,7 @@ class AppLogger {
     if (_entries.length >= _maxEntries) _entries.removeAt(0);
     _entries.add(entry);
     _controller.add(entry);
+    debugPrint('[${level.name}] $message${detail != null ? '  $detail' : ''}');
   }
 
   void info(String msg, {String? detail}) =>

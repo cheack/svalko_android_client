@@ -18,6 +18,7 @@ import '../../ui/widgets/video_link_card.dart';
 import '../../ui/widgets/video_player_widget.dart';
 import '../../core/result.dart';
 import '../../models/post.dart';
+import '../../models/feed_source.dart';
 import '../../ui/skin_ext.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
@@ -266,6 +267,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                       approvedBy: post.approvedBy,
                       onAuthorTap: () => Navigator.of(context)
                           .pushNamed('/author', arguments: post.author),
+                      onApprovedByTap: post.approvedBy == null
+                          ? null
+                          : () => Navigator.of(context).pushNamed('/approver',
+                              arguments: ApproverFeed(approverName: post.approvedBy!)),
                     ),
                   ),
                   if (post.imageUrls.isNotEmpty)

@@ -77,6 +77,12 @@ class SvalkoApp extends ConsumerWidget {
             ),
           );
         }
+        if (settings.name == '/approver') {
+          final feed = settings.arguments as ApproverFeed;
+          return MaterialPageRoute(
+            builder: (_) => FeedScreen(source: feed),
+          );
+        }
         if (settings.name == '/images') {
           return MaterialPageRoute(builder: (_) => const ImagesScreen());
         }

@@ -5,6 +5,7 @@ import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_stor
 import 'package:html/parser.dart' as html_parser;
 import '../core/config.dart';
 import '../core/encoding.dart';
+import '../core/app_logger.dart';
 import '../core/logging_interceptor.dart';
 import '../core/result.dart';
 import '../models/feed_source.dart';
@@ -65,6 +66,14 @@ class SvalkoApi {
     int? page,
     FeedSource source = const MainFeed(),
   }) async {
+    if (source is ApproverFeed) {
+      final encoded = await encodeQueryWin1251(source.approverName);
+      final url = page == null
+          ? '${Config.baseUrl}/?approver=$encoded'
+          : '${Config.baseUrl}/page/$page?approver=$encoded';
+      AppLogger.instance.info('[fetchFeedPage] $url');
+      return _get(url);
+    }
     final url = switch (source) {
       MainFeed() => page == null
           ? Config.baseUrl
@@ -75,7 +84,6 @@ class SvalkoApi {
       AuthorFeed(:final profileUrl) => page == null
           ? profileUrl
           : () {
-              // Extract the raw encoded ?author=... param from the profileUrl.
               final authorParam = profileUrl.contains('?author=')
                   ? profileUrl.split('?author=').last
                   : '';
@@ -84,7 +92,9 @@ class SvalkoApi {
       DateFeed(:final path) => page == null
           ? '${Config.baseUrl}$path'
           : '${Config.baseUrl}$path?page=$page',
+      ApproverFeed() => '', // unreachable
     };
+    AppLogger.instance.info('[fetchFeedPage] $url');
     return _get(url);
   }
 

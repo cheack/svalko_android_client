@@ -42,6 +42,19 @@ class AuthorFeed extends FeedSource {
   int get hashCode => authorName.hashCode;
 }
 
+class ApproverFeed extends FeedSource {
+  const ApproverFeed({required this.approverName});
+
+  final String approverName;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ApproverFeed && other.approverName == approverName;
+
+  @override
+  int get hashCode => approverName.hashCode;
+}
+
 class DateFeed extends FeedSource {
   const DateFeed({required this.path, required this.label});
 
