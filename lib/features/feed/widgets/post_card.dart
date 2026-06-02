@@ -83,6 +83,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                 publishedAt: widget.post.publishedAt,
                 rating: _rating,
                 borodaCount: _borodaCount,
+                approvedBy: widget.post.approvedBy,
                 onAuthorTap: widget.onTap,
               ),
             ),

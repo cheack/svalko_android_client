@@ -263,6 +263,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                       publishedAt: post.publishedAt,
                       rating: _rating ?? post.rating,
                       borodaCount: _borodaCount ?? post.borodaCount,
+                      approvedBy: post.approvedBy,
                       onAuthorTap: () => Navigator.of(context)
                           .pushNamed('/author', arguments: post.author),
                     ),
