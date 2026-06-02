@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../core/config.dart';
 import '../../core/open_url.dart';
+import '../skin_ext.dart';
 
 class CommentHtml extends StatelessWidget {
   const CommentHtml(this.html, {super.key, this.onSvalkoPost});
@@ -24,8 +25,9 @@ class CommentHtml extends StatelessWidget {
       textStyle: theme.textTheme.bodyMedium,
       customStylesBuilder: (el) {
         if (el.localName == 'a') {
+          final linkColor = theme.extension<SvalkoSkinExt>()?.linkColor;
           return {
-            'color': _hexColor(colorScheme.primary),
+            'color': _hexColor(linkColor ?? colorScheme.primary),
           };
         }
         if (el.localName == 'code') {

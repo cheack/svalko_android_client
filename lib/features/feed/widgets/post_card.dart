@@ -71,12 +71,14 @@ class _PostCardState extends ConsumerState<PostCard> {
             Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PostHeader(
-              author: widget.post.author.name,
-              publishedAt: widget.post.publishedAt,
-              rating: _rating,
-              borodaCount: _borodaCount,
-              onAuthorTap: widget.onTap,
+            SkinHeader(
+              child: PostHeader(
+                author: widget.post.author.name,
+                publishedAt: widget.post.publishedAt,
+                rating: _rating,
+                borodaCount: _borodaCount,
+                onAuthorTap: widget.onTap,
+              ),
             ),
             if (widget.post.imageUrls.isNotEmpty)
               ImageCarousel(urls: widget.post.imageUrls),

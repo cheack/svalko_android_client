@@ -86,93 +86,105 @@ class CommentTile extends StatelessWidget {
     final hasComplex = _hasComplexStyles();
     final cardPattern = theme.extension<SvalkoSkinExt>()?.cardPattern;
 
+    final cs = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-      child: DecoratedBox(
+      child: Container(
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainer,
+          color: cs.surfaceContainer,
           image: cardPattern,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: theme.colorScheme.outline, width: 1),
+          border: Border.all(color: cs.outline, width: 1),
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(context)
-                          .pushNamed('/author', arguments: comment.author),
-                      child: Text(
-                        comment.author.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.primary,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkinHeader(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context)
+                            .pushNamed('/author', arguments: comment.author),
+                        child: Text(
+                          comment.author.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: cs.primary,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(_formatDate(comment.publishedAt),
-                      style: theme.textTheme.bodySmall),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _showCommentMenu(context),
-                    child: Text(
-                      '#${comment.id}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.outline,
-                        decoration: TextDecoration.underline,
-                        decorationColor: theme.colorScheme.outline,
+                    const SizedBox(width: 8),
+                    Text(_formatDate(comment.publishedAt),
+                        style: theme.textTheme.bodySmall),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => _showCommentMenu(context),
+                      child: Text(
+                        '#${comment.id}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.outline,
+                          decoration: TextDecoration.underline,
+                          decorationColor: cs.outline,
+                        ),
                       ),
                     ),
-                  ),
-                  if (hasComplex) ...[
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: () => _showComplexStylesInfo(context),
-                      child: Icon(Icons.info_outline,
-                          size: 14, color: theme.colorScheme.outline),
+                    if (hasComplex) ...[
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () => _showComplexStylesInfo(context),
+                        child: Icon(Icons.info_outline,
+                            size: 14, color: cs.outline),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 4, 10, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (comment.text != null && comment.text!.isNotEmpty) ...[
+                    const SizedBox(height: 0),
+                    CommentHtml(
+                      comment.text!,
+                      onSvalkoPost: (id) =>
+                          Navigator.of(context).pushNamed('/post', arguments: id),
                     ),
                   ],
+                  for (final url in comment.imageUrls) ...[
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: () => showFullscreenImage(context, url),
+                      onLongPress: () => showMediaSheet(context, url),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 360),
+                        child: MediaImage(
+                          url: url,
+                          fit: BoxFit.contain,
+                          loadingWidget: const ShimmerPlaceholder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                  for (final url in comment.videoUrls) ...[
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onLongPress: () => showMediaSheet(context, url, isVideo: true),
+                      child: VideoPlayerWidget(url: url),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
                 ],
               ),
-              if (comment.text != null && comment.text!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                CommentHtml(
-                  comment.text!,
-                  onSvalkoPost: (id) =>
-                      Navigator.of(context).pushNamed('/post', arguments: id),
-                ),
-              ],
-              for (final url in comment.imageUrls) ...[
-                const SizedBox(height: 6),
-                GestureDetector(
-                  onTap: () => showFullscreenImage(context, url),
-                  onLongPress: () => showMediaSheet(context, url),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 360),
-                    child: MediaImage(
-                      url: url,
-                      fit: BoxFit.contain,
-                      loadingWidget: const ShimmerPlaceholder(),
-                    ),
-                  ),
-                ),
-              ],
-              for (final url in comment.videoUrls) ...[
-                const SizedBox(height: 6),
-                GestureDetector(
-                  onLongPress: () => showMediaSheet(context, url, isVideo: true),
-                  child: VideoPlayerWidget(url: url),
-                ),
-              ],
-              const SizedBox(height: 8),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
