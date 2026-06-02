@@ -14,7 +14,7 @@ const _svalkoYellowDark = Color(0xFF333333);
 const _svalkoYellowBlue = Color(0xFF0000FF);
 const _svalkoYellowBg = Color(0xFFFFFFFF);
 const _svalkoYellowCard = Color(0xFFFFFFFF);
-const _svalkoYellowInfoPanel = Color(0xFFCCCCCC);
+const _svalkoYellowInfoPanel = Color(0xFFFFFAC8);
 
 // Pink skin colors
 const _svalkoPink = Color(0xFFC245A1);
@@ -49,6 +49,7 @@ ThemeData _buildLightTheme({
   DecorationImage? cardPattern,
   Color? headerColor,
   Color? linkColor,
+  bool cardDividers = false,
 }) {
   final secondary = secondaryColor ?? primary;
   final appBar = appBarColor ?? primary;
@@ -60,6 +61,7 @@ ThemeData _buildLightTheme({
       cardPattern: cardPattern,
       headerColor: headerColor,
       linkColor: linkColor,
+      cardDividers: cardDividers,
     )],
     colorScheme: ColorScheme.light(
       primary: primary,
@@ -108,6 +110,12 @@ ThemeData _buildLightTheme({
       backgroundColor: appBar,
       foregroundColor: appBarFg,
     ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: appBar,
+        foregroundColor: appBarFg,
+      ),
+    ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(foregroundColor: primary),
     ),
@@ -153,6 +161,7 @@ final _yellowTheme = _buildLightTheme(
   onAppBar: Colors.black,
   headerColor: _svalkoYellow,
   linkColor: _svalkoYellowBlue,
+  cardDividers: true,
 );
 
 final _darkTheme = ThemeData(

@@ -87,15 +87,16 @@ class CommentTile extends StatelessWidget {
     final cardPattern = theme.extension<SvalkoSkinExt>()?.cardPattern;
 
     final cs = theme.colorScheme;
+    final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+      padding: dividers ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 4, 8, 0),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: cs.surfaceContainer,
           image: cardPattern,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: cs.outline, width: 1),
+          borderRadius: dividers ? null : BorderRadius.circular(4),
+          border: dividers ? null : Border.all(color: cs.outline, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

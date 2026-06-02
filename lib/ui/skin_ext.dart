@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
 
 class SvalkoSkinExt extends ThemeExtension<SvalkoSkinExt> {
-  const SvalkoSkinExt({this.cardPattern, this.headerColor, this.linkColor});
+  const SvalkoSkinExt({
+    this.cardPattern,
+    this.headerColor,
+    this.linkColor,
+    this.cardDividers = false,
+  });
 
   final DecorationImage? cardPattern;
   final Color? headerColor;
   final Color? linkColor;
+  /// When true, feed cards have no border/shadow — items are separated by a divider line.
+  final bool cardDividers;
 
   @override
   SvalkoSkinExt copyWith({
     DecorationImage? cardPattern,
     Color? headerColor,
     Color? linkColor,
+    bool? cardDividers,
   }) =>
       SvalkoSkinExt(
         cardPattern: cardPattern ?? this.cardPattern,
         headerColor: headerColor ?? this.headerColor,
         linkColor: linkColor ?? this.linkColor,
+        cardDividers: cardDividers ?? this.cardDividers,
       );
 
   @override
