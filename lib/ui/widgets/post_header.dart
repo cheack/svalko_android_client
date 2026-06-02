@@ -8,7 +8,9 @@ class PostHeader extends StatefulWidget {
     required this.publishedAt,
     this.rating,
     this.borodaCount,
+    this.approvedBy,
     this.onAuthorTap,
+    this.onApprovedByTap,
     this.padding = const EdgeInsets.fromLTRB(12, 10, 12, 10),
   });
 
@@ -16,7 +18,9 @@ class PostHeader extends StatefulWidget {
   final DateTime publishedAt;
   final PostRating? rating;
   final int? borodaCount;
+  final String? approvedBy;
   final VoidCallback? onAuthorTap;
+  final VoidCallback? onApprovedByTap;
   final EdgeInsetsGeometry padding;
 
   static String formatRating(PostRating r, int? borodaCount) {
@@ -205,15 +209,41 @@ class _PostHeaderState extends State<PostHeader> {
                 ],
               ),
               const Spacer(),
-              if (widget.rating != null)
-                GestureDetector(
-                  key: _ratingKey,
-                  onTap: _showRatingPopup,
-                  child: Text(
-                    PostHeader.formatRating(widget.rating!, widget.borodaCount),
-                    style: theme.textTheme.bodyMedium?.copyWith(color: cs.outline),
-                  ),
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.rating != null)
+                    GestureDetector(
+                      key: _ratingKey,
+                      onTap: _showRatingPopup,
+                      child: Text(
+                        PostHeader.formatRating(widget.rating!, widget.borodaCount),
+                        style: theme.textTheme.bodyMedium?.copyWith(color: cs.outline),
+                      ),
+                    ),
+                  if (widget.approvedBy != null)
+                    GestureDetector(
+                      onTap: widget.onApprovedByTap,
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'одобрил ',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                            TextSpan(
+                              text: widget.approvedBy,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           );
         },
