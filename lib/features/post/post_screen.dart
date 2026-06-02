@@ -255,13 +255,15 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  PostHeader(
-                    author: post.author.name,
-                    publishedAt: post.publishedAt,
-                    rating: _rating ?? post.rating,
-                    borodaCount: _borodaCount ?? post.borodaCount,
-                    onAuthorTap: () => Navigator.of(context)
-                        .pushNamed('/author', arguments: post.author),
+                  SkinHeader(
+                    child: PostHeader(
+                      author: post.author.name,
+                      publishedAt: post.publishedAt,
+                      rating: _rating ?? post.rating,
+                      borodaCount: _borodaCount ?? post.borodaCount,
+                      onAuthorTap: () => Navigator.of(context)
+                          .pushNamed('/author', arguments: post.author),
+                    ),
                   ),
                   if (post.imageUrls.isNotEmpty)
                     Padding(

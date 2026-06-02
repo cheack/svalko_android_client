@@ -243,12 +243,14 @@ class _DayCell extends StatelessWidget {
     Color? bg;
     Color textColor;
 
+    final brandColor = theme.appBarTheme.backgroundColor ?? theme.colorScheme.primary;
+    final onBrandColor = theme.appBarTheme.foregroundColor ?? theme.colorScheme.onPrimary;
     if (isSelected) {
-      bg = theme.colorScheme.primary;
-      textColor = theme.colorScheme.onPrimary;
+      bg = brandColor;
+      textColor = onBrandColor;
     } else if (hasLink && inMonth) {
-      bg = theme.colorScheme.primaryContainer.withValues(alpha: 0.5);
-      textColor = theme.colorScheme.onPrimaryContainer;
+      bg = brandColor.withValues(alpha: 0.25);
+      textColor = onBrandColor;
     } else {
       textColor = inMonth
           ? theme.colorScheme.onSurface.withValues(alpha: 0.35)
