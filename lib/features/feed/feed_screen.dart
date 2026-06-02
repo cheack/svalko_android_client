@@ -78,6 +78,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         MainFeed() => s.appTitle,
         TagFeed(:final tagName) => '#$tagName',
         AuthorFeed(:final authorName) => authorName,
+        ApproverFeed(:final approverName) => 'одобрено: $approverName',
         DateFeed(:final label) => label,
       };
 
@@ -214,6 +215,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       '/post',
                       arguments: post.id,
                     ),
+                    showApproverTap: widget.source is! ApproverFeed,
                   );
                   if (pageAtIndex != null) card = KeyedSubtree(key: _keyFor(pageAtIndex), child: card);
                   if (useDividers && i > 0) {

@@ -7,6 +7,7 @@ import '../../../core/l10n.dart';
 import '../../../core/settings_storage.dart';
 import '../../../ui/skin_ext.dart';
 import '../../../models/post.dart';
+import '../../../models/feed_source.dart';
 import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/comment_html.dart';
 import '../../../ui/widgets/post_action_buttons.dart';
@@ -18,10 +19,11 @@ import '../../../ui/widgets/post_header.dart';
 
 
 class PostCard extends ConsumerStatefulWidget {
-  const PostCard({super.key, required this.post, required this.onTap});
+  const PostCard({super.key, required this.post, required this.onTap, this.showApproverTap = true});
 
   final Post post;
   final VoidCallback onTap;
+  final bool showApproverTap;
 
   @override
   ConsumerState<PostCard> createState() => _PostCardState();
@@ -85,6 +87,10 @@ class _PostCardState extends ConsumerState<PostCard> {
                 borodaCount: _borodaCount,
                 approvedBy: widget.post.approvedBy,
                 onAuthorTap: widget.onTap,
+                onApprovedByTap: (widget.post.approvedBy == null || !widget.showApproverTap)
+                    ? null
+                    : () => Navigator.of(context).pushNamed('/approver',
+                        arguments: ApproverFeed(approverName: widget.post.approvedBy!)),
               ),
             ),
             if (widget.post.imageUrls.isNotEmpty)
