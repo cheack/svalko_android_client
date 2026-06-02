@@ -48,9 +48,12 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    if (widget.highlightCommentId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _tryScrollToHighlight());
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(postControllerProvider(widget.postId).notifier).refresh();
+      }
+      if (widget.highlightCommentId != null) _tryScrollToHighlight();
+    });
   }
 
   Future<void> _openRandom() async {
@@ -198,6 +201,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                 icon: const Icon(Icons.shuffle),
                 onPressed: _openRandom,
               ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: state.isLoadingMore ? null : ctrl.refresh,
+          ),
           PostShareButton(postId: post.id),
           PostFavButton(post: post),
         ],
@@ -223,10 +230,13 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         ),
       ),
       body: SelectionArea(
+        child: RefreshIndicator(
+        onRefresh: ctrl.refresh,
         child: Scrollbar(
         controller: _scrollController,
         child: ListView(
         controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).padding.bottom),
         children: [
           Padding(
@@ -356,6 +366,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               },
             ),
         ],
+      ),
       ),
       ),
       ),
