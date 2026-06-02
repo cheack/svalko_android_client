@@ -239,16 +239,18 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).padding.bottom),
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+          Builder(builder: (ctx) {
+            final dividers = Theme.of(ctx).extension<SvalkoSkinExt>()?.cardDividers ?? false;
+            return Padding(
+            padding: dividers ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 8, 8, 0),
             child: Container(
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainer,
-                image: Theme.of(context).extension<SvalkoSkinExt>()?.cardPattern,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline,
+                color: Theme.of(ctx).colorScheme.surfaceContainer,
+                image: Theme.of(ctx).extension<SvalkoSkinExt>()?.cardPattern,
+                borderRadius: dividers ? null : BorderRadius.circular(4),
+                border: dividers ? null : Border.all(
+                  color: Theme.of(ctx).colorScheme.outline,
                   width: 1,
                 ),
               ),
@@ -318,7 +320,8 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                 ],
               ),
             ),
-          ),
+          );
+          }),
           const Divider(height: 24),
           // Comments section header — anchor for scroll
           Padding(
@@ -344,17 +347,22 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           AnimatedOpacity(
             opacity: state.isLoadingMore ? 0.35 : 1.0,
             duration: const Duration(milliseconds: 200),
-            child: Column(
-              children: [
-                for (final comment in state.comments)
-                  CommentTile(
-                    key: comment.id == widget.highlightCommentId
-                        ? _highlightKey
-                        : null,
-                    comment: comment,
-                  ),
-              ],
-            ),
+            child: Builder(builder: (ctx) {
+              final dividers = Theme.of(ctx).extension<SvalkoSkinExt>()?.cardDividers ?? false;
+              return Column(
+                children: [
+                  for (int i = 0; i < state.comments.length; i++) ...[
+                    if (dividers && i > 0) const Divider(height: 1, thickness: 1),
+                    CommentTile(
+                      key: state.comments[i].id == widget.highlightCommentId
+                          ? _highlightKey
+                          : null,
+                      comment: state.comments[i],
+                    ),
+                  ],
+                ],
+              );
+            }),
           ),
           // Bottom page bar
           if (state.totalPages > 1)

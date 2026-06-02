@@ -9,6 +9,7 @@ import 'feed_controller.dart';
 import 'widgets/calendar_sheet.dart';
 import 'widgets/page_nav_panel.dart';
 import 'widgets/post_card.dart';
+import '../../ui/skin_ext.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key, this.source = const MainFeed()});
@@ -205,7 +206,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   }
                   final post = state.posts[i];
                   final pageAtIndex = indexToPage[i];
-                  final card = PostCard(
+                  final useDividers = Theme.of(ctx).extension<SvalkoSkinExt>()?.cardDividers ?? false;
+                  Widget card = PostCard(
                     key: ValueKey(post.id),
                     post: post,
                     onTap: () => Navigator.of(ctx).pushNamed(
@@ -213,9 +215,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       arguments: post.id,
                     ),
                   );
-                  return pageAtIndex != null
-                      ? KeyedSubtree(key: _keyFor(pageAtIndex), child: card)
-                      : card;
+                  if (pageAtIndex != null) card = KeyedSubtree(key: _keyFor(pageAtIndex), child: card);
+                  if (useDividers && i > 0) {
+                    card = Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Divider(height: 1, thickness: 1),
+                        card,
+                      ],
+                    );
+                  }
+                  return card;
                 },
               ),
             ),

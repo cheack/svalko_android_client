@@ -42,22 +42,28 @@ class _PostCardState extends ConsumerState<PostCard> {
   Widget build(BuildContext context) {
     final s = AppStrings.of(ref.watch(languageProvider));
     final theme = Theme.of(context);
+    final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
+      margin: dividers
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: dividers
+          ? null
+          : BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
       child: Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
+      shape: dividers ? const RoundedRectangleBorder() : null,
       child: InkWell(
         onLongPress: () => _showPostSheet(context, s, widget.post.id),
         child: Stack(
