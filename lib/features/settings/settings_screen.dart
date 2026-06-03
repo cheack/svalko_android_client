@@ -7,6 +7,12 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
 import '../../core/skin.dart';
+import '../../models/comment.dart';
+import '../../models/post.dart';
+import '../../ui/theme.dart';
+import '../feed/widgets/post_card.dart';
+import '../post/widgets/comment_tile.dart';
+import 'post_gen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -57,11 +63,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (dir != null) await dir.delete(recursive: true);
       final tmp = await getTemporaryDirectory();
       final videoThumbsDir = Directory('${tmp.path}/video_thumbs');
-      if (videoThumbsDir.existsSync()) await videoThumbsDir.delete(recursive: true);
+      if (videoThumbsDir.existsSync()) {
+        await videoThumbsDir.delete(recursive: true);
+      }
       PaintingBinding.instance.imageCache.clear();
       PaintingBinding.instance.imageCache.clearLiveImages();
       Gif.cache.clear();
-      if (mounted) setState(() { _cacheBytes = 0; _clearing = false; });
+      if (mounted) {
+        setState(() {
+          _cacheBytes = 0;
+          _clearing = false;
+        });
+      }
     } catch (e) {
       if (mounted) setState(() => _clearing = false);
     }
@@ -77,6 +90,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = ref.watch(languageProvider);
     final skin = ref.watch(skinProvider);
+    final fontSize = ref.watch(fontSizeProvider);
     final autoLoadMedia = ref.watch(autoLoadMediaProvider);
     final autoLoadVideo = ref.watch(autoLoadVideoProvider);
 
@@ -124,17 +138,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   value: AppSkin.yellow,
                   title: Text('Жёлтый (классика)'),
                 ),
-                RadioListTile(
-                  value: AppSkin.pink,
-                  title: Text('Розовый'),
-                ),
-                RadioListTile(
-                  value: AppSkin.dark,
-                  title: Text('Тёмный'),
-                ),
+                RadioListTile(value: AppSkin.pink, title: Text('Розовый')),
+                RadioListTile(value: AppSkin.dark, title: Text('Тёмный')),
               ],
             ),
           ),
+
+          // ── Текст ─────────────────────────────────────────────────────────
+          const _SectionHeader('Текст'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Slider(
+              min: 11,
+              max: 20,
+              divisions: 9,
+              value: fontSize,
+              onChanged: (v) => ref.read(fontSizeProvider.notifier).set(v),
+            ),
+          ),
+          _TextSizePreview(skin: skin, fontSize: fontSize),
 
           // ── Медиа ─────────────────────────────────────────────────────────
           const _SectionHeader('Медиа'),
@@ -175,6 +197,62 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
+class _TextSizePreview extends StatefulWidget {
+  const _TextSizePreview({required this.skin, required this.fontSize});
+
+  final AppSkin skin;
+  final double fontSize;
+
+  @override
+  State<_TextSizePreview> createState() => _TextSizePreviewState();
+}
+
+class _TextSizePreviewState extends State<_TextSizePreview> {
+  late Post _post;
+  late List<Comment> _comments;
+
+  @override
+  void initState() {
+    super.initState();
+    final preview = generateSettingsPreview(commentCount: 2);
+    _post = preview.post;
+    _comments = preview.comments;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = themeForSkin(widget.skin);
+    final scale = widget.fontSize / FontSizeNotifier.defaultSize;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Theme(
+        data: theme,
+        child: MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
+          child: ColoredBox(
+            color: theme.scaffoldBackgroundColor,
+            child: IgnorePointer(
+              child: Column(
+                children: [
+                  PostCard(
+                    post: _post,
+                    onTap: () {},
+                    showApproverTap: false,
+                    showVoteSection: false,
+                  ),
+                  for (final c in _comments) CommentTile(comment: c),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader(this.title);
   final String title;
@@ -186,8 +264,8 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
     );
   }
