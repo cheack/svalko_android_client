@@ -210,5 +210,8 @@ class FeedController extends StateNotifier<FeedState> {
 
 final feedControllerProvider =
     StateNotifierProvider.family<FeedController, FeedState, FeedSource>(
-  (ref, source) => FeedController(ref.watch(repositoryProvider), source),
+  (ref, source) {
+    ref.watch(siteModeProvider);
+    return FeedController(ref.watch(repositoryProvider), source);
+  },
 );

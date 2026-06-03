@@ -1,10 +1,14 @@
 abstract final class Config {
-  static const String baseUrl = 'https://svalko.org';
-  static const String pdaBaseUrl = 'https://pda.svalko.org';
-  static const String tagsUrl = '$baseUrl/tags.html';
-  static const String imagesUrl = '$baseUrl/images.html';
-  static const String rssUrl = '$baseUrl/rss.php';
-  static const String rssCommentsUrl = '$rssUrl?comments=1';
+  static String _baseUrl = 'https://svalko.org';
+
+  static String get baseUrl => _baseUrl;
+static String get tagsUrl => '$_baseUrl/tags.html';
+  static String get imagesUrl => '$_baseUrl/images.html';
+  static String get rssUrl => '$_baseUrl/rss.php';
+  static String get rssCommentsUrl => '$rssUrl?comments=1';
+
+  // ignore: use_setters_to_change_properties
+  static void setBaseUrl(String url) => _baseUrl = url;
 
   static const String userAgent =
       'Mozilla/5.0 (Linux; Android 14; Pixel 8) '

@@ -34,4 +34,5 @@ Future<void> openInBrowser(BuildContext context, String url) async {
 
 bool _isSvalkoUrl(Uri uri) =>
     uri.host == 'svalko.org' || uri.host == 'pda.svalko.org' ||
+    uri.host == 'ta.svalko.org' || uri.host == 'pda.ta.svalko.org' ||
     uri.host == Uri.parse(Config.baseUrl).host;

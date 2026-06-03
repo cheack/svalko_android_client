@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/result.dart';
+import '../../../core/settings_storage.dart';
 import '../../../data/parsers/calendar_parser.dart';
 import '../../../models/calendar.dart';
 import '../../../models/feed_source.dart';
@@ -37,6 +38,15 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
     super.initState();
     final saved = ref.read(calendarStateProvider);
     _calendar = saved.month ?? widget.fallbackMonth;
+
+    final now = _effectiveNow;
+    final tooNew = _calendar.year > now.year ||
+        (_calendar.year == now.year && _calendar.month > now.month);
+    if (tooNew) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _changeMonth(CalendarParser.monthPath(now.year, now.month));
+      });
+    }
   }
 
   String? get _selectedPath => ref.read(calendarStateProvider).selectedPath;
@@ -44,8 +54,14 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
   static const _firstYear = 2003;
   static const _firstMonth = 8; // August 2003
 
-  Future<void> _pickMonth(BuildContext context) async {
+  DateTime get _effectiveNow {
     final now = DateTime.now();
+    final isTa = ref.read(siteModeProvider) == SiteMode.taSvalko;
+    return isTa ? DateTime(now.year - 10, now.month, now.day) : now;
+  }
+
+  Future<void> _pickMonth(BuildContext context) async {
+    final now = _effectiveNow;
     final maxMonth = _calendar.year == now.year ? now.month : 12;
     final minMonth = _calendar.year == _firstYear ? _firstMonth : 1;
     final box = context.findRenderObject() as RenderBox;
@@ -69,7 +85,7 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
   }
 
   Future<void> _pickYear(BuildContext context) async {
-    final now = DateTime.now();
+    final now = _effectiveNow;
     final box = context.findRenderObject() as RenderBox;
     final offset = box.localToGlobal(Offset.zero);
     final selected = await showMenu<int>(
@@ -86,7 +102,7 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
           .toList(),
     );
     if (selected != null && selected != _calendar.year) {
-      final now2 = DateTime.now();
+      final now2 = _effectiveNow;
       var month = _calendar.month;
       if (selected == now2.year && month > now2.month) month = now2.month;
       if (selected == _firstYear && month < _firstMonth) month = _firstMonth;
@@ -128,11 +144,26 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
     Navigator.of(context).pop(DateFeed(path: day.path!, label: label));
   }
 
+  CalendarDay _clampDay(CalendarDay day, DateTime? limit) {
+    if (limit == null) return day;
+    if (!day.isCurrentMonth) return day;
+    final pastLimit = _calendar.year > limit.year ||
+        (_calendar.year == limit.year && _calendar.month > limit.month) ||
+        (_calendar.year == limit.year && _calendar.month == limit.month && day.day > limit.day);
+    return pastLimit
+        ? CalendarDay(day: day.day, isCurrentMonth: day.isCurrentMonth, isToday: day.isToday)
+        : day;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = _calendar;
     final selectedPath = _selectedPath;
+    final isTa = ref.read(siteModeProvider) == SiteMode.taSvalko;
+    final limit = isTa ? _effectiveNow : null;
+    final nextBlocked = limit != null && (c.year > limit.year ||
+        (c.year == limit.year && c.month >= limit.month));
 
     return SafeArea(
       child: Padding(
@@ -184,7 +215,7 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
-                  onPressed: (_loading || c.nextPath == null)
+                  onPressed: (_loading || c.nextPath == null || nextBlocked)
                       ? null
                       : () => _changeMonth(c.nextPath),
                 ),
@@ -213,11 +244,14 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
               mainAxisSpacing: 2,
               crossAxisSpacing: 2,
               children: c.days
-                  .map((day) => _DayCell(
-                        day: day,
-                        isSelected: day.path != null && day.path == selectedPath,
-                        onTap: () => _selectDay(day),
-                      ))
+                  .map((day) {
+                        final d = _clampDay(day, limit);
+                        return _DayCell(
+                          day: d,
+                          isSelected: d.path != null && d.path == selectedPath,
+                          onTap: () => _selectDay(d),
+                        );
+                      })
                   .toList(),
             ),
           ],

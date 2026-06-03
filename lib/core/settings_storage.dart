@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'config.dart';
 import 'l10n.dart';
 import 'skin.dart';
 
@@ -119,3 +120,36 @@ class AutoLoadVideoNotifier extends Notifier<bool> {
 
 final autoLoadVideoProvider =
     NotifierProvider<AutoLoadVideoNotifier, bool>(AutoLoadVideoNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Site mode
+// ---------------------------------------------------------------------------
+
+enum SiteMode { svalko, taSvalko }
+
+class SiteModeNotifier extends Notifier<SiteMode> {
+  static const _urls = {
+    SiteMode.svalko: 'https://svalko.org',
+    SiteMode.taSvalko: 'https://ta.svalko.org',
+  };
+
+  @override
+  SiteMode build() {
+    final box = ref.watch(settingsBoxProvider);
+    final mode = SiteMode.values.firstWhere(
+      (m) => m.name == box.get('siteMode'),
+      orElse: () => SiteMode.svalko,
+    );
+    Config.setBaseUrl(_urls[mode]!);
+    listenSelf((_, next) {
+      box.put('siteMode', next.name);
+      Config.setBaseUrl(_urls[next]!);
+    });
+    return mode;
+  }
+
+  void set(SiteMode value) => state = value;
+}
+
+final siteModeProvider =
+    NotifierProvider<SiteModeNotifier, SiteMode>(SiteModeNotifier.new);

@@ -23,6 +23,7 @@ class SvalkoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final skin = ref.watch(skinProvider);
+    ref.watch(siteModeProvider); // initializes Config.baseUrl from saved setting
 
     return MaterialApp(
       navigatorKey: navigatorKey,

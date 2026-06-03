@@ -103,6 +103,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       }
     });
 
+    ref.listen<SiteMode>(siteModeProvider, (prev, next) {
+      if (prev != null) {
+        _pageKeys.clear();
+        _pageScrollOffsets.clear();
+        setState(() => _visiblePage = null);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) _scrollController.jumpTo(0);
+        });
+      }
+    });
+
     if (_visiblePage == null && state.currentPage != null) {
       _visiblePage = state.currentPage;
       _pageScrollOffsets[state.currentPage!] = 0;
