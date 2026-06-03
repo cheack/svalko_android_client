@@ -256,7 +256,7 @@ class _TextSizePreviewState extends State<_TextSizePreview> {
     final theme = themeForSkin(widget.skin);
     final scale = widget.fontSize / FontSizeNotifier.defaultSize;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Theme(
         data: theme,
         child: MediaQuery(
