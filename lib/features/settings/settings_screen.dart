@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
 import '../../core/skin.dart';
+import '../feed/feed_controller.dart';
 import '../../models/comment.dart';
 import '../../models/post.dart';
 import '../../ui/theme.dart';
@@ -93,11 +94,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final fontSize = ref.watch(fontSizeProvider);
     final autoLoadMedia = ref.watch(autoLoadMediaProvider);
     final autoLoadVideo = ref.watch(autoLoadVideoProvider);
+    final siteMode = ref.watch(siteModeProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
       body: ListView(
         children: [
+          // ── Режим ─────────────────────────────────────────────────────────
+          const _SectionHeader('Режим'),
+          RadioGroup<SiteMode>(
+            groupValue: siteMode,
+            onChanged: (v) {
+              if (v != null) {
+                ref.read(siteModeProvider.notifier).set(v);
+                ref.read(calendarStateProvider.notifier).state =
+                    (month: null, selectedPath: null);
+              }
+            },
+            child: const Column(
+              children: [
+                RadioListTile(
+                  value: SiteMode.svalko,
+                  title: Text('Свалка'),
+                ),
+                RadioListTile(
+                  value: SiteMode.taSvalko,
+                  title: Text('Та свалка'),
+                ),
+              ],
+            ),
+          ),
+
           // ── Язык ──────────────────────────────────────────────────────────
           const _SectionHeader('Язык'),
           RadioGroup<AppLanguage>(
