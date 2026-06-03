@@ -156,6 +156,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
       }
     });
     final s = AppStrings.of(ref.watch(languageProvider));
+    final fontSize = ref.watch(fontSizeProvider);
 
     if (state.isLoading) {
       return const Scaffold(
@@ -230,7 +231,11 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           ),
         ),
       ),
-      body: SelectionArea(
+      body: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
+        ),
+        child: SelectionArea(
         child: RefreshIndicator(
         onRefresh: ctrl.refresh,
         child: Scrollbar(
@@ -382,6 +387,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               },
             ),
         ],
+      ),
       ),
       ),
       ),

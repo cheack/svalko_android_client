@@ -79,6 +79,29 @@ final autoLoadMediaProvider =
     NotifierProvider<AutoLoadMediaNotifier, bool>(AutoLoadMediaNotifier.new);
 
 // ---------------------------------------------------------------------------
+// Font size
+// ---------------------------------------------------------------------------
+
+class FontSizeNotifier extends Notifier<double> {
+  static const _min = 11.0;
+  static const _max = 20.0;
+  static const defaultSize = 13.0;
+
+  @override
+  double build() {
+    final box = ref.watch(settingsBoxProvider);
+    final v = double.tryParse(box.get('fontSize') ?? '');
+    listenSelf((_, next) => box.put('fontSize', next.toString()));
+    return (v != null && v >= _min && v <= _max) ? v : defaultSize;
+  }
+
+  void set(double value) => state = value.clamp(_min, _max);
+}
+
+final fontSizeProvider =
+    NotifierProvider<FontSizeNotifier, double>(FontSizeNotifier.new);
+
+// ---------------------------------------------------------------------------
 // Auto-load video
 // ---------------------------------------------------------------------------
 
