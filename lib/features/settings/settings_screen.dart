@@ -98,7 +98,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
-      body: ListView(
+      body: Theme(
+        data: Theme.of(context).copyWith(
+          visualDensity: const VisualDensity(vertical: -2),
+        ),
+        child: ListView(
         children: [
           // ── Режим ─────────────────────────────────────────────────────────
           const _SectionHeader('Режим'),
@@ -220,6 +224,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 }
@@ -287,10 +292,10 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 2),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
           color: Theme.of(context).colorScheme.primary,
         ),
       ),
