@@ -19,11 +19,12 @@ import '../../../ui/widgets/post_header.dart';
 
 
 class PostCard extends ConsumerStatefulWidget {
-  const PostCard({super.key, required this.post, required this.onTap, this.showApproverTap = true});
+  const PostCard({super.key, required this.post, required this.onTap, this.showApproverTap = true, this.showVoteSection = true});
 
   final Post post;
   final VoidCallback onTap;
   final bool showApproverTap;
+  final bool showVoteSection;
 
   @override
   ConsumerState<PostCard> createState() => _PostCardState();
@@ -45,8 +46,13 @@ class _PostCardState extends ConsumerState<PostCard> {
     final s = AppStrings.of(ref.watch(languageProvider));
     final theme = Theme.of(context);
     final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
+    final fontSize = ref.watch(fontSizeProvider);
 
-    return Container(
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
+      ),
+      child: Container(
       margin: dividers
           ? EdgeInsets.zero
           : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -117,7 +123,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
                 child: PostTagsRow(tags: widget.post.tags),
               ),
-            PostVoteSection(
+            if (widget.showVoteSection) PostVoteSection(
               postId: widget.post.id,
               rating: widget.post.rating,
               borodaCount: widget.post.borodaCount,
@@ -154,8 +160,9 @@ class _PostCardState extends ConsumerState<PostCard> {
         ],
         ),
       ),
-    ));
+    )));
   }
+
 
 
 

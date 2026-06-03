@@ -132,7 +132,9 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 4,
+            runSpacing: 2,
             children: [
               if (_vote == null) ...[
                 if (_canVote(0)) _Btn('? я чото п', null,                    _votingVote ? null : () => _doVote(0),  color),
@@ -140,13 +142,11 @@ class _PostVoteSectionState extends ConsumerState<PostVoteSection> {
                 if (_canVote(-1)) _Btn('КГ/АМ',     'assets/icons/vote.png', _votingVote ? null : () => _doVote(-1), color),
               ] else
                 _VotedChip(_voteLabel(_vote!), _vote != 0 ? 'assets/icons/vote.png' : null, primary),
-              const SizedBox(width: 8),
               if (_boroda == null) ...[
                 _Btn('борода!',     'assets/icons/boroda.png',    _votingBoroda ? null : () => _doBoroda(0), color),
                 _Btn('МЕГАборода!', 'assets/icons/megaboroda.png', _votingBoroda ? null : () => _doBoroda(1), color),
               ] else
                 _VotedChip(_borodaLabel(_boroda!), _boroda == 1 ? 'assets/icons/megaboroda.png' : 'assets/icons/boroda.png', primary),
-              const Spacer(),
             ],
           ),
         ],
@@ -201,7 +201,7 @@ class _VotedChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (iconAsset != null) ...[
-            _iconAsset(context, iconAsset!, 14),
+            _iconAsset(context, iconAsset!, MediaQuery.textScalerOf(context).scale(14)),
             const SizedBox(width: 4),
           ],
           Text(label,
@@ -232,7 +232,7 @@ class _Btn extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (iconAsset != null) ...[
-              _iconAsset(context, iconAsset!, 12, opacity: onTap != null ? 1.0 : 0.4),
+              _iconAsset(context, iconAsset!, MediaQuery.textScalerOf(context).scale(12), opacity: onTap != null ? 1.0 : 0.4),
               const SizedBox(width: 3),
             ],
             Text(
