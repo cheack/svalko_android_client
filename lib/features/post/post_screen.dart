@@ -231,8 +231,9 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           ),
         ),
       ),
-      body: MediaQuery(
-        data: MediaQuery.of(context).copyWith(
+      body: Builder(
+        builder: (ctx) => MediaQuery(
+        data: MediaQuery.of(ctx).copyWith(
           textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
         ),
         child: SelectionArea(
@@ -387,6 +388,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               },
             ),
         ],
+      ),
       ),
       ),
       ),
