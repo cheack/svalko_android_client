@@ -46,13 +46,8 @@ class _PostCardState extends ConsumerState<PostCard> {
     final s = AppStrings.of(ref.watch(languageProvider));
     final theme = Theme.of(context);
     final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
-    final fontSize = ref.watch(fontSizeProvider);
 
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(
-        textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
-      ),
-      child: Container(
+    return Container(
       margin: dividers
           ? EdgeInsets.zero
           : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -160,7 +155,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         ],
         ),
       ),
-    )));
+    ));
   }
 
 

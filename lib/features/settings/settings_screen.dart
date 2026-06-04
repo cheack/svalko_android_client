@@ -91,7 +91,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = ref.watch(languageProvider);
     final skin = ref.watch(skinProvider);
-    final fontSize = ref.watch(fontSizeProvider);
+
     final autoLoadMedia = ref.watch(autoLoadMediaProvider);
     final autoLoadVideo = ref.watch(autoLoadVideoProvider);
     final siteMode = ref.watch(siteModeProvider);
@@ -177,17 +177,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // ── Текст ─────────────────────────────────────────────────────────
           const _SectionHeader('Текст'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Slider(
-              min: 11,
-              max: 20,
-              divisions: 9,
-              value: fontSize,
-              onChanged: (v) => ref.read(fontSizeProvider.notifier).set(v),
-            ),
-          ),
-          _TextSizePreview(skin: skin, fontSize: fontSize),
+          _TextSizeSection(skin: skin),
 
           // ── Медиа ─────────────────────────────────────────────────────────
           const _SectionHeader('Медиа'),
@@ -225,6 +215,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
       ),
+    );
+  }
+}
+
+class _TextSizeSection extends ConsumerStatefulWidget {
+  const _TextSizeSection({required this.skin});
+  final AppSkin skin;
+
+  @override
+  ConsumerState<_TextSizeSection> createState() => _TextSizeSectionState();
+}
+
+class _TextSizeSectionState extends ConsumerState<_TextSizeSection> {
+  double? _local;
+
+  @override
+  Widget build(BuildContext context) {
+    final fontSize = ref.watch(fontSizeProvider);
+    final display = _local ?? fontSize;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Slider(
+            min: 11,
+            max: 20,
+            divisions: 9,
+            value: display,
+            onChanged: (v) => setState(() => _local = v),
+            onChangeEnd: (v) {
+              ref.read(fontSizeProvider.notifier).set(v);
+              setState(() => _local = null);
+            },
+          ),
+        ),
+        _TextSizePreview(skin: widget.skin, fontSize: display),
+      ],
     );
   }
 }

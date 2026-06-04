@@ -87,6 +87,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final state = ref.watch(feedControllerProvider(widget.source));
     final ctrl = ref.read(feedControllerProvider(widget.source).notifier);
     final s = AppStrings.of(ref.watch(languageProvider));
+    final fontSize = ref.watch(fontSizeProvider);
 
     // After loadPage/refresh: reset offsets, update page, jump to top.
     ref.listen<FeedState>(feedControllerProvider(widget.source), (prev, next) {
@@ -194,7 +195,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ),
         ],
       ),
-      body: Stack(
+      body: Builder(
+        builder: (ctx) => MediaQuery(
+        data: MediaQuery.of(ctx).copyWith(
+          textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
+        ),
+        child: Stack(
         children: [
           RefreshIndicator(
             onRefresh: ctrl.refresh,
@@ -264,6 +270,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ),
             ),
         ],
+        ),
+        ),
       ),
     );
   }
