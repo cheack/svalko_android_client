@@ -43,6 +43,6 @@ class SkinHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).extension<SvalkoSkinExt>()?.headerColor;
     if (color == null) return child;
-    return ColoredBox(color: color, child: child);
+    return SizedBox(width: double.infinity, child: ColoredBox(color: color, child: child));
   }
 }

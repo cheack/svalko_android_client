@@ -6,8 +6,10 @@ import '../parsers/calendar_parser.dart';
 import '../parsers/feed_parser.dart';
 import '../parsers/images_parser.dart';
 import '../parsers/post_parser.dart';
+import '../parsers/last_parser.dart';
 import '../parsers/tags_parser.dart';
 import '../svalko_api.dart';
+import '../../core/crash_reporter.dart';
 import '../../core/result.dart';
 import '../../models/ban_page_data.dart';
 import '../../models/calendar.dart';
@@ -15,6 +17,7 @@ import '../../models/feed_source.dart';
 import '../../models/image_item.dart';
 import '../../models/post.dart';
 import '../../models/comment.dart';
+import '../../models/last_item.dart';
 import '../../models/tag.dart';
 
 class FeedPage {
@@ -227,7 +230,25 @@ class SvalkoRepository {
   Result<List<ImageItem>, AppError> _parseImages(String html) {
     try {
       return Ok(ImagesParser.parse(html));
-    } catch (_) {
+    } catch (e, st) {
+      CrashReporter.instance.report(e, st);
+      return const Err(AppError.parseFailure);
+    }
+  }
+
+  Future<Result<(List<LastComment>, List<LastImage>), AppError>> getLast({int skip = 0}) async {
+    final result = await _api.fetchLastPage(skip: skip);
+    return switch (result) {
+      Err(:final error) => Err(error),
+      Ok(:final value) => _parseLast(value),
+    };
+  }
+
+  Result<(List<LastComment>, List<LastImage>), AppError> _parseLast(String html) {
+    try {
+      return Ok(LastParser.parse(html));
+    } catch (e, st) {
+      CrashReporter.instance.report(e, st);
       return const Err(AppError.parseFailure);
     }
   }
@@ -249,7 +270,8 @@ class SvalkoRepository {
         comments: parsed.comments,
         pagination: parsed.pagination,
       ));
-    } catch (_) {
+    } catch (e, st) {
+      CrashReporter.instance.report(e, st);
       return const Err(AppError.parseFailure);
     }
   }
@@ -263,7 +285,8 @@ class SvalkoRepository {
   Result<List<Tag>, AppError> _parseTags(String html) {
     try {
       return Ok(TagsParser.parse(html));
-    } catch (_) {
+    } catch (e, st) {
+      CrashReporter.instance.report(e, st);
       return const Err(AppError.parseFailure);
     }
   }

@@ -106,15 +106,25 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   void _tryScrollToHighlight() {
     if (_didScrollToHighlight) return;
     final state = ref.read(postControllerProvider(widget.postId));
-    if (state.isLoading || state.totalPages != 1) return;
+    if (state.isLoading) return;
     final ctx = _highlightKey.currentContext;
     if (ctx == null) return;
     _didScrollToHighlight = true;
-    Scrollable.ensureVisible(
-      ctx,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-    );
+    Scrollable.ensureVisible(ctx,
+        duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+    // Images loading above the target shift the layout — re-scroll a few times.
+    for (final ms in [400, 900, 1800]) {
+      Future.delayed(Duration(milliseconds: ms), () {
+        if (!mounted) return;
+        final c = _highlightKey.currentContext;
+        if (c != null) {
+          // ignore: use_build_context_synchronously
+          Scrollable.ensureVisible(c,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut);
+        }
+      });
+    }
   }
 
   void _scrollToComments() {
@@ -367,6 +377,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                           ? _highlightKey
                           : null,
                       comment: state.comments[i],
+                      isHighlighted: state.comments[i].id == widget.highlightCommentId,
                     ),
                   ],
                 ],
@@ -554,7 +565,13 @@ class _CommentPageBar extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4)),
               ),
-              child: Text('$slot', style: const TextStyle(fontSize: 12)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('$slot', style: const TextStyle(fontSize: 12)),
+                ),
+              ),
             ),
           );
         }).toList(),

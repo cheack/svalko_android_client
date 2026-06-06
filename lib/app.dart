@@ -5,6 +5,7 @@ import 'core/settings_storage.dart';
 import 'features/about/about_screen.dart';
 import 'features/favorites/favorites_screen.dart';
 import 'features/feed/feed_screen.dart';
+import 'features/last/last_screen.dart';
 import 'features/images/images_screen.dart';
 import 'features/logs/logs_screen.dart';
 import 'features/post/post_screen.dart';
@@ -83,6 +84,9 @@ class SvalkoApp extends ConsumerWidget {
           return MaterialPageRoute(
             builder: (_) => FeedScreen(source: feed),
           );
+        }
+        if (settings.name == '/last') {
+          return MaterialPageRoute(builder: (_) => const LastScreen());
         }
         if (settings.name == '/images') {
           return MaterialPageRoute(builder: (_) => const ImagesScreen());

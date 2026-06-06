@@ -11,10 +11,54 @@ import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/shimmer_placeholder.dart';
 import '../../../ui/widgets/video_player_widget.dart';
 
-class CommentTile extends StatelessWidget {
-  const CommentTile({super.key, required this.comment});
+class CommentTile extends StatefulWidget {
+  const CommentTile({super.key, required this.comment, this.isHighlighted = false});
 
   final Comment comment;
+  final bool isHighlighted;
+
+  @override
+  State<CommentTile> createState() => _CommentTileState();
+}
+
+class _CommentTileState extends State<CommentTile> with SingleTickerProviderStateMixin {
+  AnimationController? _flashCtrl;
+  Animation<double>? _flashAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isHighlighted) {
+      _flashCtrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 350),
+      );
+      _flashAnim = Tween<double>(begin: 0, end: 0.4).animate(
+        CurvedAnimation(parent: _flashCtrl!, curve: Curves.easeInOut),
+      );
+      // Delay start until after the scroll animation completes (~650ms).
+      Future.delayed(const Duration(milliseconds: 700), _runFlash);
+    }
+  }
+
+  Future<void> _runFlash() async {
+    final ctrl = _flashCtrl;
+    if (ctrl == null) return;
+    for (int i = 0; i < 3; i++) {
+      if (!mounted) return;
+      await ctrl.forward();
+      if (!mounted) return;
+      await ctrl.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _flashCtrl?.dispose();
+    super.dispose();
+  }
+
+  Comment get comment => widget.comment;
 
   String _commentUrl() =>
       '${Config.baseUrl}/${comment.postId}.html#c${comment.id}';
@@ -88,9 +132,12 @@ class CommentTile extends StatelessWidget {
 
     final cs = theme.colorScheme;
     final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
+    final flashAnim = _flashAnim;
     return Padding(
       padding: dividers ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 4, 8, 0),
-      child: Container(
+      child: Stack(
+        children: [
+          Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: cs.surfaceContainer,
@@ -187,6 +234,19 @@ class CommentTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+          if (flashAnim != null)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: flashAnim,
+                  builder: (_, _) => ColoredBox(
+                    color: cs.primary.withValues(alpha: flashAnim.value),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -6,6 +6,7 @@ import '../../core/l10n.dart';
 import '../../core/result.dart';
 import '../../core/settings_storage.dart';
 import '../../features/feed/feed_controller.dart';
+import '../../features/last/last_controller.dart';
 import '../../features/navigation/tags_cache.dart';
 import '../../models/tag.dart';
 import '../../ui/widgets/new_post_sheet.dart';
@@ -105,6 +106,15 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
               onTap: () {
                 ref.read(activeTagProvider.notifier).state = null;
                 Navigator.of(context).popUntil((r) => r.isFirst);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history_outlined),
+              title: const Text('Ласты'),
+              onTap: () {
+                ref.read(lastProvider.notifier).resetToFirst();
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/last');
               },
             ),
             ListTile(

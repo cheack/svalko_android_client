@@ -152,6 +152,9 @@ class SvalkoApi {
     }
   }
 
+  Future<Result<String, AppError>> fetchLastPage({int skip = 0}) =>
+      _get(Config.lastUrl(skip: skip));
+
   Future<Result<String, AppError>> fetchTagsPage() => _get(
         Config.tagsUrl,
         cacheOptions: _cacheStore == null

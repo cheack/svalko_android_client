@@ -2,7 +2,9 @@ abstract final class Config {
   static String _baseUrl = 'https://svalko.org';
 
   static String get baseUrl => _baseUrl;
-static String get tagsUrl => '$_baseUrl/tags.html';
+  static String lastUrl({int skip = 0}) =>
+      skip > 0 ? '$_baseUrl/last.html?skip=$skip' : '$_baseUrl/last.html';
+  static String get tagsUrl => '$_baseUrl/tags.html';
   static String get imagesUrl => '$_baseUrl/images.html';
   static String get rssUrl => '$_baseUrl/rss.php';
   static String get rssCommentsUrl => '$rssUrl?comments=1';
