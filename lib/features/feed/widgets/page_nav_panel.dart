@@ -54,26 +54,24 @@ class PageNavPanel extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               onPressed: (!isLoading && canGoNewer) ? onNewer : null,
             ),
-            SizedBox(
-              width: 72,
-              child: Center(
-                child: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : GestureDetector(
-                        onTap: () => _showPicker(context),
-                        child: Text(
-                          'стр. $currentPage',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            decoration: TextDecoration.underline,
-                            decorationStyle: TextDecorationStyle.dotted,
-                          ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : GestureDetector(
+                      onTap: () => _showPicker(context),
+                      child: Text(
+                        'стр. $currentPage',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          decoration: TextDecoration.underline,
+                          decorationStyle: TextDecorationStyle.dotted,
                         ),
                       ),
-              ),
+                    ),
             ),
             IconButton(
               icon: const Icon(Icons.arrow_downward, size: 18),
