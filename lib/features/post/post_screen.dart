@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
+import '../../features/favorites/favorites_storage.dart';
 import '../../ui/widgets/post_action_buttons.dart';
 import '../feed/feed_controller.dart';
 import 'post_controller.dart';
@@ -203,12 +205,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                 icon: const Icon(Icons.shuffle),
                 onPressed: _openRandom,
               ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: state.isLoadingMore ? null : ctrl.refresh,
-          ),
-          PostShareButton(postId: post.id),
-          PostFavButton(post: post),
+          _PostMenu(post: post, scrollController: _scrollController),
         ],
       ),
       floatingActionButton: AnimatedSlide(
@@ -393,6 +390,79 @@ class _PostScreenState extends ConsumerState<PostScreen> {
       ),
       ),
       ),
+      ),
+    );
+  }
+}
+
+class _PostMenu extends ConsumerStatefulWidget {
+  const _PostMenu({required this.post, required this.scrollController});
+  final Post post;
+  final ScrollController scrollController;
+
+  @override
+  ConsumerState<_PostMenu> createState() => _PostMenuState();
+}
+
+class _PostMenuState extends ConsumerState<_PostMenu> {
+  final _menuController = MenuController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    widget.scrollController.removeListener(_onScroll);
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_menuController.isOpen) _menuController.close();
+  }
+
+  void _toggleFav() {
+    final post = widget.post;
+    ref.read(favoritesProvider.notifier).toggle(
+          FavoritePost(
+            id: post.id,
+            authorName: post.author.name,
+            publishedAt: post.publishedAt,
+            addedAt: DateTime.now(),
+            firstImageUrl: post.imageUrls.firstOrNull,
+            previewText: post.text != null && post.text!.isNotEmpty
+                ? post.text!.substring(0, post.text!.length.clamp(0, 120))
+                : null,
+          ),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final post = widget.post;
+    final isFav = ref.watch(
+      favoritesProvider.select((list) => list.any((f) => f.id == post.id)),
+    );
+    return MenuAnchor(
+      controller: _menuController,
+      menuChildren: [
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.share_outlined),
+          onPressed: () => Share.share(PostShareButton.postUrl(post.id)),
+          child: const Text('Поделиться'),
+        ),
+        MenuItemButton(
+          leadingIcon: Icon(isFav ? Icons.bookmark : Icons.bookmark_outline),
+          onPressed: _toggleFav,
+          child: Text(isFav ? 'Убрать из избранного' : 'В избранное'),
+        ),
+      ],
+      builder: (_, controller, _) => IconButton(
+        icon: const Icon(Icons.more_vert),
+        onPressed: () =>
+            controller.isOpen ? controller.close() : controller.open(),
       ),
     );
   }
