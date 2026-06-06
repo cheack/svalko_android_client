@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
@@ -27,6 +28,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   // Populated while the marker is rendered; survives after it's disposed.
   final _pageScrollOffsets = <int, double>{};
   int? _visiblePage;
+  DateTime? _lastBackPress;
 
   @override
   void initState() {
@@ -164,7 +166,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     };
     final visiblePage = _visiblePage;
 
-    return Scaffold(
+    final scaffold = Scaffold(
       drawer: const AppDrawer(),
       drawerEdgeDragWidth: 80,
       appBar: AppBar(
@@ -273,6 +275,28 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         ),
         ),
       ),
+    );
+
+    if (widget.source is! MainFeed) return scaffold;
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, _) {
+        final now = DateTime.now();
+        if (_lastBackPress != null &&
+            now.difference(_lastBackPress!) < const Duration(seconds: 2)) {
+          SystemNavigator.pop();
+          return;
+        }
+        _lastBackPress = now;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Нажмите назад ещё раз для выхода'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
+      child: scaffold,
     );
   }
 }
