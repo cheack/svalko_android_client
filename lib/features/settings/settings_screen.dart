@@ -8,6 +8,7 @@ import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
 import '../../core/skin.dart';
 import '../feed/feed_controller.dart';
+import '../navigation/tags_cache.dart';
 import '../../models/comment.dart';
 import '../../models/post.dart';
 import '../../ui/theme.dart';
@@ -70,6 +71,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       PaintingBinding.instance.imageCache.clear();
       PaintingBinding.instance.imageCache.clearLiveImages();
       Gif.cache.clear();
+      await ref.read(tagsCacheProvider.notifier).clearAndRefetch();
       if (mounted) {
         setState(() {
           _cacheBytes = 0;

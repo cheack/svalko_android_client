@@ -8,6 +8,11 @@ class Tag {
   final String name;
   final int? count;
 
+  factory Tag.fromJson(Map<String, dynamic> j) =>
+      Tag(id: j['id'] as int, name: j['name'] as String, count: j['count'] as int?);
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'count': count};
+
   @override
   bool operator ==(Object other) =>
       other is Tag && other.id == id && other.name == name;

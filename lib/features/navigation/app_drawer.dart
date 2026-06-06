@@ -6,16 +6,9 @@ import '../../core/l10n.dart';
 import '../../core/result.dart';
 import '../../core/settings_storage.dart';
 import '../../features/feed/feed_controller.dart';
+import '../../features/navigation/tags_cache.dart';
 import '../../models/tag.dart';
 import '../../ui/widgets/new_post_sheet.dart';
-
-final tagsProvider = FutureProvider<List<Tag>>((ref) async {
-  final result = await ref.watch(repositoryProvider).getTags();
-  return switch (result) {
-    Ok(:final value) => value,
-    Err() => [],
-  };
-});
 
 class AppDrawer extends ConsumerStatefulWidget {
   const AppDrawer({super.key});
@@ -83,7 +76,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    final tagsAsync = ref.watch(tagsProvider);
+    final tagsAsync = ref.watch(tagsCacheProvider);
     final activeTag = ref.watch(activeTagProvider);
     final s = AppStrings.of(ref.watch(languageProvider));
     final theme = Theme.of(context);
