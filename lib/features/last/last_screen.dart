@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/settings_storage.dart';
 import '../../models/last_item.dart';
 import '../../ui/skin_ext.dart';
+import '../navigation/app_drawer.dart';
 import 'last_controller.dart';
 
 class LastScreen extends ConsumerWidget {
@@ -22,6 +23,8 @@ class LastScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        drawer: const AppDrawer(activePage: 'last'),
+        drawerEdgeDragWidth: 80,
         appBar: AppBar(
           title: const Text('Ласты'),
           actions: [

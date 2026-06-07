@@ -167,7 +167,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final visiblePage = _visiblePage;
 
     final scaffold = Scaffold(
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(activePage: widget.source is MainFeed ? 'home' : null),
       drawerEdgeDragWidth: 80,
       appBar: AppBar(
         title: Text(_title(s)),

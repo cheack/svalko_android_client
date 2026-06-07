@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../navigation/app_drawer.dart';
 import 'favorites_storage.dart';
 
 class FavoritesScreen extends ConsumerWidget {
@@ -61,6 +62,8 @@ class FavoritesScreen extends ConsumerWidget {
     final notifier = ref.read(favoritesProvider.notifier);
 
     return Scaffold(
+      drawer: const AppDrawer(activePage: 'favorites'),
+      drawerEdgeDragWidth: 80,
       appBar: AppBar(
         title: const Text('Избранное'),
         actions: [

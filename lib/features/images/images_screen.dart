@@ -7,6 +7,7 @@ import '../../core/settings_storage.dart';
 import '../../features/feed/feed_controller.dart';
 import '../../models/image_item.dart';
 import '../../ui/widgets/image_viewer.dart';
+import '../navigation/app_drawer.dart';
 import 'images_controller.dart';
 
 class ImagesScreen extends ConsumerStatefulWidget {
@@ -63,6 +64,8 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
     final s = AppStrings.of(ref.watch(languageProvider));
 
     return Scaffold(
+      drawer: const AppDrawer(activePage: 'images'),
+      drawerEdgeDragWidth: 80,
       appBar: AppBar(title: Text(s.navImages)),
       body: _buildBody(state, s),
     );

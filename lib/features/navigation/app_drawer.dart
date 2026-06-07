@@ -12,7 +12,9 @@ import '../../models/tag.dart';
 import '../../ui/widgets/new_post_sheet.dart';
 
 class AppDrawer extends ConsumerStatefulWidget {
-  const AppDrawer({super.key});
+  const AppDrawer({super.key, this.activePage});
+
+  final String? activePage;
 
   @override
   ConsumerState<AppDrawer> createState() => _AppDrawerState();
@@ -56,6 +58,11 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
       _tagsScrollController.position.maxScrollExtent,
     );
     _tagsScrollController.jumpTo(target);
+  }
+
+  void _navTo(String page, void Function() action) {
+    Navigator.of(context).pop();
+    if (widget.activePage != page) action();
   }
 
   Future<void> _openRandom() async {
@@ -103,6 +110,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
             ListTile(
               leading: const Icon(Icons.home_outlined),
               title: Text(s.navHome),
+              selected: widget.activePage == 'home',
               onTap: () {
                 ref.read(activeTagProvider.notifier).state = null;
                 Navigator.of(context).popUntil((r) => r.isFirst);
@@ -111,11 +119,11 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
             ListTile(
               leading: const Icon(Icons.history_outlined),
               title: const Text('Ласты'),
-              onTap: () {
+              selected: widget.activePage == 'last',
+              onTap: () => _navTo('last', () {
                 ref.read(lastProvider.notifier).resetToFirst();
-                Navigator.of(context).pop();
                 Navigator.of(context).pushNamed('/last');
-              },
+              }),
             ),
             ListTile(
               leading: const Icon(Icons.edit_outlined),
@@ -147,18 +155,14 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: Text(s.navImages),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/images');
-              },
+              selected: widget.activePage == 'images',
+              onTap: () => _navTo('images', () => Navigator.of(context).pushNamed('/images')),
             ),
             ListTile(
               leading: const Icon(Icons.bookmark_outline),
               title: const Text('Избранное'),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/favorites');
-              },
+              selected: widget.activePage == 'favorites',
+              onTap: () => _navTo('favorites', () => Navigator.of(context).pushNamed('/favorites')),
             ),
             const Divider(height: 1),
             Padding(
