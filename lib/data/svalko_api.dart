@@ -23,13 +23,26 @@ class CommentFormData {
   final String suggestedAuthor;
 }
 
+Options applyMynameCookie(Options? base, String mynameCookie) {
+  final opts = base ?? Options();
+  if (mynameCookie.isEmpty) return opts;
+  opts.headers = {...?opts.headers, 'Cookie': mynameCookie};
+  return opts;
+}
+
 class SvalkoApi {
-  SvalkoApi({FileCacheStore? cacheStore})
+  SvalkoApi({FileCacheStore? cacheStore, String mynameCookie = ''})
       : _cacheStore = cacheStore,
+        _mynameCookie = mynameCookie,
         _dio = _buildDio(cacheStore);
 
   final FileCacheStore? _cacheStore;
   final Dio _dio;
+  String _mynameCookie;
+
+  set mynameCookie(String v) => _mynameCookie = v;
+
+  Options _withCookie(Options? base) => applyMynameCookie(base, _mynameCookie);
 
   // Historical pages (index < totalPages-1) — immutable, cache 30 days.
   // forceCache: ignores server Cache-Control headers and caches unconditionally.
@@ -102,11 +115,11 @@ class SvalkoApi {
     try {
       final response = await _dio.get<dynamic>(
         '${Config.baseUrl}/random.html',
-        options: Options(
+        options: _withCookie(Options(
           followRedirects: true,
           maxRedirects: 5,
           responseType: ResponseType.bytes,
-        ),
+        )),
       );
       final match =
           RegExp(r'/(\d+)\.html').firstMatch(response.realUri.toString());
@@ -133,11 +146,11 @@ class SvalkoApi {
           '${Config.imagesUrl}?find=${Uri.encodeComponent(filename)}';
       final response = await _dio.get<dynamic>(
         url,
-        options: Options(
+        options: _withCookie(Options(
           followRedirects: true,
           maxRedirects: 5,
           responseType: ResponseType.bytes,
-        ),
+        )),
       );
       final finalUri = response.realUri;
       final postMatch = RegExp(r'/(\d+)\.html').firstMatch(finalUri.toString());
@@ -390,7 +403,7 @@ class SvalkoApi {
     try {
       final response = await _dio.get<dynamic>(
         '${Config.baseUrl}$path',
-        options: Options(followRedirects: false, responseType: ResponseType.bytes),
+        options: _withCookie(Options(followRedirects: false, responseType: ResponseType.bytes)),
       );
       final data = response.data;
       final Uint8List bytes = data is Uint8List
@@ -436,7 +449,7 @@ class SvalkoApi {
     try {
       final response = await _dio.get<String>(
         url,
-        options: Options(responseType: ResponseType.plain),
+        options: _withCookie(Options(responseType: ResponseType.plain)),
       );
       return Ok(response.data ?? '');
     } on DioException catch (e) {
@@ -453,7 +466,7 @@ class SvalkoApi {
     try {
       final response = await _dio.get<dynamic>(
         url,
-        options: cacheOptions?.toOptions(),
+        options: _withCookie(cacheOptions?.toOptions()),
       );
       final data = response.data;
       final Uint8List bytes;

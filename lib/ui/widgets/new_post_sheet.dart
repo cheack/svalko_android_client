@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import '../../data/svalko_api.dart';
+import '../../core/encoding.dart';
 import '../../core/result.dart';
 
 Future<bool> showNewPostSheet(
@@ -112,6 +113,10 @@ class _NewPostSheetState extends State<_NewPostSheet> {
     });
 
     widget.settingsBox.put(_authorKey, author);
+    final encoded = await encodeQueryWin1251(author);
+    final mynameCookie = 'myname=$encoded';
+    widget.settingsBox.put('mynameCookie', mynameCookie);
+    widget.api.mynameCookie = mynameCookie;
 
     final result = await widget.api.submitPost(
       author: author,

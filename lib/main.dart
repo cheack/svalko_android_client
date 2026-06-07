@@ -9,6 +9,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'app.dart';
 import 'core/crash_reporter.dart';
+import 'core/encoding.dart';
 import 'core/settings_storage.dart';
 import 'data/svalko_api.dart';
 import 'features/favorites/favorites_storage.dart';
@@ -43,10 +44,25 @@ void main() {
       final cacheDir = await getApplicationCacheDirectory();
       final cacheStore = FileCacheStore('${cacheDir.path}/http_cache');
 
+      String mynameCookie = settings.get('mynameCookie') ?? '';
+      if (mynameCookie.isEmpty) {
+        final author = settings.get('comment_author') ?? '';
+        if (author.isNotEmpty) {
+          final encoded = await encodeQueryWin1251(author);
+          mynameCookie = 'myname=$encoded';
+          settings.put('mynameCookie', mynameCookie);
+        }
+      }
+
       runApp(
         ProviderScope(
           overrides: [
-            apiProvider.overrideWithValue(SvalkoApi(cacheStore: cacheStore)),
+          apiProvider.overrideWithValue(
+            SvalkoApi(
+              cacheStore: cacheStore,
+              mynameCookie: mynameCookie,
+            ),
+          ),
             settingsBoxProvider.overrideWithValue(settings),
             votesBoxProvider.overrideWithValue(votes),
             favoritesBoxProvider.overrideWithValue(favorites),
