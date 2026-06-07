@@ -40,6 +40,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   final _highlightKey = GlobalKey();
   double? _commentsTarget;
   bool _didScrollToHighlight = false;
+  int _scrollRetries = 0;
   bool _pendingScrollToBottom = false;
   bool _fabVisible = true;
   double _lastScrollOffset = 0;
@@ -108,7 +109,23 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     final state = ref.read(postControllerProvider(widget.postId));
     if (state.isLoading) return;
     final ctx = _highlightKey.currentContext;
-    if (ctx == null) return;
+    if (ctx == null) {
+      // Item not yet built by ListView — jump to estimated position to bring it into viewport.
+      if (_scrollRetries < 3 && _scrollController.hasClients && state.comments.isNotEmpty) {
+        _scrollRetries++;
+        final matchIdx = state.comments.indexWhere((c) => c.id == widget.highlightCommentId);
+        if (matchIdx >= 0) {
+          final max = _scrollController.position.maxScrollExtent;
+          final target = (max * matchIdx / state.comments.length).clamp(0.0, max);
+          _scrollController.jumpTo(target);
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _tryScrollToHighlight();
+        });
+      }
+      return;
+    }
+    _scrollRetries = 0;
     _didScrollToHighlight = true;
     Scrollable.ensureVisible(ctx,
         duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
