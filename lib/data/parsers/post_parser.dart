@@ -137,7 +137,9 @@ abstract final class PostParser {
     if (textDiv == null) return null;
     final clone = textDiv.clone(true);
     clone.querySelector('.tags')?.remove();
-    for (final img in clone.querySelectorAll('img')) { img.remove(); }
+    for (final img in clone.querySelectorAll('img')) {
+      if (img.parent?.classes.contains('video') != true) img.remove();
+    }
     for (final video in clone.querySelectorAll('video')) { video.remove(); }
     stripHtmlComments(clone);
     final html = clone.innerHtml.trim();

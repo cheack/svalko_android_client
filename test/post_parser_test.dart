@@ -78,4 +78,35 @@ void main() {
       expect(result.pagination.totalPages, greaterThan(0));
     });
   });
+
+  group('PostParser — YouTube-only comment', () {
+    const youtubePostId = 1019849;
+    late List<dynamic> comments;
+
+    setUpAll(() {
+      final html = File('test/fixtures/youtube_comment_page.html').readAsStringSync();
+      final result = PostParser.parse(html, youtubePostId)!;
+      comments = result.comments;
+    });
+
+    test('comment is parsed and not skipped', () {
+      expect(comments.length, equals(1));
+    });
+
+    test('comment text is not null', () {
+      expect(comments.first.text, isNotNull);
+    });
+
+    test('comment text contains YouTube thumbnail img', () {
+      expect(comments.first.text, contains('<img'));
+    });
+
+    test('comment imageUrls is empty (thumbnail not in carousel)', () {
+      expect(comments.first.imageUrls, isEmpty);
+    });
+
+    test('comment videoUrls is empty', () {
+      expect(comments.first.videoUrls, isEmpty);
+    });
+  });
 }
