@@ -109,4 +109,29 @@ void main() {
       expect(comments.first.videoUrls, isEmpty);
     });
   });
+
+  group('PostParser — kum comments', () {
+    const kumPostId = 700144;
+    late List<dynamic> comments;
+
+    setUpAll(() {
+      final html = File('test/fixtures/kum_comment_page.html').readAsStringSync();
+      final result = PostParser.parse(html, kumPostId)!;
+      comments = result.comments;
+    });
+
+    test('parses two comments', () {
+      expect(comments.length, equals(2));
+    });
+
+    test('regular comment has isKum = false', () {
+      final regular = comments.firstWhere((c) => c.id == 700288);
+      expect(regular.isKum, isFalse);
+    });
+
+    test('kum comment has isKum = true', () {
+      final kum = comments.firstWhere((c) => c.id == 700295);
+      expect(kum.isKum, isTrue);
+    });
+  });
 }

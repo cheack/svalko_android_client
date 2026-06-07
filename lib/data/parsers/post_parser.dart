@@ -129,6 +129,7 @@ abstract final class PostParser {
       text: text,
       imageUrls: imageUrls,
       videoUrls: videoUrls,
+      isKum: el.classes.contains('kum'),
     );
   }
 

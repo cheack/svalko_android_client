@@ -11,6 +11,7 @@ class Comment {
     required this.imageUrls,
     required this.videoUrls,
     this.text,
+    this.isKum = false,
   });
 
   final int id;
@@ -20,4 +21,5 @@ class Comment {
   final String? text;
   final List<String> imageUrls;
   final List<String> videoUrls;
+  final bool isKum;
 }
