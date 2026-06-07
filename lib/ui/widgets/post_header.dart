@@ -29,6 +29,12 @@ class PostHeader extends StatefulWidget {
     return buf.toString();
   }
 
+  static String formatRatingShort(PostRating r, int? borodaCount) {
+    final buf = StringBuffer('${r.percentage}%');
+    if (borodaCount != null && borodaCount > 0) buf.write(' · б:$borodaCount');
+    return buf.toString();
+  }
+
   static String formatExactDate(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
       '${dt.day.toString().padLeft(2, '0')} '
@@ -175,17 +181,32 @@ class _PostHeaderState extends State<PostHeader> {
       padding: widget.padding,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final maxAuthorWidth = constraints.maxWidth * 0.75;
+          final maxRightWidth = constraints.maxWidth * 0.5;
+
+          String? ratingText;
+          if (widget.rating != null) {
+            final r = widget.rating!;
+            final full = PostHeader.formatRating(r, widget.borodaCount);
+            final ratingStyle = theme.textTheme.bodyMedium?.copyWith(color: cs.outline);
+            final tp = TextPainter(
+              text: TextSpan(text: full, style: ratingStyle),
+              textDirection: TextDirection.ltr,
+              maxLines: 1,
+            )..layout();
+            ratingText = tp.width <= maxRightWidth
+                ? full
+                : PostHeader.formatRatingShort(r, widget.borodaCount);
+          }
+
           return Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxAuthorWidth),
-                    child: GestureDetector(
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
                       onTap: widget.onAuthorTap,
                       child: Text(
                         widget.author,
@@ -197,52 +218,59 @@ class _PostHeaderState extends State<PostHeader> {
                         ),
                       ),
                     ),
-                  ),
-                  GestureDetector(
-                    key: _dateKey,
-                    onTap: _showDatePopup,
-                    child: Text(
-                      PostHeader.formatRelativeTime(widget.publishedAt),
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (widget.rating != null)
                     GestureDetector(
-                      key: _ratingKey,
-                      onTap: _showRatingPopup,
+                      key: _dateKey,
+                      onTap: _showDatePopup,
                       child: Text(
-                        PostHeader.formatRating(widget.rating!, widget.borodaCount),
-                        style: theme.textTheme.bodyMedium?.copyWith(color: cs.outline),
+                        PostHeader.formatRelativeTime(widget.publishedAt),
+                        style: theme.textTheme.bodySmall,
                       ),
                     ),
-                  if (widget.approvedBy != null)
-                    GestureDetector(
-                      onTap: widget.onApprovedByTap,
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'одобрил ',
-                              style: theme.textTheme.bodySmall,
-                            ),
-                            TextSpan(
-                              text: widget.approvedBy,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: cs.primary,
-                              ),
-                            ),
-                          ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxRightWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (ratingText != null)
+                      GestureDetector(
+                        key: _ratingKey,
+                        onTap: _showRatingPopup,
+                        child: Text(
+                          ratingText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(color: cs.outline),
                         ),
                       ),
-                    ),
-                ],
+                    if (widget.approvedBy != null)
+                      GestureDetector(
+                        onTap: widget.onApprovedByTap,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'одобрил ',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                              TextSpan(
+                                text: widget.approvedBy,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: cs.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
           );
