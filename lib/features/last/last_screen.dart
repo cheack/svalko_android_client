@@ -122,38 +122,57 @@ class _CommentsTab extends StatelessWidget {
                 .pushNamed('/post', arguments: c.postId),
             child: Padding(
               padding: dividers
-                  ? const EdgeInsets.fromLTRB(12, 10, 12, 2)
-                  : const EdgeInsets.fromLTRB(8, 10, 8, 2),
+                  ? const EdgeInsets.fromLTRB(12, 10, 12, 4)
+                  : const EdgeInsets.fromLTRB(8, 10, 8, 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text.rich(
                     TextSpan(
-                      style: theme.textTheme.bodyMedium
+                      children: [
+                        TextSpan(
+                          text: 'Тема: ',
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                        if (c.postTitle.isNotEmpty)
+                          TextSpan(
+                            text: c.postTitle,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontStyle: FontStyle.italic,
+                              color: cs.primary,
+                              decoration: TextDecoration.underline,
+                              decorationColor: cs.primary,
+                            ),
+                          ),
+                      ],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text.rich(
+                    TextSpan(
+                      style: theme.textTheme.bodySmall
                           ?.copyWith(color: cs.onSurfaceVariant),
                       children: [
-                        TextSpan(text: '${c.commentCount} комментариев на '),
-                        if (c.isOldTopic)
+                        if (c.topicAge == TopicAge.veryOld) ...[
                           const TextSpan(
-                            text: 'очень старую ',
+                            text: 'очень старая тема',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                        const TextSpan(text: 'тему:'),
+                          const TextSpan(text: ', '),
+                        ] else if (c.topicAge == TopicAge.old) ...[
+                          const TextSpan(
+                            text: 'старая тема',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const TextSpan(text: ', '),
+                        ],
+                        TextSpan(text: '${c.commentCount} комментариев'),
                       ],
                     ),
                   ),
-                  if (c.postTitle.isNotEmpty)
-                    Text(
-                      c.postTitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontStyle: FontStyle.italic,
-                        color: cs.primary,
-                        decoration: TextDecoration.underline,
-                        decorationColor: cs.primary,
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -214,6 +233,7 @@ class _CommentsTab extends StatelessWidget {
                 const Divider(height: 1, thickness: 1),
                 topicRow,
                 Padding(padding: padding, child: card),
+                const SizedBox(height: 12),
               ],
             );
           }
@@ -223,6 +243,7 @@ class _CommentsTab extends StatelessWidget {
             children: [
               topicRow,
               Padding(padding: padding, child: card),
+              const SizedBox(height: 12),
             ],
           );
         },

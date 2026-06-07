@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+enum TopicAge { normal, old, veryOld }
+
 @immutable
 class LastComment {
   const LastComment({
@@ -9,7 +11,7 @@ class LastComment {
     required this.postTitle,
     required this.commentText,
     required this.commentCount,
-    required this.isOldTopic,
+    required this.topicAge,
   });
 
   final String author;
@@ -18,7 +20,7 @@ class LastComment {
   final String postTitle;
   final String commentText;
   final int commentCount;
-  final bool isOldTopic;
+  final TopicAge topicAge;
 }
 
 @immutable

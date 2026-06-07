@@ -28,7 +28,12 @@ abstract final class LastParser {
 
       final countMatch = _countRe.firstMatch(small.text);
       final commentCount = int.tryParse(countMatch?.group(2) ?? '') ?? 0;
-      final isOldTopic = small.querySelector('b') != null;
+      final ageText = small.querySelector('b')?.text ?? '';
+      final topicAge = ageText.contains('очень')
+          ? TopicAge.veryOld
+          : ageText.isNotEmpty
+              ? TopicAge.old
+              : TopicAge.normal;
 
       final italic = td.querySelector('i');
       final postTitle = (italic?.text ?? '')
@@ -66,7 +71,7 @@ abstract final class LastParser {
         postTitle: postTitle,
         commentText: commentText,
         commentCount: commentCount,
-        isOldTopic: isOldTopic,
+        topicAge: topicAge,
       ));
     }
     return result;
