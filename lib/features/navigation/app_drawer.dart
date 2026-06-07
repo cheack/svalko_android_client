@@ -61,8 +61,13 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
   }
 
   void _navTo(String page, void Function() action) {
-    Navigator.of(context).pop();
-    if (widget.activePage != page) action();
+    if (widget.activePage == page) {
+      Navigator.of(context).pop();
+      return;
+    }
+    Navigator.of(context).pop(); // close drawer
+    Navigator.of(context).popUntil((r) => r.isFirst);
+    action();
   }
 
   Future<void> _openRandom() async {
