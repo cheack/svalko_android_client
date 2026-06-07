@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,10 @@ class AppDrawer extends ConsumerStatefulWidget {
 
   final String? activePage;
 
+  static const fojjerBase = 'НАОРАТЬ НА ФОЖЖЕРА';
+  static const fojjerSuffixes = ['??', '?', '!', '!!11', '??!', '?!'];
+  static const fojjerPrefixes = ['ФОЖЖЖЖЖЕЕР!!! ', '8-[  =  ] !!! '];
+
   @override
   ConsumerState<AppDrawer> createState() => _AppDrawerState();
 }
@@ -25,6 +30,8 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
   late final ScrollController _tagsScrollController;
   List<Tag>? _tags;
   String? _lastScrolledTag;
+  late String _fojjerText;
+  bool _fojjerLoading = false;
 
   @override
   void initState() {
@@ -35,6 +42,8 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
       ref.read(drawerTagsScrollOffsetProvider.notifier).state =
           _tagsScrollController.offset;
     });
+    final rng = Random();
+    _fojjerText = AppDrawer.fojjerBase + AppDrawer.fojjerSuffixes[rng.nextInt(AppDrawer.fojjerSuffixes.length)];
   }
 
   @override
@@ -68,6 +77,23 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     Navigator.of(context).pop(); // close drawer
     Navigator.of(context).popUntil((r) => r.isFirst);
     action();
+  }
+
+  Future<void> _shoutFojjer() async {
+    if (_fojjerLoading) return;
+    setState(() => _fojjerLoading = true);
+    final result = await ref.read(apiProvider).fojjer();
+    if (!mounted) return;
+    final rng = Random();
+    setState(() {
+      _fojjerLoading = false;
+      switch (result) {
+        case Ok(:final value):
+          _fojjerText = AppDrawer.fojjerPrefixes[rng.nextInt(AppDrawer.fojjerPrefixes.length)] + value;
+        case Err():
+          _fojjerText = AppDrawer.fojjerBase + AppDrawer.fojjerSuffixes[rng.nextInt(AppDrawer.fojjerSuffixes.length)];
+      }
+    });
   }
 
   Future<void> _openRandom() async {
@@ -239,6 +265,13 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
                 Navigator.of(context).pop();
                 Navigator.of(context).pushNamed('/about');
               },
+            ),
+            ListTile(
+              leading: _fojjerLoading
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.campaign_outlined),
+              title: Text(_fojjerText),
+              onTap: _shoutFojjer,
             ),
             const Divider(height: 1),
             InkWell(

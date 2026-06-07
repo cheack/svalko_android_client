@@ -404,6 +404,28 @@ class SvalkoApi {
     }
   }
 
+  Future<Result<String, AppError>> fojjer() async {
+    try {
+      final response = await _dio.post<dynamic>(
+        '${Config.baseUrl}/fojjer2.php',
+        data: 'shout=1',
+        options: Options(
+          contentType: 'application/x-www-form-urlencoded',
+          responseType: ResponseType.bytes,
+        ),
+      );
+      final data = response.data;
+      final Uint8List bytes = data is Uint8List
+          ? data
+          : Uint8List.fromList(data as List<int>);
+      return Ok((await decodeWin1251(bytes)).trim());
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (_) {
+      return const Err(AppError.unknown);
+    }
+  }
+
   Future<Result<String, AppError>> vote(int postId, int vote) =>
       _action('${Config.baseUrl}/vote.php?post_id=$postId&vote=$vote&dynamic=1');
 
