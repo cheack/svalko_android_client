@@ -42,6 +42,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   bool _didScrollToHighlight = false;
   int _scrollRetries = 0;
   bool _pendingScrollToBottom = false;
+  bool _pendingScrollToComments = false;
   bool _fabVisible = true;
   double _lastScrollOffset = 0;
   bool _loadingRandom = false;
@@ -154,6 +155,23 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     );
   }
 
+  void _settleScrollToComments() {
+    _scrollToComments();
+    for (final ms in [100, 350]) {
+      Future.delayed(Duration(milliseconds: ms), () {
+        if (!mounted) return;
+        _captureCommentsTarget();
+        _scrollToComments();
+      });
+    }
+  }
+
+  void _loadCommentsPage(int page) {
+    _captureCommentsTarget();
+    _pendingScrollToComments = true;
+    ref.read(postControllerProvider(widget.postId).notifier).loadPage(page);
+  }
+
   void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
     _scrollController.animateTo(
@@ -175,8 +193,9 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           if (_pendingScrollToBottom) {
             _pendingScrollToBottom = false;
             _scrollToBottom();
-          } else {
-            _scrollToComments();
+          } else if (_pendingScrollToComments) {
+            _pendingScrollToComments = false;
+            _settleScrollToComments();
           }
         });
       }
@@ -375,8 +394,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               currentPage: state.currentPage,
               isLoading: state.isLoadingMore,
               onPageTap: (page) {
-                _captureCommentsTarget();
-                ctrl.loadPage(page);
+                _loadCommentsPage(page);
               },
             ),
           const SizedBox(height: 4),
@@ -408,8 +426,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               currentPage: state.currentPage,
               isLoading: state.isLoadingMore,
               onPageTap: (page) {
-                _captureCommentsTarget();
-                ctrl.loadPage(page);
+                _loadCommentsPage(page);
               },
             ),
         ],
