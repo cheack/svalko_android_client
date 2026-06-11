@@ -11,6 +11,7 @@ class PostHeader extends StatefulWidget {
     this.approvedBy,
     this.onAuthorTap,
     this.onApprovedByTap,
+    this.onDateTap,
     this.padding = const EdgeInsets.fromLTRB(12, 10, 12, 10),
   });
 
@@ -21,6 +22,7 @@ class PostHeader extends StatefulWidget {
   final String? approvedBy;
   final VoidCallback? onAuthorTap;
   final VoidCallback? onApprovedByTap;
+  final VoidCallback? onDateTap;
   final EdgeInsetsGeometry padding;
 
   static String formatRating(PostRating r, int? borodaCount) {
@@ -128,7 +130,7 @@ class _PostHeaderState extends State<PostHeader> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: DefaultTextStyle(
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 15,
                       color: Theme.of(context).colorScheme.onSurface,
                       height: 1.6,
                     ),
@@ -166,9 +168,21 @@ class _PostHeaderState extends State<PostHeader> {
   }
 
   void _showDatePopup() {
+    final onDateTap = widget.onDateTap;
     _showPopup(
       _dateKey,
-      Text(PostHeader.formatExactDate(widget.publishedAt)),
+      onDateTap != null
+          ? GestureDetector(
+              onTap: () {
+                _dismiss();
+                onDateTap();
+              },
+              child: Text(
+                PostHeader.formatExactDate(widget.publishedAt),
+                style: const TextStyle(decoration: TextDecoration.underline),
+              ),
+            )
+          : Text(PostHeader.formatExactDate(widget.publishedAt)),
     );
   }
 

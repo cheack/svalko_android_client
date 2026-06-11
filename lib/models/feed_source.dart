@@ -58,6 +58,19 @@ class ApproverFeed extends FeedSource {
 class DateFeed extends FeedSource {
   const DateFeed({required this.path, required this.label});
 
+  static const _monthNamesGen = [
+    '', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+  ];
+
+  factory DateFeed.fromDateTime(DateTime dt) => DateFeed(
+        path: '/${dt.year}/${dt.month}/${dt.day}/',
+        label: DateFeed.labelFor(dt.day, dt.month, dt.year),
+      );
+
+  static String labelFor(int day, int month, int year) =>
+      '$day ${_monthNamesGen[month]} $year';
+
   /// Server-relative path, e.g. "/2026/04/13/"
   final String path;
 

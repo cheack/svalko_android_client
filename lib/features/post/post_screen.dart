@@ -362,6 +362,8 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                       approvedBy: post.approvedBy,
                       onAuthorTap: () => Navigator.of(context)
                           .pushNamed('/author', arguments: post.author),
+                      onDateTap: () => Navigator.of(context).pushNamed(
+                          '/date', arguments: DateFeed.fromDateTime(post.publishedAt)),
                       onApprovedByTap: post.approvedBy == null
                           ? null
                           : () => Navigator.of(context).pushNamed('/approver',

@@ -91,6 +91,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                 borodaCount: _borodaCount,
                 approvedBy: widget.post.approvedBy,
                 onAuthorTap: widget.onTap,
+                onDateTap: () => Navigator.of(context).pushNamed(
+                    '/date', arguments: DateFeed.fromDateTime(widget.post.publishedAt)),
                 onApprovedByTap: (widget.post.approvedBy == null || !widget.showApproverTap)
                     ? null
                     : () => Navigator.of(context).pushNamed('/approver',

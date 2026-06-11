@@ -85,6 +85,12 @@ class SvalkoApp extends ConsumerWidget {
             builder: (_) => FeedScreen(source: feed),
           );
         }
+        if (settings.name == '/date') {
+          final feed = settings.arguments as DateFeed;
+          return MaterialPageRoute(
+            builder: (_) => FeedScreen(source: feed),
+          );
+        }
         if (settings.name == '/last') {
           return MaterialPageRoute(builder: (_) => const LastScreen());
         }

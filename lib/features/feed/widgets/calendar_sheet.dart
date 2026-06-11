@@ -12,10 +12,6 @@ const _monthNames = [
   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
 ];
 
-const _monthNamesGen = [
-  '', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-];
 
 const _weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 
@@ -140,8 +136,10 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
     ref.read(calendarStateProvider.notifier).update(
           (s) => (month: _calendar, selectedPath: day.path),
         );
-    final label = '${day.day} ${_monthNamesGen[_calendar.month]} ${_calendar.year}';
-    Navigator.of(context).pop(DateFeed(path: day.path!, label: label));
+    Navigator.of(context).pop(DateFeed(
+      path: day.path!,
+      label: DateFeed.labelFor(day.day, _calendar.month, _calendar.year),
+    ));
   }
 
   CalendarDay _clampDay(CalendarDay day, DateTime? limit) {
