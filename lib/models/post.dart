@@ -38,6 +38,7 @@ class Post {
     this.parsedVote,
     this.parsedBoroda,
     this.availableVotes,
+    this.isKum = false,
   });
 
   final int id;
@@ -58,4 +59,5 @@ class Post {
   final int? parsedVote;
   final bool? parsedBoroda;
   final List<int>? availableVotes;
+  final bool isKum;
 }

@@ -9,11 +9,13 @@ class CommentsPaginationInfo {
     required this.currentPage,
     required this.totalPages,
     required this.totalComments,
+    this.isKum = false,
   });
 
   final int currentPage;
   final int totalPages;
   final int totalComments;
+  final bool isKum;
 }
 
 class PostParseResult {
@@ -85,6 +87,7 @@ abstract final class PostParser {
       parsedVote: voteState.vote,
       parsedBoroda: voteState.boroda,
       availableVotes: availableVotes.isEmpty ? null : availableVotes,
+      isKum: el.classes.contains('kum'),
     );
   }
 
@@ -154,9 +157,9 @@ abstract final class PostParser {
     }).firstOrNull;
 
     if (metaComment == null) {
-      return const CommentsPaginationInfo(
-          currentPage: 0, totalPages: 1, totalComments: 0);
+      return const CommentsPaginationInfo(currentPage: 0, totalPages: 1, totalComments: 0);
     }
+    final isKum = metaComment.classes.contains('kum');
 
     final text = metaComment.querySelector('.text')?.text ?? '';
 
@@ -175,6 +178,7 @@ abstract final class PostParser {
       currentPage: current,
       totalPages: totalPages == 0 ? 1 : totalPages,
       totalComments: total,
+      isKum: isKum,
     );
   }
 }

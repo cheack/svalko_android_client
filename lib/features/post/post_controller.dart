@@ -20,6 +20,7 @@ class PostState {
     this.currentPage = 0,
     this.totalPages = 1,
     this.totalComments = 0,
+    this.paginationIsKum = false,
   });
 
   final Post? post;
@@ -30,6 +31,7 @@ class PostState {
   final int currentPage;
   final int totalPages;
   final int totalComments;
+  final bool paginationIsKum;
 
   bool get hasMore => currentPage < totalPages - 1;
 
@@ -42,6 +44,7 @@ class PostState {
     int? currentPage,
     int? totalPages,
     int? totalComments,
+    bool? paginationIsKum,
     bool clearError = false,
   }) =>
       PostState(
@@ -53,6 +56,7 @@ class PostState {
         currentPage: currentPage ?? this.currentPage,
         totalPages: totalPages ?? this.totalPages,
         totalComments: totalComments ?? this.totalComments,
+        paginationIsKum: paginationIsKum ?? this.paginationIsKum,
       );
 }
 
@@ -78,6 +82,7 @@ class PostController extends StateNotifier<PostState> {
           currentPage: value.pagination.currentPage,
           totalPages: value.pagination.totalPages,
           totalComments: value.pagination.totalComments,
+          paginationIsKum: value.pagination.isKum,
         ),
       Err(:final error) => PostState(error: error),
     };
@@ -94,6 +99,7 @@ class PostController extends StateNotifier<PostState> {
           currentPage: value.pagination.currentPage,
           totalPages: value.pagination.totalPages,
           totalComments: value.pagination.totalComments,
+          paginationIsKum: value.pagination.isKum,
           isLoadingMore: false,
         );
       case Err(:final error):
@@ -117,6 +123,7 @@ class PostController extends StateNotifier<PostState> {
           currentPage: value.pagination.currentPage,
           totalPages: value.pagination.totalPages,
           totalComments: value.pagination.totalComments,
+          paginationIsKum: value.pagination.isKum,
           isLoadingMore: false,
         );
       case Err(:final error):
@@ -152,6 +159,7 @@ class PostController extends StateNotifier<PostState> {
           // totalPages/totalComments obtained during load().
           totalPages: isHistorical ? state.totalPages : value.pagination.totalPages,
           totalComments: isHistorical ? state.totalComments : value.pagination.totalComments,
+          paginationIsKum: isHistorical ? state.paginationIsKum : value.pagination.isKum,
           isLoadingMore: false,
         );
       case Err(:final error):

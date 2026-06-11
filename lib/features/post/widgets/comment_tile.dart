@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/config.dart';
@@ -8,6 +6,7 @@ import '../../../models/comment.dart';
 import '../../../ui/skin_ext.dart';
 import '../../../ui/widgets/image_viewer.dart';
 import '../../../ui/widgets/comment_html.dart';
+import '../../../ui/widgets/kum_shake.dart';
 import '../../../ui/widgets/media_actions.dart';
 import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/shimmer_placeholder.dart';
@@ -27,10 +26,6 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   AnimationController? _flashCtrl;
   Animation<double>? _flashAnim;
 
-  Timer? _kumTimer;
-  Offset _kumOffset = Offset.zero;
-  static final _rng = Random();
-
   @override
   void initState() {
     super.initState();
@@ -44,16 +39,6 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
       );
       // Delay start until after the scroll animation completes (~650ms).
       Future.delayed(const Duration(milliseconds: 700), _runFlash);
-    }
-    if (widget.comment.isKum) {
-      _kumTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
-        setState(() {
-          _kumOffset = Offset(
-            _rng.nextDouble() * 10 - 5,
-            _rng.nextDouble() * 8 - 4,
-          );
-        });
-      });
     }
   }
 
@@ -71,7 +56,6 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
   @override
   void dispose() {
     _flashCtrl?.dispose();
-    _kumTimer?.cancel();
     super.dispose();
   }
 
@@ -150,8 +134,8 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
     final cs = theme.colorScheme;
     final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
     final flashAnim = _flashAnim;
-    return Transform.translate(
-      offset: _kumOffset,
+    return KumShake(
+      enabled: comment.isKum,
       child: Padding(
       padding: dividers ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 4, 8, 0),
       child: Stack(

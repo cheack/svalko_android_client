@@ -15,6 +15,7 @@ import '../../../ui/widgets/post_tags.dart';
 import '../../../ui/widgets/video_link_card.dart';
 import '../../../ui/widgets/video_player_widget.dart';
 import '../../../ui/widgets/post_vote_section.dart';
+import '../../../ui/widgets/kum_shake.dart';
 import '../../../ui/widgets/post_header.dart';
 
 
@@ -47,7 +48,9 @@ class _PostCardState extends ConsumerState<PostCard> {
     final theme = Theme.of(context);
     final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
 
-    return Container(
+    return KumShake(
+      enabled: widget.post.isKum,
+      child: Container(
       margin: dividers
           ? EdgeInsets.zero
           : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -155,11 +158,8 @@ class _PostCardState extends ConsumerState<PostCard> {
         ],
         ),
       ),
-    ));
+    )));
   }
-
-
-
 
   static Future<void> _showPostSheet(
       BuildContext context, AppStrings s, int id) async {

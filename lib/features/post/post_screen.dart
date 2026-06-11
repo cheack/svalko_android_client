@@ -22,6 +22,7 @@ import '../../core/result.dart';
 import '../../models/post.dart';
 import '../../models/feed_source.dart';
 import '../../ui/skin_ext.dart';
+import '../../ui/widgets/kum_shake.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
   const PostScreen({super.key, required this.postId, this.highlightCommentId, this.showShuffle = false});
@@ -334,7 +335,9 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         children: [
           Builder(builder: (ctx) {
             final dividers = Theme.of(ctx).extension<SvalkoSkinExt>()?.cardDividers ?? false;
-            return Padding(
+            return KumShake(
+            enabled: post.isKum,
+            child: Padding(
             padding: dividers ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 8, 8, 0),
             child: Container(
               clipBehavior: Clip.antiAlias,
@@ -418,7 +421,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                 ],
               ),
             ),
-          );
+          ));
           }),
           const Divider(height: 24),
           // Comments section header — anchor for scroll
@@ -432,13 +435,14 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           ),
           // Top page bar
           if (state.totalPages > 1)
-            _CommentPageBar(
-              totalPages: state.totalPages,
-              currentPage: state.currentPage,
-              isLoading: state.isLoadingMore,
-              onPageTap: (page) {
-                _loadCommentsPage(page);
-              },
+            KumShake(
+              enabled: state.paginationIsKum,
+              child: _CommentPageBar(
+                totalPages: state.totalPages,
+                currentPage: state.currentPage,
+                isLoading: state.isLoadingMore,
+                onPageTap: _loadCommentsPage,
+              ),
             ),
           const SizedBox(height: 4),
           AnimatedOpacity(
@@ -464,13 +468,14 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           ),
           // Bottom page bar
           if (state.totalPages > 1)
-            _CommentPageBar(
-              totalPages: state.totalPages,
-              currentPage: state.currentPage,
-              isLoading: state.isLoadingMore,
-              onPageTap: (page) {
-                _loadCommentsPage(page);
-              },
+            KumShake(
+              enabled: state.paginationIsKum,
+              child: _CommentPageBar(
+                totalPages: state.totalPages,
+                currentPage: state.currentPage,
+                isLoading: state.isLoadingMore,
+                onPageTap: _loadCommentsPage,
+              ),
             ),
         ],
       ),

@@ -94,6 +94,7 @@ abstract final class FeedParser {
       parsedVote: voteState.vote,
       parsedBoroda: voteState.boroda,
       availableVotes: availableVotes.isEmpty ? null : availableVotes,
+      isKum: el.classes.contains('kum'),
     );
   }
 
