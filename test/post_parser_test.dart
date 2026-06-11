@@ -134,4 +134,32 @@ void main() {
       expect(kum.isKum, isTrue);
     });
   });
+
+  group('PostParser — kum pagination', () {
+    const kumPostId = 100003;
+    late PostParseResult result;
+
+    setUpAll(() {
+      final html = File('test/fixtures/kum_pagination_page.html').readAsStringSync();
+      result = PostParser.parse(html, kumPostId)!;
+    });
+
+    test('pagination isKum = true', () {
+      expect(result.pagination.isKum, isTrue);
+    });
+
+    test('pagination totalComments parsed correctly', () {
+      expect(result.pagination.totalComments, equals(50));
+    });
+
+    test('pagination totalPages parsed correctly', () {
+      expect(result.pagination.totalPages, equals(3));
+    });
+
+    test('non-kum pagination has isKum = false', () {
+      final html = File('test/fixtures/post_page.html').readAsStringSync();
+      final r = PostParser.parse(html, postId)!;
+      expect(r.pagination.isKum, isFalse);
+    });
+  });
 }

@@ -62,4 +62,27 @@ void main() {
       expect(result.posts.first.rating, isNotNull);
     });
   });
+
+  group('FeedParser — kum posts', () {
+    late FeedParseResult result;
+
+    setUpAll(() {
+      final kumHtml = File('test/fixtures/kum_feed_page.html').readAsStringSync();
+      result = FeedParser.parse(kumHtml);
+    });
+
+    test('parses two posts', () {
+      expect(result.posts.length, equals(2));
+    });
+
+    test('regular post has isKum = false', () {
+      final post = result.posts.firstWhere((p) => p.id == 100001);
+      expect(post.isKum, isFalse);
+    });
+
+    test('kum post has isKum = true', () {
+      final post = result.posts.firstWhere((p) => p.id == 100002);
+      expect(post.isKum, isTrue);
+    });
+  });
 }
