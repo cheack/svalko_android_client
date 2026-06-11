@@ -43,6 +43,8 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   int _scrollRetries = 0;
   bool _pendingScrollToBottom = false;
   bool _pendingScrollToComments = false;
+  int _pinFrames = 0; // frames left to keep the comments header pinned to top
+  bool _searchingDown = false; // walking down from the top to find the header
   bool _fabVisible = true;
   double _lastScrollOffset = 0;
   bool _loadingRandom = false;
@@ -85,6 +87,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
       setState(() => _fabVisible = true);
     }
     _lastScrollOffset = offset;
+    // Capture while the header passes through the viewport — the lazy
+    // ListView disposes it once it's far off-screen, so capturing only at
+    // page-tap time fails if the user scrolled straight to the bottom bar.
+    _captureCommentsTarget();
   }
 
   @override
@@ -93,7 +99,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     super.dispose();
   }
 
-  // Called BEFORE loadPage so the layout is still stable.
+  // Remembers the absolute offset of the comments header. Only works while
+  // the header is built (in or near the viewport), so it's captured
+  // opportunistically: after the post loads, on every scroll tick, on page
+  // tap, and on every frame of the pin loop.
   void _captureCommentsTarget() {
     final ctx = _commentsKey.currentContext;
     if (ctx == null || !_scrollController.hasClients) return;
@@ -145,25 +154,43 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     }
   }
 
-  void _scrollToComments() {
-    final target = _commentsTarget;
-    if (target == null || !_scrollController.hasClients) return;
-    _scrollController.animateTo(
-      target.clamp(0.0, _scrollController.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+  // After a page change: jump instantly to the remembered header position,
+  // then pin it to the top for a few frames while the layout settles.
+  // No animation — an animated scroll gives the lazy list a 300ms window to
+  // shift the layout under us, which is what made this unreliable.
+  void _settleScrollToComments() {
+    if (_scrollController.hasClients) {
+      final pos = _scrollController.position;
+      _scrollController.jumpTo(
+          (_commentsTarget ?? 0.0).clamp(0.0, pos.maxScrollExtent));
+    }
+    _searchingDown = false;
+    _pinFrames = 90;
+    _pinCommentsHeader();
   }
 
-  void _settleScrollToComments() {
-    _scrollToComments();
-    for (final ms in [100, 350]) {
-      Future.delayed(Duration(milliseconds: ms), () {
-        if (!mounted) return;
+  void _pinCommentsHeader() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _pinFrames-- <= 0) return;
+      if (!_scrollController.hasClients) return;
+      final pos = _scrollController.position;
+      final ctx = _commentsKey.currentContext;
+      if (ctx == null) {
+        // Header isn't laid out — the guess was off by more than a viewport.
+        // Restart from the top and walk down one viewport per frame: this
+        // lays everything out for real (no estimates) until it's built.
+        final next =
+            _searchingDown ? pos.pixels + pos.viewportDimension : 0.0;
+        _searchingDown = true;
+        _scrollController.jumpTo(next.clamp(0.0, pos.maxScrollExtent));
+      } else {
+        _searchingDown = false;
         _captureCommentsTarget();
-        _scrollToComments();
-      });
-    }
+        final to = _commentsTarget!.clamp(0.0, pos.maxScrollExtent);
+        if ((to - pos.pixels).abs() > 1) _scrollController.jumpTo(to);
+      }
+      _pinCommentsHeader();
+    });
   }
 
   void _loadCommentsPage(int page) {
@@ -174,6 +201,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
 
   void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
+    _pinFrames = 0; // don't let the pin loop fight this animation
     _scrollController.animateTo(
       _scrollController.position.maxScrollExtent,
       duration: const Duration(milliseconds: 300),
@@ -200,7 +228,13 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         });
       }
       if (prev?.isLoading == true && !next.isLoading) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _tryScrollToHighlight());
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          // Remember the header position right away — the first guess for
+          // page-change jumps even if the user never scrolls past it.
+          _captureCommentsTarget();
+          _tryScrollToHighlight();
+        });
       }
     });
     final s = AppStrings.of(ref.watch(languageProvider));
@@ -266,6 +300,9 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               final sent = await showCommentSheet(context, api, settingsBox, post.id);
               if (sent && mounted) {
                 _pendingScrollToBottom = true;
+                // Could be left set by a failed page load — don't let it
+                // hijack the next loadingMore completion.
+                _pendingScrollToComments = false;
                 ctrl.loadLastPage();
               }
             },
@@ -282,6 +319,12 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         child: SelectionArea(
         child: RefreshIndicator(
         onRefresh: ctrl.refresh,
+        child: NotificationListener<ScrollStartNotification>(
+        onNotification: (n) {
+          // User grabbed the list — stop pinning the comments header.
+          if (n.dragDetails != null) _pinFrames = 0;
+          return false;
+        },
         child: Scrollbar(
         controller: _scrollController,
         child: ListView(
@@ -430,6 +473,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               },
             ),
         ],
+      ),
       ),
       ),
       ),
