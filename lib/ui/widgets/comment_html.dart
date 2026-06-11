@@ -3,6 +3,7 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../core/config.dart';
 import '../../core/open_url.dart';
 import '../skin_ext.dart';
+import 'video_link_card.dart';
 
 class CommentHtml extends StatelessWidget {
   const CommentHtml(this.html, {super.key, this.onSvalkoPost});
@@ -23,6 +24,18 @@ class CommentHtml extends StatelessWidget {
     return HtmlWidget(
       html,
       textStyle: theme.textTheme.bodyMedium,
+      customWidgetBuilder: (el) {
+        if (el.localName == 'a' && el.classes.contains('video')) {
+          final href = el.attributes['href'] ?? '';
+          if (VideoLinkCard.isSupported(href)) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: VideoLinkCard(url: href),
+            );
+          }
+        }
+        return null;
+      },
       customStylesBuilder: (el) {
         if (el.localName == 'a') {
           final linkColor = theme.extension<SvalkoSkinExt>()?.linkColor;
