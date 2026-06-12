@@ -33,7 +33,17 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
   void initState() {
     super.initState();
     final saved = ref.read(calendarStateProvider);
-    _calendar = saved.month ?? widget.fallbackMonth;
+    final selectedPath = saved.selectedPath == null
+        ? null
+        : DateFeed.normalizePath(saved.selectedPath!);
+    final savedHasSelection =
+        selectedPath != null && _containsPath(saved.month, selectedPath);
+    final fallbackHasSelection =
+        selectedPath != null &&
+        _containsPath(widget.fallbackMonth, selectedPath);
+    _calendar = fallbackHasSelection && !savedHasSelection
+        ? widget.fallbackMonth
+        : saved.month ?? widget.fallbackMonth;
 
     final now = _effectiveNow;
     final tooNew = _calendar.year > now.year ||
@@ -46,6 +56,14 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
   }
 
   String? get _selectedPath => ref.read(calendarStateProvider).selectedPath;
+
+  bool _containsPath(CalendarMonth? month, String selectedPath) =>
+      month?.days.any(
+        (day) =>
+            day.path != null &&
+            DateFeed.normalizePath(day.path!) == selectedPath,
+      ) ??
+      false;
 
   static const _firstYear = 2003;
   static const _firstMonth = 8; // August 2003
@@ -133,11 +151,12 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
 
   void _selectDay(CalendarDay day) {
     if (day.path == null) return;
+    final path = DateFeed.normalizePath(day.path!);
     ref.read(calendarStateProvider.notifier).update(
-          (s) => (month: _calendar, selectedPath: day.path),
+          (s) => (month: _calendar, selectedPath: path),
         );
     Navigator.of(context).pop(DateFeed(
-      path: day.path!,
+      path: path,
       label: DateFeed.labelFor(day.day, _calendar.month, _calendar.year),
     ));
   }
@@ -157,7 +176,9 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = _calendar;
-    final selectedPath = _selectedPath;
+    final selectedPath = _selectedPath == null
+        ? null
+        : DateFeed.normalizePath(_selectedPath!);
     final isTa = ref.read(siteModeProvider) == SiteMode.taSvalko;
     final limit = isTa ? _effectiveNow : null;
     final nextBlocked = limit != null && (c.year > limit.year ||
@@ -246,7 +267,8 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
                         final d = _clampDay(day, limit);
                         return _DayCell(
                           day: d,
-                          isSelected: d.path != null && d.path == selectedPath,
+                          isSelected: d.path != null &&
+                              DateFeed.normalizePath(d.path!) == selectedPath,
                           onTap: () => _selectDay(d),
                         );
                       })
