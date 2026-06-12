@@ -7,6 +7,7 @@ import '../parsers/feed_parser.dart';
 import '../parsers/images_parser.dart';
 import '../parsers/post_parser.dart';
 import '../parsers/last_parser.dart';
+import '../parsers/search_parser.dart';
 import '../parsers/tags_parser.dart';
 import '../svalko_api.dart';
 import '../../core/crash_reporter.dart';
@@ -270,6 +271,33 @@ class SvalkoRepository {
         comments: parsed.comments,
         pagination: parsed.pagination,
       ));
+    } catch (e, st) {
+      CrashReporter.instance.report(e, st);
+      return const Err(AppError.parseFailure);
+    }
+  }
+
+  Future<Result<SearchParseResult, AppError>> search({
+    required String query,
+    String order = 'rel',
+    bool searchComments = true,
+    int skip = 0,
+  }) async {
+    final result = await _api.fetchSearchPage(
+      query: query,
+      order: order,
+      searchComments: searchComments,
+      skip: skip,
+    );
+    return switch (result) {
+      Err(:final error) => Err(error),
+      Ok(:final value) => _parseSearch(value),
+    };
+  }
+
+  Result<SearchParseResult, AppError> _parseSearch(String html) {
+    try {
+      return Ok(SearchParser.parse(html));
     } catch (e, st) {
       CrashReporter.instance.report(e, st);
       return const Err(AppError.parseFailure);

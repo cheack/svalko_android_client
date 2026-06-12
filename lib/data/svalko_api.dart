@@ -165,6 +165,22 @@ class SvalkoApi {
     }
   }
 
+  Future<Result<String, AppError>> fetchSearchPage({
+    required String query,
+    String order = 'rel',
+    bool searchComments = true,
+    int skip = 0,
+  }) async {
+    final encodedQuery = await encodeQueryWin1251(query);
+    final commentsVal = searchComments ? 1 : 0;
+    final url = StringBuffer('${Config.baseUrl}/?mode=search')
+      ..write('&query=$encodedQuery')
+      ..write('&order=$order')
+      ..write('&search_comments=$commentsVal');
+    if (skip > 0) url.write('&skip=$skip');
+    return _get(url.toString());
+  }
+
   Future<Result<String, AppError>> fetchLastPage({int skip = 0}) =>
       _get(Config.lastUrl(skip: skip));
 

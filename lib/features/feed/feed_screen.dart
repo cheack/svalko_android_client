@@ -5,6 +5,8 @@ import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
 import '../../models/feed_source.dart';
 import '../navigation/app_drawer.dart';
+import '../search/search_controller.dart';
+import '../search/search_dialog.dart';
 import 'ban_screen.dart';
 import 'feed_controller.dart';
 import 'widgets/calendar_sheet.dart';
@@ -172,6 +174,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       appBar: AppBar(
         title: Text(_title(s)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Поиск',
+            onPressed: () async {
+              final params = await showSearchDialog(context, ref);
+              if (params == null || !mounted) return;
+              ref.read(lastSearchParamsProvider.notifier).state = params;
+              // ignore: use_build_context_synchronously
+              Navigator.of(context).pushNamed('/search', arguments: params);
+            },
+          ),
           if (state.calendar != null)
             IconButton(
               icon: const Icon(Icons.calendar_month_outlined),

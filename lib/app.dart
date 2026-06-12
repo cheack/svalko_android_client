@@ -9,10 +9,12 @@ import 'features/last/last_screen.dart';
 import 'features/images/images_screen.dart';
 import 'features/logs/logs_screen.dart';
 import 'features/post/post_screen.dart';
+import 'features/search/search_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/trends/trends_screen.dart';
 import 'models/author.dart';
 import 'models/feed_source.dart';
+import 'models/search_result.dart';
 import 'models/tag.dart';
 import 'ui/theme.dart';
 
@@ -111,6 +113,12 @@ class SvalkoApp extends ConsumerWidget {
         }
         if (settings.name == '/trends') {
           return MaterialPageRoute(builder: (_) => const TrendsScreen());
+        }
+        if (settings.name == '/search') {
+          final params = settings.arguments as SearchParams;
+          return MaterialPageRoute(
+            builder: (_) => SearchScreen(params: params),
+          );
         }
         return null;
       },
