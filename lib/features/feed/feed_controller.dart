@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/result.dart';
 import '../../core/settings_storage.dart';
@@ -25,6 +26,14 @@ final drawerTagsScrollOffsetProvider = StateProvider<double>((ref) => 0);
 final calendarStateProvider = StateProvider<({CalendarMonth? month, String? selectedPath})>(
   (ref) => (month: null, selectedPath: null),
 );
+
+void navigateToDateFeed(BuildContext context, WidgetRef ref, DateTime dt) {
+  final feed = DateFeed.fromDateTime(dt);
+  ref.read(calendarStateProvider.notifier).update(
+        (s) => (month: s.month, selectedPath: feed.path),
+      );
+  Navigator.of(context).pushNamed('/date', arguments: feed);
+}
 
 final repositoryProvider = Provider<SvalkoRepository>(
   (ref) => SvalkoRepository(

@@ -17,6 +17,7 @@ import '../../../ui/widgets/video_player_widget.dart';
 import '../../../ui/widgets/post_vote_section.dart';
 import '../../../ui/widgets/kum_shake.dart';
 import '../../../ui/widgets/post_header.dart';
+import '../feed_controller.dart';
 
 
 class PostCard extends ConsumerStatefulWidget {
@@ -91,8 +92,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                 borodaCount: _borodaCount,
                 approvedBy: widget.post.approvedBy,
                 onAuthorTap: widget.onTap,
-                onDateTap: () => Navigator.of(context).pushNamed(
-                    '/date', arguments: DateFeed.fromDateTime(widget.post.publishedAt)),
+                onDateTap: () => navigateToDateFeed(context, ref, widget.post.publishedAt),
                 onApprovedByTap: (widget.post.approvedBy == null || !widget.showApproverTap)
                     ? null
                     : () => Navigator.of(context).pushNamed('/approver',
