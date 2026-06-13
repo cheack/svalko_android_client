@@ -47,7 +47,6 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   bool _pendingScrollToComments = false;
   int _pinFrames = 0; // frames left to keep the comments header pinned to top
   bool _searchingDown = false; // walking down from the top to find the header
-  bool _fabVisible = true;
   bool _topVisible = false;
   double _lastScrollOffset = 0;
   bool _didNavigateToInitialPage = false;
@@ -86,11 +85,6 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   void _onScroll() {
     final offset = _scrollController.offset;
     final diff = offset - _lastScrollOffset;
-    if (diff > 4 && _fabVisible) {
-      setState(() => _fabVisible = false);
-    } else if (diff < -1 && !_fabVisible) {
-      setState(() => _fabVisible = true);
-    }
     if (diff > 1 && !_topVisible) {
       setState(() => _topVisible = true);
     }
@@ -368,37 +362,18 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                   )
                 : const SizedBox.shrink(),
           ),
-          TweenAnimationBuilder<double>(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            tween: Tween(end: _fabVisible ? 1.0 : 0.0),
-            builder: (context, value, child) => ClipRect(
-              child: Align(
-                alignment: Alignment.centerRight,
-                widthFactor: value,
-                heightFactor: 1.0,
-                child: Opacity(
-                  opacity: value,
-                  child: IgnorePointer(ignoring: value < 0.5, child: child!),
-                ),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: FloatingActionButton.extended(
-                heroTag: 'write',
-                onPressed: () async {
-                  final sent = await showCommentSheet(context, api, settingsBox, post.id);
-                  if (sent && mounted) {
-                    _pendingScrollToBottom = true;
-                    _pendingScrollToComments = false;
-                    ctrl.loadLastPage();
-                  }
-                },
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('Написать'),
-              ),
-            ),
+          FloatingActionButton.extended(
+            heroTag: 'write',
+            onPressed: () async {
+              final sent = await showCommentSheet(context, api, settingsBox, post.id);
+              if (sent && mounted) {
+                _pendingScrollToBottom = true;
+                _pendingScrollToComments = false;
+                ctrl.loadLastPage();
+              }
+            },
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Написать'),
           ),
         ],
       ),
@@ -421,7 +396,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         child: ListView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).padding.bottom),
+        padding: EdgeInsets.only(bottom: 88 + MediaQuery.of(context).padding.bottom),
         children: [
           Builder(builder: (ctx) {
             final dividers = Theme.of(ctx).extension<SvalkoSkinExt>()?.cardDividers ?? false;
