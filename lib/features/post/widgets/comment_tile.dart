@@ -230,7 +230,7 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                     else if (widget.onDelete != null)
                       GestureDetector(
                         onTap: widget.onDelete,
-                        child: Icon(Icons.delete_outline, size: 18, color: cs.outline),
+                        child: Icon(Icons.delete_outline, size: 24, color: cs.outline),
                       ),
                   ],
                 ),

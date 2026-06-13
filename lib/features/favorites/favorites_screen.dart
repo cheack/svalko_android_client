@@ -246,8 +246,10 @@ class _PostsTab extends StatelessWidget {
             onTap: () =>
                 Navigator.of(context).pushNamed('/post', arguments: fav.id),
             trailing: IconButton(
-              icon: const Icon(Icons.delete_outline, size: 20),
+              icon: const Icon(Icons.delete_outline, size: 26),
               color: Theme.of(context).colorScheme.outline,
+              padding: EdgeInsets.zero,
+              alignment: Alignment.centerRight,
               onPressed: deleteFn,
             ),
           ),
