@@ -139,7 +139,12 @@ class FavoriteComment {
     required this.authorName,
     required this.publishedAt,
     required this.addedAt,
+    this.authorProfileUrl = '',
     this.previewText,
+    this.textHtml,
+    this.imageUrls = const [],
+    this.videoUrls = const [],
+    this.isKum = false,
   });
 
   final int id;
@@ -148,16 +153,26 @@ class FavoriteComment {
   final String authorName;
   final DateTime publishedAt;
   final DateTime addedAt;
+  final String authorProfileUrl;
   final String? previewText;
+  final String? textHtml;
+  final List<String> imageUrls;
+  final List<String> videoUrls;
+  final bool isKum;
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'postId': postId,
         'commentPage': commentPage,
         'authorName': authorName,
+        if (authorProfileUrl.isNotEmpty) 'authorProfileUrl': authorProfileUrl,
         'publishedAt': publishedAt.toIso8601String(),
         'addedAt': addedAt.toIso8601String(),
         if (previewText != null) 'previewText': previewText,
+        if (textHtml != null) 'textHtml': textHtml,
+        if (imageUrls.isNotEmpty) 'imageUrls': imageUrls,
+        if (videoUrls.isNotEmpty) 'videoUrls': videoUrls,
+        if (isKum) 'isKum': isKum,
       };
 
   factory FavoriteComment.fromJson(Map<String, dynamic> json) =>
@@ -166,9 +181,18 @@ class FavoriteComment {
         postId: json['postId'] as int,
         commentPage: json['commentPage'] as int,
         authorName: json['authorName'] as String,
+        authorProfileUrl: json['authorProfileUrl'] as String? ?? '',
         publishedAt: DateTime.parse(json['publishedAt'] as String),
         addedAt: DateTime.parse(json['addedAt'] as String),
         previewText: json['previewText'] as String?,
+        textHtml: json['textHtml'] as String?,
+        imageUrls: (json['imageUrls'] as List<dynamic>? ?? [])
+            .whereType<String>()
+            .toList(),
+        videoUrls: (json['videoUrls'] as List<dynamic>? ?? [])
+            .whereType<String>()
+            .toList(),
+        isKum: json['isKum'] == true,
       );
 }
 

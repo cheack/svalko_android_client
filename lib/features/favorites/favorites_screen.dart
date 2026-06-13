@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../core/settings_storage.dart';
+import '../../models/author.dart';
+import '../../models/comment.dart';
+import '../post/widgets/comment_tile.dart';
 import '../navigation/app_drawer.dart';
 import 'favorites_storage.dart';
 
@@ -86,6 +90,7 @@ class FavoritesScreen extends ConsumerWidget {
     final favorites = ref.watch(favoritesProvider);
     final postsNotifier = ref.read(favoritesProvider.notifier);
     final commentsNotifier = ref.read(favoriteCommentsProvider.notifier);
+    final fontSize = ref.watch(fontSizeProvider);
 
     return DefaultTabController(
       length: 2,
@@ -143,11 +148,16 @@ class FavoritesScreen extends ConsumerWidget {
             ),
           ),
         ),
-        body: TabBarView(
-          children: [
-            _PostsTab(favorites: favorites, notifier: postsNotifier),
-            const _CommentsTab(),
-          ],
+        body: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
+          ),
+          child: TabBarView(
+            children: [
+              _PostsTab(favorites: favorites, notifier: postsNotifier),
+              const _CommentsTab(),
+            ],
+          ),
         ),
       ),
     );
@@ -249,11 +259,16 @@ class _PostsTab extends StatelessWidget {
 class _CommentsTab extends ConsumerWidget {
   const _CommentsTab();
 
-  static String _fmt(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
-      '${dt.day.toString().padLeft(2, '0')} '
-      '${dt.hour.toString().padLeft(2, '0')}:'
-      '${dt.minute.toString().padLeft(2, '0')}';
+  Comment _commentFromFavorite(FavoriteComment fav) => Comment(
+        id: fav.id,
+        postId: fav.postId,
+        author: Author(name: fav.authorName, profileUrl: fav.authorProfileUrl),
+        publishedAt: fav.publishedAt,
+        text: fav.textHtml ?? fav.previewText,
+        imageUrls: fav.imageUrls,
+        videoUrls: fav.videoUrls,
+        isKum: fav.isKum,
+      );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -276,69 +291,37 @@ class _CommentsTab extends ConsumerWidget {
       );
     }
 
-    return ListView.separated(
-      itemCount: comments.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final fav = comments[index];
-        return Dismissible(
-          key: ValueKey(fav.id),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            color: Colors.red,
-            padding: const EdgeInsets.only(right: 16),
-            child: const Icon(Icons.delete_outline, color: Colors.white),
-          ),
-          onDismissed: (_) => notifier.remove(fav.id),
-          child: ListTile(
-            title: Text(
-              fav.authorName,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 15,
-                color: Theme.of(context).colorScheme.primary,
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: ListView.separated(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 12),
+        itemCount: comments.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 4),
+        itemBuilder: (context, index) {
+          final fav = comments[index];
+          return Dismissible(
+            key: ValueKey(fav.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              color: Colors.red,
+              padding: const EdgeInsets.only(right: 16),
+              child: const Icon(Icons.delete_outline, color: Colors.white),
+            ),
+            onDismissed: (_) => notifier.remove(fav.id),
+            child: CommentTile(
+              comment: _commentFromFavorite(fav),
+              currentPage: fav.commentPage,
+              compact: true,
+              onTap: () => Navigator.of(context).pushNamed(
+                '/post',
+                arguments: (fav.postId, fav.id, fav.commentPage),
               ),
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      _fmt(fav.publishedAt),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontSize: 13),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Пост #${fav.postId} · стр. ${fav.commentPage}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                    ),
-                  ],
-                ),
-                if (fav.previewText != null && fav.previewText!.isNotEmpty)
-                  Text(
-                    fav.previewText!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(fontSize: 13),
-                  ),
-              ],
-            ),
-            isThreeLine: fav.previewText != null && fav.previewText!.isNotEmpty,
-            onTap: () => Navigator.of(context).pushNamed(
-              '/post',
-              arguments: (fav.postId, fav.id, fav.commentPage),
-            ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

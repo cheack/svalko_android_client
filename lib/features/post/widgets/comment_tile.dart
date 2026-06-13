@@ -15,11 +15,20 @@ import '../../../ui/widgets/shimmer_placeholder.dart';
 import '../../../ui/widgets/video_player_widget.dart';
 
 class CommentTile extends ConsumerStatefulWidget {
-  const CommentTile({super.key, required this.comment, required this.currentPage, this.isHighlighted = false});
+  const CommentTile({
+    super.key,
+    required this.comment,
+    required this.currentPage,
+    this.isHighlighted = false,
+    this.compact = false,
+    this.onTap,
+  });
 
   final Comment comment;
   final int currentPage;
   final bool isHighlighted;
+  final bool compact;
+  final VoidCallback? onTap;
 
   @override
   ConsumerState<CommentTile> createState() => _CommentTileState();
@@ -137,10 +146,20 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
     final cs = theme.colorScheme;
     final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
     final flashAnim = _flashAnim;
-    return KumShake(
+    final outerPadding = dividers
+        ? (widget.compact && comment.isKum
+            ? const EdgeInsets.symmetric(vertical: 6)
+            : EdgeInsets.zero)
+        : EdgeInsets.fromLTRB(
+            8,
+            widget.compact && comment.isKum ? 8 : 4,
+            8,
+            widget.compact && comment.isKum ? 4 : 0,
+          );
+    final tile = KumShake(
       enabled: comment.isKum,
       child: Padding(
-      padding: dividers ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 4, 8, 0),
+      padding: outerPadding,
       child: Stack(
         children: [
           Container(
@@ -195,11 +214,13 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                             size: 14, color: cs.outline),
                       ),
                     ],
-                    const Spacer(),
-                    _CommentFavButton(
-                      comment: comment,
-                      currentPage: widget.currentPage,
-                    ),
+                    if (!widget.compact) ...[
+                      const Spacer(),
+                      _CommentFavButton(
+                        comment: comment,
+                        currentPage: widget.currentPage,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -211,11 +232,27 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                 children: [
                   if (comment.text != null && comment.text!.isNotEmpty) ...[
                     const SizedBox(height: 0),
-                    CommentHtml(
+                    if (widget.compact)
+                      ClipRect(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: (MediaQuery.textScalerOf(context).scale(
+                                  theme.textTheme.bodyMedium?.fontSize ?? 14,
+                                ) * 1.45 * 5),
+                          ),
+                          child: CommentHtml(
+                            comment.text!,
+                            onSvalkoPost: (id) =>
+                                Navigator.of(context).pushNamed('/post', arguments: id),
+                          ),
+                        ),
+                      )
+                    else
+                      CommentHtml(
                       comment.text!,
                       onSvalkoPost: (id) =>
                           Navigator.of(context).pushNamed('/post', arguments: id),
-                    ),
+                      ),
                   ],
                   for (final url in comment.imageUrls) ...[
                     const SizedBox(height: 6),
@@ -223,7 +260,7 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                       onTap: () => showFullscreenImage(context, url),
                       onLongPress: () => showMediaSheet(context, url),
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 360),
+                        constraints: BoxConstraints(maxHeight: widget.compact ? 260 : 360),
                         child: MediaImage(
                           url: url,
                           fit: BoxFit.contain,
@@ -260,6 +297,12 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
         ],
       ),
     ));
+    if (widget.onTap == null) return tile;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: tile,
+    );
   }
 
   String _formatDate(DateTime dt) =>
@@ -296,9 +339,14 @@ class _CommentFavButton extends ConsumerWidget {
                 postId: comment.postId,
                 commentPage: currentPage,
                 authorName: comment.author.name,
+                authorProfileUrl: comment.author.profileUrl,
                 publishedAt: comment.publishedAt,
                 addedAt: DateTime.now(),
                 previewText: preview,
+                textHtml: comment.text,
+                imageUrls: comment.imageUrls,
+                videoUrls: comment.videoUrls,
+                isKum: comment.isKum,
               ),
             );
       },
