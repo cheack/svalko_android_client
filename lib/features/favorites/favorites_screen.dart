@@ -14,6 +14,46 @@ import '../post/widgets/comment_tile.dart';
 import '../navigation/app_drawer.dart';
 import 'favorites_storage.dart';
 
+mixin _DeletableItems<T extends StatefulWidget> on State<T> {
+  final _deleting = <int>{};
+  final _growing = <int>{};
+
+  void startDelete(BuildContext context, int id, VoidCallback onRestore) {
+    setState(() => _deleting.add(id));
+    _showUndoSnackBar(context, () {
+      if (_deleting.contains(id)) {
+        setState(() => _deleting.remove(id));
+      } else {
+        setState(() => _growing.add(id));
+        onRestore();
+      }
+    });
+  }
+
+  Widget wrapAnimated(int id, Widget child, VoidCallback onRemove) {
+    if (_deleting.contains(id)) {
+      return _AnimatedItem(
+        key: ValueKey(id),
+        shrink: true,
+        onEnd: () {
+          onRemove();
+          setState(() => _deleting.remove(id));
+        },
+        child: child,
+      );
+    }
+    if (_growing.contains(id)) {
+      return _AnimatedItem(
+        key: ValueKey(id),
+        shrink: false,
+        onEnd: () => setState(() => _growing.remove(id)),
+        child: child,
+      );
+    }
+    return KeyedSubtree(key: ValueKey(id), child: child);
+  }
+}
+
 void _showUndoSnackBar(BuildContext context, VoidCallback onUndo) {
   final messenger = ScaffoldMessenger.of(context);
   messenger.hideCurrentSnackBar();
@@ -202,9 +242,7 @@ class _PostsTab extends StatefulWidget {
   State<_PostsTab> createState() => _PostsTabState();
 }
 
-class _PostsTabState extends State<_PostsTab> {
-  final _deleting = <int>{};
-  final _growing = <int>{};
+class _PostsTabState extends State<_PostsTab> with _DeletableItems<_PostsTab> {
 
   static String _fmt(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
@@ -281,34 +319,13 @@ class _PostsTabState extends State<_PostsTab> {
               color: Theme.of(context).colorScheme.outline,
               padding: EdgeInsets.zero,
               alignment: Alignment.centerRight,
-              onPressed: () => setState(() => _deleting.add(fav.id)),
+              onPressed: () => startDelete(
+                context, fav.id, () => widget.notifier.add(fav),
+              ),
             ),
           );
 
-          if (_deleting.contains(fav.id)) {
-            return _AnimatedItem(
-              key: ValueKey(fav.id),
-              shrink: true,
-              onEnd: () {
-                widget.notifier.remove(fav.id);
-                _showUndoSnackBar(context, () {
-                  setState(() => _growing.add(fav.id));
-                  widget.notifier.add(fav);
-                });
-                setState(() => _deleting.remove(fav.id));
-              },
-              child: tile,
-            );
-          }
-          if (_growing.contains(fav.id)) {
-            return _AnimatedItem(
-              key: ValueKey(fav.id),
-              shrink: false,
-              onEnd: () => setState(() => _growing.remove(fav.id)),
-              child: tile,
-            );
-          }
-          return KeyedSubtree(key: ValueKey(fav.id), child: tile);
+          return wrapAnimated(fav.id, tile, () => widget.notifier.remove(fav.id));
         },
       ),
     );
@@ -324,9 +341,8 @@ class _CommentsTab extends ConsumerStatefulWidget {
   ConsumerState<_CommentsTab> createState() => _CommentsTabState();
 }
 
-class _CommentsTabState extends ConsumerState<_CommentsTab> {
-  final _deleting = <int>{};
-  final _growing = <int>{};
+class _CommentsTabState extends ConsumerState<_CommentsTab>
+    with _DeletableItems<_CommentsTab> {
 
   Comment _commentFromFavorite(FavoriteComment fav) => Comment(
         id: fav.id,
@@ -373,7 +389,7 @@ class _CommentsTabState extends ConsumerState<_CommentsTab> {
             comment: _commentFromFavorite(fav),
             currentPage: fav.commentPage,
             compact: true,
-            onDelete: () => setState(() => _deleting.add(fav.id)),
+            onDelete: () => startDelete(context, fav.id, () => notifier.add(fav)),
             onTap: () {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               Navigator.of(context).pushNamed(
@@ -383,30 +399,7 @@ class _CommentsTabState extends ConsumerState<_CommentsTab> {
             },
           );
 
-          if (_deleting.contains(fav.id)) {
-            return _AnimatedItem(
-              key: ValueKey(fav.id),
-              shrink: true,
-              onEnd: () {
-                notifier.remove(fav.id);
-                _showUndoSnackBar(context, () {
-                  setState(() => _growing.add(fav.id));
-                  notifier.add(fav);
-                });
-                setState(() => _deleting.remove(fav.id));
-              },
-              child: tile,
-            );
-          }
-          if (_growing.contains(fav.id)) {
-            return _AnimatedItem(
-              key: ValueKey(fav.id),
-              shrink: false,
-              onEnd: () => setState(() => _growing.remove(fav.id)),
-              child: tile,
-            );
-          }
-          return KeyedSubtree(key: ValueKey(fav.id), child: tile);
+          return wrapAnimated(fav.id, tile, () => notifier.remove(fav.id));
         },
       ),
     );
