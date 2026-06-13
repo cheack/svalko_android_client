@@ -178,49 +178,53 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                 child: Row(
                   children: [
-                    Flexible(
-                      child: GestureDetector(
-                        onTap: () => Navigator.of(context)
-                            .pushNamed('/author', arguments: comment.author),
-                        child: Text(
-                          comment.author.name,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: cs.primary,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context)
+                                  .pushNamed('/author', arguments: comment.author),
+                              child: Text(
+                                comment.author.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: cs.primary,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Text(_formatDate(comment.publishedAt),
+                              style: theme.textTheme.bodySmall),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => _showCommentMenu(context),
+                            child: Text(
+                              '#${comment.id}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.outline,
+                                decoration: TextDecoration.underline,
+                                decorationColor: cs.outline,
+                              ),
+                            ),
+                          ),
+                          if (hasComplex) ...[
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () => _showComplexStylesInfo(context),
+                              child: Icon(Icons.info_outline,
+                                  size: 14, color: cs.outline),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(_formatDate(comment.publishedAt),
-                        style: theme.textTheme.bodySmall),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => _showCommentMenu(context),
-                      child: Text(
-                        '#${comment.id}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: cs.outline,
-                          decoration: TextDecoration.underline,
-                          decorationColor: cs.outline,
-                        ),
-                      ),
-                    ),
-                    if (hasComplex) ...[
-                      const SizedBox(width: 6),
-                      GestureDetector(
-                        onTap: () => _showComplexStylesInfo(context),
-                        child: Icon(Icons.info_outline,
-                            size: 14, color: cs.outline),
-                      ),
-                    ],
-                    if (!widget.compact) ...[
-                      const Spacer(),
+                    if (!widget.compact)
                       _CommentFavButton(
                         comment: comment,
                         currentPage: widget.currentPage,
                       ),
-                    ],
                   ],
                 ),
               ),
