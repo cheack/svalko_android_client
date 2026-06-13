@@ -190,22 +190,19 @@ class _PostsTab extends StatelessWidget {
         ),
       );
     }
-    return ListView.separated(
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: ListView.separated(
       itemCount: favorites.length,
       separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final fav = favorites[index];
-        return Dismissible(
+        return _DeletableItem(
           key: ValueKey(fav.id),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            color: Colors.red,
-            padding: const EdgeInsets.only(right: 16),
-            child: const Icon(Icons.delete_outline, color: Colors.white),
-          ),
-          onDismissed: (_) => notifier.remove(fav.id),
+          onDelete: () => notifier.remove(fav.id),
           child: ListTile(
+            contentPadding: const EdgeInsets.only(left: 16, right: 44),
             leading: fav.firstImageUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(4),
@@ -252,6 +249,7 @@ class _PostsTab extends StatelessWidget {
           ),
         );
       },
+    ),
     );
   }
 }
@@ -300,16 +298,9 @@ class _CommentsTab extends ConsumerWidget {
         separatorBuilder: (_, _) => const SizedBox(height: 4),
         itemBuilder: (context, index) {
           final fav = comments[index];
-          return Dismissible(
+          return _DeletableItem(
             key: ValueKey(fav.id),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              alignment: Alignment.centerRight,
-              color: Colors.red,
-              padding: const EdgeInsets.only(right: 16),
-              child: const Icon(Icons.delete_outline, color: Colors.white),
-            ),
-            onDismissed: (_) => notifier.remove(fav.id),
+            onDelete: () => notifier.remove(fav.id),
             child: CommentTile(
               comment: _commentFromFavorite(fav),
               currentPage: fav.commentPage,
@@ -327,3 +318,74 @@ class _CommentsTab extends ConsumerWidget {
 }
 
 enum _MenuAction { export, import }
+
+class _DeletableItem extends StatefulWidget {
+  const _DeletableItem({super.key, required this.child, required this.onDelete});
+
+  final Widget child;
+  final VoidCallback onDelete;
+
+  @override
+  State<_DeletableItem> createState() => _DeletableItemState();
+}
+
+class _DeletableItemState extends State<_DeletableItem>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  late final Animation<double> _size;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _fade = Tween<double>(begin: 1, end: 0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
+    );
+    _size = Tween<double>(begin: 1, end: 0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _delete() {
+    _ctrl.forward().then((_) {
+      if (mounted) widget.onDelete();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SizeTransition(
+        sizeFactor: _size,
+        alignment: Alignment.topCenter,
+        child: Stack(
+          children: [
+            widget.child,
+            Positioned(
+              top: 4,
+              right: 4,
+              child: IconButton(
+                icon: const Icon(Icons.delete_outline, size: 20),
+                color: Theme.of(context).colorScheme.outline,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: _delete,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
