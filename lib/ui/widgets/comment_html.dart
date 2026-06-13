@@ -6,10 +6,11 @@ import '../skin_ext.dart';
 import 'video_link_card.dart';
 
 class CommentHtml extends StatelessWidget {
-  const CommentHtml(this.html, {super.key, this.onSvalkoPost});
+  const CommentHtml(this.html, {super.key, this.onSvalkoPost, this.compact = false});
 
   final String html;
   final void Function(int postId)? onSvalkoPost;
+  final bool compact;
 
   static final _svalkoPostRe = RegExp(
     r'https?://(?:www\.)?svalko\.org/(\d+)\.html',
@@ -26,6 +27,7 @@ class CommentHtml extends StatelessWidget {
       textStyle: theme.textTheme.bodyMedium,
       customWidgetBuilder: (el) {
         if (el.localName == 'a' && el.classes.contains('video')) {
+          if (compact) return const SizedBox.shrink();
           final href = el.attributes['href'] ?? '';
           if (VideoLinkCard.isSupported(href)) {
             return Padding(

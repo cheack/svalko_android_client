@@ -12,6 +12,7 @@ import '../../../ui/widgets/kum_shake.dart';
 import '../../../ui/widgets/media_actions.dart';
 import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/shimmer_placeholder.dart';
+import '../../../ui/widgets/video_link_card.dart';
 import '../../../ui/widgets/video_player_widget.dart';
 
 class CommentTile extends ConsumerStatefulWidget {
@@ -74,6 +75,19 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
   }
 
   Comment get comment => widget.comment;
+
+  static final _videoLinkRe = RegExp(
+    r'''href="([^"]*)"[^>]*class="[^"]*\bvideo\b'''
+    r'''|'''
+    r'''class="[^"]*\bvideo\b[^"]*"[^>]*href="([^"]*)"''',
+    caseSensitive: false,
+  );
+
+  static List<String> _extractVideoLinks(String html) =>
+      _videoLinkRe.allMatches(html)
+          .map((m) => m.group(1) ?? m.group(2) ?? '')
+          .where((url) => url.isNotEmpty)
+          .toList();
 
   String _commentUrl() =>
       '${Config.baseUrl}/${comment.postId}.html#c${comment.id}';
@@ -253,6 +267,7 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                           ),
                           child: CommentHtml(
                             comment.text!,
+                            compact: true,
                             onSvalkoPost: (id) =>
                                 Navigator.of(context).pushNamed('/post', arguments: id),
                           ),
@@ -264,6 +279,13 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                       onSvalkoPost: (id) =>
                           Navigator.of(context).pushNamed('/post', arguments: id),
                       ),
+                    if (widget.compact)
+                      for (final url in _extractVideoLinks(comment.text!))
+                        if (VideoLinkCard.isSupported(url))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: VideoLinkCard(url: url),
+                          ),
                   ],
                   for (final url in comment.imageUrls) ...[
                     const SizedBox(height: 6),
@@ -284,7 +306,12 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                     const SizedBox(height: 6),
                     GestureDetector(
                       onLongPress: () => showMediaSheet(context, url, isVideo: true),
-                      child: VideoPlayerWidget(url: url),
+                      child: widget.compact
+                          ? ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 260),
+                              child: VideoPlayerWidget(url: url),
+                            )
+                          : VideoPlayerWidget(url: url),
                     ),
                   ],
                   const SizedBox(height: 8),
