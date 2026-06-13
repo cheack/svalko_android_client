@@ -48,6 +48,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   int _pinFrames = 0; // frames left to keep the comments header pinned to top
   bool _searchingDown = false; // walking down from the top to find the header
   bool _fabVisible = true;
+  bool _topVisible = false;
   double _lastScrollOffset = 0;
   bool _didNavigateToInitialPage = false;
   bool _pendingScrollToHighlight = false;
@@ -87,8 +88,14 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     final diff = offset - _lastScrollOffset;
     if (diff > 4 && _fabVisible) {
       setState(() => _fabVisible = false);
-    } else if (diff < -4 && !_fabVisible) {
+    } else if (diff < -1 && !_fabVisible) {
       setState(() => _fabVisible = true);
+    }
+    if (diff > 1 && !_topVisible) {
+      setState(() => _topVisible = true);
+    }
+    if (offset < 50 && _topVisible) {
+      setState(() => _topVisible = false);
     }
     _lastScrollOffset = offset;
     // Capture while the header passes through the viewport — the lazy
@@ -214,6 +221,17 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     });
   }
 
+  void _scrollToTop() {
+    if (!_scrollController.hasClients) return;
+    setState(() => _topVisible = false);
+    _pinFrames = 0;
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
     _pinFrames = 0; // don't let the pin loop fight this animation
@@ -333,28 +351,56 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           _PostMenu(post: post, scrollController: _scrollController),
         ],
       ),
-      floatingActionButton: AnimatedSlide(
-        offset: _fabVisible ? Offset.zero : const Offset(0, 2),
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        child: AnimatedOpacity(
-          opacity: _fabVisible ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 200),
-          child: FloatingActionButton.extended(
-            onPressed: () async {
-              final sent = await showCommentSheet(context, api, settingsBox, post.id);
-              if (sent && mounted) {
-                _pendingScrollToBottom = true;
-                // Could be left set by a failed page load — don't let it
-                // hijack the next loadingMore completion.
-                _pendingScrollToComments = false;
-                ctrl.loadLastPage();
-              }
-            },
-            icon: const Icon(Icons.edit_outlined),
-            label: const Text('Написать'),
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            child: _topVisible
+                ? Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FloatingActionButton.small(
+                      heroTag: 'scroll_top',
+                      onPressed: _scrollToTop,
+                      child: const Icon(Icons.arrow_upward),
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
-        ),
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            tween: Tween(end: _fabVisible ? 1.0 : 0.0),
+            builder: (context, value, child) => ClipRect(
+              child: Align(
+                alignment: Alignment.centerRight,
+                widthFactor: value,
+                heightFactor: 1.0,
+                child: Opacity(
+                  opacity: value,
+                  child: IgnorePointer(ignoring: value < 0.5, child: child!),
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: FloatingActionButton.extended(
+                heroTag: 'write',
+                onPressed: () async {
+                  final sent = await showCommentSheet(context, api, settingsBox, post.id);
+                  if (sent && mounted) {
+                    _pendingScrollToBottom = true;
+                    _pendingScrollToComments = false;
+                    ctrl.loadLastPage();
+                  }
+                },
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Написать'),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Builder(
         builder: (ctx) => MediaQuery(
