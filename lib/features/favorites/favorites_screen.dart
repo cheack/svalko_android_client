@@ -201,8 +201,7 @@ class _PostsTab extends StatelessWidget {
         return _DeletableItem(
           key: ValueKey(fav.id),
           onDelete: () => notifier.remove(fav.id),
-          child: ListTile(
-            contentPadding: const EdgeInsets.only(left: 16, right: 44),
+          builder: (deleteFn) => ListTile(
             leading: fav.firstImageUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(4),
@@ -246,6 +245,11 @@ class _PostsTab extends StatelessWidget {
             isThreeLine: fav.previewText != null && fav.previewText!.isNotEmpty,
             onTap: () =>
                 Navigator.of(context).pushNamed('/post', arguments: fav.id),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, size: 20),
+              color: Theme.of(context).colorScheme.outline,
+              onPressed: deleteFn,
+            ),
           ),
         );
       },
@@ -301,10 +305,11 @@ class _CommentsTab extends ConsumerWidget {
           return _DeletableItem(
             key: ValueKey(fav.id),
             onDelete: () => notifier.remove(fav.id),
-            child: CommentTile(
+            builder: (deleteFn) => CommentTile(
               comment: _commentFromFavorite(fav),
               currentPage: fav.commentPage,
               compact: true,
+              onDelete: deleteFn,
               onTap: () => Navigator.of(context).pushNamed(
                 '/post',
                 arguments: (fav.postId, fav.id, fav.commentPage),
@@ -320,9 +325,9 @@ class _CommentsTab extends ConsumerWidget {
 enum _MenuAction { export, import }
 
 class _DeletableItem extends StatefulWidget {
-  const _DeletableItem({super.key, required this.child, required this.onDelete});
+  const _DeletableItem({super.key, required this.builder, required this.onDelete});
 
-  final Widget child;
+  final Widget Function(VoidCallback deleteFn) builder;
   final VoidCallback onDelete;
 
   @override
@@ -369,22 +374,7 @@ class _DeletableItemState extends State<_DeletableItem>
       child: SizeTransition(
         sizeFactor: _size,
         alignment: Alignment.topCenter,
-        child: Stack(
-          children: [
-            widget.child,
-            Positioned(
-              top: 4,
-              right: 4,
-              child: IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20),
-                color: Theme.of(context).colorScheme.outline,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                onPressed: _delete,
-              ),
-            ),
-          ],
-        ),
+        child: widget.builder(_delete),
       ),
     );
   }

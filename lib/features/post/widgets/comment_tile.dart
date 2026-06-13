@@ -22,6 +22,7 @@ class CommentTile extends ConsumerStatefulWidget {
     this.isHighlighted = false,
     this.compact = false,
     this.onTap,
+    this.onDelete,
   });
 
   final Comment comment;
@@ -29,6 +30,7 @@ class CommentTile extends ConsumerStatefulWidget {
   final bool isHighlighted;
   final bool compact;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
 
   @override
   ConsumerState<CommentTile> createState() => _CommentTileState();
@@ -224,6 +226,11 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                       _CommentFavButton(
                         comment: comment,
                         currentPage: widget.currentPage,
+                      )
+                    else if (widget.onDelete != null)
+                      GestureDetector(
+                        onTap: widget.onDelete,
+                        child: Icon(Icons.delete_outline, size: 18, color: cs.outline),
                       ),
                   ],
                 ),
