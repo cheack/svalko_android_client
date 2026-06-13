@@ -67,7 +67,8 @@ class FavoritesNotifier extends Notifier<List<FavoritePost>> {
   void add(FavoritePost post) {
     final box = ref.read(favoritesBoxProvider);
     box.put('${post.id}', jsonEncode(post.toJson()));
-    state = [post, ...state.where((f) => f.id != post.id)];
+    state = [post, ...state.where((f) => f.id != post.id)]
+      ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
   }
 
   void remove(int postId) {
@@ -219,7 +220,8 @@ class FavoriteCommentsNotifier extends Notifier<List<FavoriteComment>> {
   void add(FavoriteComment comment) {
     final box = ref.read(favoriteCommentsBoxProvider);
     box.put('${comment.id}', jsonEncode(comment.toJson()));
-    state = [comment, ...state.where((f) => f.id != comment.id)];
+    state = [comment, ...state.where((f) => f.id != comment.id)]
+      ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
   }
 
   void remove(int commentId) {

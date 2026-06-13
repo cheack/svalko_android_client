@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -13,9 +14,33 @@ import '../post/widgets/comment_tile.dart';
 import '../navigation/app_drawer.dart';
 import 'favorites_storage.dart';
 
-class FavoritesScreen extends ConsumerWidget {
+void _showUndoSnackBar(BuildContext context, VoidCallback onUndo) {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar();
+  Timer? timer;
+  final ctrl = messenger.showSnackBar(SnackBar(
+    duration: const Duration(days: 1),
+    content: const Text('Удалено из избранного'),
+    action: SnackBarAction(
+      label: 'Отменить',
+      onPressed: () {
+        timer?.cancel();
+        onUndo();
+      },
+    ),
+  ));
+  timer = Timer(const Duration(seconds: 5), ctrl.close);
+  ctrl.closed.then((_) => timer?.cancel());
+}
+
+class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
 
+  @override
+  ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   Future<void> _export(
     BuildContext context,
     FavoritesNotifier postsNotifier,
@@ -51,7 +76,6 @@ class FavoritesScreen extends ConsumerWidget {
       int addedPosts;
       int addedComments;
       if (decoded is List) {
-        // Legacy format: flat array of posts
         addedPosts = postsNotifier.importList(decoded);
         addedComments = 0;
       } else {
@@ -86,7 +110,7 @@ class FavoritesScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final favorites = ref.watch(favoritesProvider);
     final postsNotifier = ref.read(favoritesProvider.notifier);
     final commentsNotifier = ref.read(favoriteCommentsProvider.notifier);
@@ -94,69 +118,71 @@ class FavoritesScreen extends ConsumerWidget {
 
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        drawer: const AppDrawer(activePage: 'favorites'),
-        drawerEdgeDragWidth: 80,
-        appBar: AppBar(
-          title: const Text('Избранное'),
-          actions: [
-            PopupMenuButton<_MenuAction>(
-              onSelected: (action) {
-                switch (action) {
-                  case _MenuAction.export:
-                    _export(context, postsNotifier, commentsNotifier);
-                  case _MenuAction.import:
-                    _import(context, postsNotifier, commentsNotifier);
-                }
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: _MenuAction.export,
-                  child: ListTile(
-                    leading: Icon(Icons.upload_outlined),
-                    title: Text('Экспорт'),
-                    contentPadding: EdgeInsets.zero,
+      child: ScaffoldMessenger(
+        child: Scaffold(
+          drawer: const AppDrawer(activePage: 'favorites'),
+          drawerEdgeDragWidth: 80,
+          appBar: AppBar(
+            title: const Text('Избранное'),
+            actions: [
+              PopupMenuButton<_MenuAction>(
+                onSelected: (action) {
+                  switch (action) {
+                    case _MenuAction.export:
+                      _export(context, postsNotifier, commentsNotifier);
+                    case _MenuAction.import:
+                      _import(context, postsNotifier, commentsNotifier);
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: _MenuAction.export,
+                    child: ListTile(
+                      leading: Icon(Icons.upload_outlined),
+                      title: Text('Экспорт'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: _MenuAction.import,
-                  child: ListTile(
-                    leading: Icon(Icons.download_outlined),
-                    title: Text('Импорт'),
-                    contentPadding: EdgeInsets.zero,
+                  PopupMenuItem(
+                    value: _MenuAction.import,
+                    child: ListTile(
+                      leading: Icon(Icons.download_outlined),
+                      title: Text('Импорт'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(kTextTabBarHeight),
+              child: Builder(
+                builder: (ctx) {
+                  final fg =
+                      Theme.of(ctx).appBarTheme.foregroundColor ?? Colors.white;
+                  return TabBar(
+                    labelColor: fg,
+                    unselectedLabelColor: fg.withAlpha(178),
+                    indicatorColor: fg,
+                    tabs: const [
+                      Tab(text: 'Посты'),
+                      Tab(text: 'Комментарии'),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+          body: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
+            ),
+            child: TabBarView(
+              children: [
+                _PostsTab(favorites: favorites, notifier: postsNotifier),
+                const _CommentsTab(),
               ],
             ),
-          ],
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(kTextTabBarHeight),
-            child: Builder(
-              builder: (ctx) {
-                final fg =
-                    Theme.of(ctx).appBarTheme.foregroundColor ?? Colors.white;
-                return TabBar(
-                  labelColor: fg,
-                  unselectedLabelColor: fg.withAlpha(178),
-                  indicatorColor: fg,
-                  tabs: const [
-                    Tab(text: 'Посты'),
-                    Tab(text: 'Комментарии'),
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
-        body: MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
-          ),
-          child: TabBarView(
-            children: [
-              _PostsTab(favorites: favorites, notifier: postsNotifier),
-              const _CommentsTab(),
-            ],
           ),
         ),
       ),
@@ -164,11 +190,21 @@ class FavoritesScreen extends ConsumerWidget {
   }
 }
 
-class _PostsTab extends StatelessWidget {
+// ---------------------------------------------------------------------------
+
+class _PostsTab extends StatefulWidget {
   const _PostsTab({required this.favorites, required this.notifier});
 
   final List<FavoritePost> favorites;
   final FavoritesNotifier notifier;
+
+  @override
+  State<_PostsTab> createState() => _PostsTabState();
+}
+
+class _PostsTabState extends State<_PostsTab> {
+  final _deleting = <int>{};
+  final _growing = <int>{};
 
   static String _fmt(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
@@ -178,7 +214,7 @@ class _PostsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (favorites.isEmpty) {
+    if (widget.favorites.isEmpty) {
       return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -194,14 +230,11 @@ class _PostsTab extends StatelessWidget {
       context: context,
       removeTop: true,
       child: ListView.separated(
-      itemCount: favorites.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final fav = favorites[index];
-        return _DeletableItem(
-          key: ValueKey(fav.id),
-          onDelete: () => notifier.remove(fav.id),
-          builder: (deleteFn) => ListTile(
+        itemCount: widget.favorites.length,
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final fav = widget.favorites[index];
+          final tile = ListTile(
             leading: fav.firstImageUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(4),
@@ -227,41 +260,73 @@ class _PostsTab extends StatelessWidget {
               children: [
                 Text(
                   _fmt(fav.publishedAt),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontSize: 13),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13),
                 ),
                 if (fav.previewText != null && fav.previewText!.isNotEmpty)
                   Text(
                     fav.previewText!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(fontSize: 13),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13),
                   ),
               ],
             ),
             isThreeLine: fav.previewText != null && fav.previewText!.isNotEmpty,
-            onTap: () =>
-                Navigator.of(context).pushNamed('/post', arguments: fav.id),
+            onTap: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              Navigator.of(context).pushNamed('/post', arguments: fav.id);
+            },
             trailing: IconButton(
               icon: const Icon(Icons.delete_outline, size: 26),
               color: Theme.of(context).colorScheme.outline,
               padding: EdgeInsets.zero,
               alignment: Alignment.centerRight,
-              onPressed: deleteFn,
+              onPressed: () => setState(() => _deleting.add(fav.id)),
             ),
-          ),
-        );
-      },
-    ),
+          );
+
+          if (_deleting.contains(fav.id)) {
+            return _AnimatedItem(
+              key: ValueKey(fav.id),
+              shrink: true,
+              onEnd: () {
+                widget.notifier.remove(fav.id);
+                _showUndoSnackBar(context, () {
+                  setState(() => _growing.add(fav.id));
+                  widget.notifier.add(fav);
+                });
+                setState(() => _deleting.remove(fav.id));
+              },
+              child: tile,
+            );
+          }
+          if (_growing.contains(fav.id)) {
+            return _AnimatedItem(
+              key: ValueKey(fav.id),
+              shrink: false,
+              onEnd: () => setState(() => _growing.remove(fav.id)),
+              child: tile,
+            );
+          }
+          return KeyedSubtree(key: ValueKey(fav.id), child: tile);
+        },
+      ),
     );
   }
 }
 
-class _CommentsTab extends ConsumerWidget {
+// ---------------------------------------------------------------------------
+
+class _CommentsTab extends ConsumerStatefulWidget {
   const _CommentsTab();
+
+  @override
+  ConsumerState<_CommentsTab> createState() => _CommentsTabState();
+}
+
+class _CommentsTabState extends ConsumerState<_CommentsTab> {
+  final _deleting = <int>{};
+  final _growing = <int>{};
 
   Comment _commentFromFavorite(FavoriteComment fav) => Comment(
         id: fav.id,
@@ -275,7 +340,7 @@ class _CommentsTab extends ConsumerWidget {
       );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final comments = ref.watch(favoriteCommentsProvider);
     final notifier = ref.read(favoriteCommentsProvider.notifier);
 
@@ -304,20 +369,44 @@ class _CommentsTab extends ConsumerWidget {
         separatorBuilder: (_, _) => const SizedBox(height: 4),
         itemBuilder: (context, index) {
           final fav = comments[index];
-          return _DeletableItem(
-            key: ValueKey(fav.id),
-            onDelete: () => notifier.remove(fav.id),
-            builder: (deleteFn) => CommentTile(
-              comment: _commentFromFavorite(fav),
-              currentPage: fav.commentPage,
-              compact: true,
-              onDelete: deleteFn,
-              onTap: () => Navigator.of(context).pushNamed(
+          final tile = CommentTile(
+            comment: _commentFromFavorite(fav),
+            currentPage: fav.commentPage,
+            compact: true,
+            onDelete: () => setState(() => _deleting.add(fav.id)),
+            onTap: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              Navigator.of(context).pushNamed(
                 '/post',
                 arguments: (fav.postId, fav.id, fav.commentPage),
-              ),
-            ),
+              );
+            },
           );
+
+          if (_deleting.contains(fav.id)) {
+            return _AnimatedItem(
+              key: ValueKey(fav.id),
+              shrink: true,
+              onEnd: () {
+                notifier.remove(fav.id);
+                _showUndoSnackBar(context, () {
+                  setState(() => _growing.add(fav.id));
+                  notifier.add(fav);
+                });
+                setState(() => _deleting.remove(fav.id));
+              },
+              child: tile,
+            );
+          }
+          if (_growing.contains(fav.id)) {
+            return _AnimatedItem(
+              key: ValueKey(fav.id),
+              shrink: false,
+              onEnd: () => setState(() => _growing.remove(fav.id)),
+              child: tile,
+            );
+          }
+          return KeyedSubtree(key: ValueKey(fav.id), child: tile);
         },
       ),
     );
@@ -326,101 +415,38 @@ class _CommentsTab extends ConsumerWidget {
 
 enum _MenuAction { export, import }
 
-class _UndoSnackBarContent extends StatefulWidget {
-  const _UndoSnackBarContent({required this.onUndo});
-  final VoidCallback onUndo;
+// ---------------------------------------------------------------------------
+
+class _AnimatedItem extends StatefulWidget {
+  const _AnimatedItem({
+    super.key,
+    required this.child,
+    required this.shrink,
+    required this.onEnd,
+  });
+
+  final Widget child;
+  final bool shrink;
+  final VoidCallback onEnd;
 
   @override
-  State<_UndoSnackBarContent> createState() => _UndoSnackBarContentState();
+  State<_AnimatedItem> createState() => _AnimatedItemState();
 }
 
-class _UndoSnackBarContentState extends State<_UndoSnackBarContent>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _timer.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 6),
-          child: Row(
-            children: [
-              const Expanded(child: Text('Удалено из избранного')),
-              TextButton.icon(
-                onPressed: widget.onUndo,
-                icon: const Icon(Icons.undo, size: 16),
-                label: const Text('Отменить'),
-                style: TextButton.styleFrom(
-                  foregroundColor: cs.inversePrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ],
-          ),
-        ),
-        AnimatedBuilder(
-          animation: _timer,
-          builder: (_, _) => LinearProgressIndicator(
-            value: 1.0 - _timer.value,
-            backgroundColor: Colors.white24,
-            color: cs.inversePrimary,
-            minHeight: 3,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DeletableItem extends StatefulWidget {
-  const _DeletableItem({super.key, required this.builder, required this.onDelete});
-
-  final Widget Function(VoidCallback deleteFn) builder;
-  final VoidCallback onDelete;
-
-  @override
-  State<_DeletableItem> createState() => _DeletableItemState();
-}
-
-class _DeletableItemState extends State<_DeletableItem>
+class _AnimatedItemState extends State<_AnimatedItem>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double> _fade;
-  late final Animation<double> _size;
 
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: const Duration(milliseconds: 300),
     );
-    _fade = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
-    );
-    _size = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _ctrl.forward().then((_) {
+      if (mounted) widget.onEnd();
+    });
   }
 
   @override
@@ -429,36 +455,19 @@ class _DeletableItemState extends State<_DeletableItem>
     super.dispose();
   }
 
-  Future<void> _delete() async {
-    _ctrl.forward();
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.clearSnackBars();
-
-    bool undone = false;
-    final snackController = messenger.showSnackBar(SnackBar(
-      duration: const Duration(seconds: 5),
-      padding: EdgeInsets.zero,
-      content: _UndoSnackBarContent(
-        onUndo: () {
-          undone = true;
-          messenger.hideCurrentSnackBar();
-          if (mounted) _ctrl.reverse();
-        },
-      ),
-    ));
-
-    await snackController.closed;
-    if (!undone && mounted) widget.onDelete();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fade,
+    final curved = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+    final size = widget.shrink
+        ? Tween<double>(begin: 1, end: 0).animate(curved)
+        : Tween<double>(begin: 0, end: 1).animate(curved);
+    final opacity = widget.shrink
+        ? Tween<double>(begin: 1, end: 0).animate(curved)
+        : Tween<double>(begin: 0, end: 1).animate(curved);
+    return IgnorePointer(
       child: SizeTransition(
-        sizeFactor: _size,
-        alignment: Alignment.topCenter,
-        child: widget.builder(_delete),
+        sizeFactor: size,
+        child: FadeTransition(opacity: opacity, child: widget.child),
       ),
     );
   }
