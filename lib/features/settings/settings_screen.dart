@@ -303,7 +303,7 @@ class _TextSizePreviewState extends State<_TextSizePreview> {
                     showApproverTap: false,
                     showVoteSection: false,
                   ),
-                  for (final c in _comments) CommentTile(comment: c),
+                  for (final c in _comments) CommentTile(comment: c, currentPage: 0),
                 ],
               ),
             ),

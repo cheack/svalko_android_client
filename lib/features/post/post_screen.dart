@@ -25,10 +25,11 @@ import '../../ui/skin_ext.dart';
 import '../../ui/widgets/kum_shake.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
-  const PostScreen({super.key, required this.postId, this.highlightCommentId, this.showShuffle = false});
+  const PostScreen({super.key, required this.postId, this.highlightCommentId, this.initialCommentPage, this.showShuffle = false});
 
   final int postId;
   final int? highlightCommentId;
+  final int? initialCommentPage;
   final bool showShuffle;
 
   @override
@@ -48,6 +49,8 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   bool _searchingDown = false; // walking down from the top to find the header
   bool _fabVisible = true;
   double _lastScrollOffset = 0;
+  bool _didNavigateToInitialPage = false;
+  bool _pendingScrollToHighlight = false;
   bool _loadingRandom = false;
   PostRating? _rating;
   int? _borodaCount;
@@ -57,10 +60,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (mounted && widget.initialCommentPage == null) {
         ref.read(postControllerProvider(widget.postId).notifier).refresh();
       }
-      if (widget.highlightCommentId != null) _tryScrollToHighlight();
+      if (widget.highlightCommentId != null && widget.initialCommentPage == null) _tryScrollToHighlight();
     });
   }
 
@@ -116,9 +119,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   }
 
   void _tryScrollToHighlight() {
+    if (widget.highlightCommentId == null) return;
     if (_didScrollToHighlight) return;
     final state = ref.read(postControllerProvider(widget.postId));
-    if (state.isLoading) return;
+    if (state.isLoading || state.isLoadingMore) return;
     final ctx = _highlightKey.currentContext;
     if (ctx == null) {
       // Item not yet built by ListView — jump to estimated position to bring it into viewport.
@@ -145,8 +149,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
       Future.delayed(Duration(milliseconds: ms), () {
         if (!mounted) return;
         final c = _highlightKey.currentContext;
-        if (c != null) {
-          // ignore: use_build_context_synchronously
+        if (c != null && c.mounted) {
           Scrollable.ensureVisible(c,
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOut);
@@ -194,10 +197,21 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     });
   }
 
-  void _loadCommentsPage(int page) {
+  void _loadCommentsPage(int page, {bool settleToComments = true}) {
     _captureCommentsTarget();
-    _pendingScrollToComments = true;
+    _pendingScrollToComments = settleToComments;
     ref.read(postControllerProvider(widget.postId).notifier).loadPage(page);
+  }
+
+  void _resetHighlightScroll() {
+    _didScrollToHighlight = false;
+    _scrollRetries = 0;
+  }
+
+  void _scrollToHighlightAfterLayout() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _tryScrollToHighlight();
+    });
   }
 
   void _scrollToBottom() {
@@ -216,15 +230,45 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     final state = ref.watch(postControllerProvider(widget.postId));
     final ctrl = ref.read(postControllerProvider(widget.postId).notifier);
 
+    if (widget.initialCommentPage != null &&
+        !_didNavigateToInitialPage &&
+        !state.isLoading &&
+        !state.isLoadingMore &&
+        state.post != null) {
+      final page = widget.initialCommentPage!;
+      _resetHighlightScroll();
+      if (page != state.currentPage) {
+        _pendingScrollToHighlight = widget.highlightCommentId != null;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          final current = ref.read(postControllerProvider(widget.postId));
+          if (current.isLoading || current.isLoadingMore) return;
+          _didNavigateToInitialPage = true;
+          _loadCommentsPage(page, settleToComments: false);
+        });
+      } else if (widget.highlightCommentId != null) {
+        _didNavigateToInitialPage = true;
+        _scrollToHighlightAfterLayout();
+      } else {
+        _didNavigateToInitialPage = true;
+      }
+    }
+
     ref.listen<PostState>(postControllerProvider(widget.postId), (prev, next) {
       if (prev?.isLoadingMore == true && !next.isLoadingMore) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
           if (_pendingScrollToBottom) {
             _pendingScrollToBottom = false;
             _scrollToBottom();
           } else if (_pendingScrollToComments) {
             _pendingScrollToComments = false;
             _settleScrollToComments();
+          }
+          if (_pendingScrollToHighlight) {
+            _pendingScrollToHighlight = false;
+            _resetHighlightScroll();
+            _scrollToHighlightAfterLayout();
           }
         });
       }
@@ -234,7 +278,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           // Remember the header position right away — the first guess for
           // page-change jumps even if the user never scrolls past it.
           _captureCommentsTarget();
-          _tryScrollToHighlight();
+          if (widget.initialCommentPage == null) _tryScrollToHighlight();
         });
       }
     });
@@ -460,6 +504,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                           ? _highlightKey
                           : null,
                       comment: state.comments[i],
+                      currentPage: state.currentPage,
                       isHighlighted: state.comments[i].id == widget.highlightCommentId,
                     ),
                   ],

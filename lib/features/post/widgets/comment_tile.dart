@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config.dart';
 import '../../../core/open_url.dart';
+import '../../../features/favorites/favorites_storage.dart';
 import '../../../models/comment.dart';
 import '../../../ui/skin_ext.dart';
 import '../../../ui/widgets/image_viewer.dart';
@@ -12,17 +14,18 @@ import '../../../ui/widgets/image_carousel.dart';
 import '../../../ui/widgets/shimmer_placeholder.dart';
 import '../../../ui/widgets/video_player_widget.dart';
 
-class CommentTile extends StatefulWidget {
-  const CommentTile({super.key, required this.comment, this.isHighlighted = false});
+class CommentTile extends ConsumerStatefulWidget {
+  const CommentTile({super.key, required this.comment, required this.currentPage, this.isHighlighted = false});
 
   final Comment comment;
+  final int currentPage;
   final bool isHighlighted;
 
   @override
-  State<CommentTile> createState() => _CommentTileState();
+  ConsumerState<CommentTile> createState() => _CommentTileState();
 }
 
-class _CommentTileState extends State<CommentTile> with SingleTickerProviderStateMixin {
+class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProviderStateMixin {
   AnimationController? _flashCtrl;
   Animation<double>? _flashAnim;
 
@@ -192,6 +195,11 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
                             size: 14, color: cs.outline),
                       ),
                     ],
+                    const Spacer(),
+                    _CommentFavButton(
+                      comment: comment,
+                      currentPage: widget.currentPage,
+                    ),
                   ],
                 ),
               ),
@@ -259,4 +267,46 @@ class _CommentTileState extends State<CommentTile> with SingleTickerProviderStat
       '${dt.day.toString().padLeft(2, '0')} '
       '${dt.hour.toString().padLeft(2, '0')}:'
       '${dt.minute.toString().padLeft(2, '0')}';
+}
+
+class _CommentFavButton extends ConsumerWidget {
+  const _CommentFavButton({required this.comment, required this.currentPage});
+
+  final Comment comment;
+  final int currentPage;
+
+  static String _stripHtml(String html) =>
+      html.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFav = ref.watch(
+      favoriteCommentsProvider.select((list) => list.any((f) => f.id == comment.id)),
+    );
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () {
+        final stripped = comment.text == null ? '' : _stripHtml(comment.text!);
+        final preview = stripped.isEmpty
+            ? null
+            : stripped.substring(0, stripped.length > 120 ? 120 : stripped.length);
+        ref.read(favoriteCommentsProvider.notifier).toggle(
+              FavoriteComment(
+                id: comment.id,
+                postId: comment.postId,
+                commentPage: currentPage,
+                authorName: comment.author.name,
+                publishedAt: comment.publishedAt,
+                addedAt: DateTime.now(),
+                previewText: preview,
+              ),
+            );
+      },
+      child: Icon(
+        isFav ? Icons.bookmark : Icons.bookmark_outline,
+        size: 18,
+        color: isFav ? cs.primary : cs.outline,
+      ),
+    );
+  }
 }

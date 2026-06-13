@@ -47,17 +47,25 @@ class SvalkoApp extends ConsumerWidget {
           final args = settings.arguments;
           final int postId;
           final int? commentId;
-          if (args is (int, int?)) {
+          final int? initialPage;
+          if (args is (int, int?, int?)) {
             postId = args.$1;
             commentId = args.$2;
+            initialPage = args.$3;
+          } else if (args is (int, int?)) {
+            postId = args.$1;
+            commentId = args.$2;
+            initialPage = null;
           } else {
             postId = args as int;
             commentId = null;
+            initialPage = null;
           }
           return MaterialPageRoute(
             builder: (_) => PostScreen(
               postId: postId,
               highlightCommentId: commentId,
+              initialCommentPage: initialPage,
               showShuffle: settings.name == '/random-post',
             ),
           );
