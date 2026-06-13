@@ -324,6 +324,72 @@ class _CommentsTab extends ConsumerWidget {
 
 enum _MenuAction { export, import }
 
+class _UndoSnackBarContent extends StatefulWidget {
+  const _UndoSnackBarContent({required this.onUndo});
+  final VoidCallback onUndo;
+
+  @override
+  State<_UndoSnackBarContent> createState() => _UndoSnackBarContentState();
+}
+
+class _UndoSnackBarContentState extends State<_UndoSnackBarContent>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _timer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 6),
+          child: Row(
+            children: [
+              const Expanded(child: Text('Удалено из избранного')),
+              TextButton.icon(
+                onPressed: widget.onUndo,
+                icon: const Icon(Icons.undo, size: 16),
+                label: const Text('Отменить'),
+                style: TextButton.styleFrom(
+                  foregroundColor: cs.inversePrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ),
+        ),
+        AnimatedBuilder(
+          animation: _timer,
+          builder: (_, _) => LinearProgressIndicator(
+            value: 1.0 - _timer.value,
+            backgroundColor: Colors.white24,
+            color: cs.inversePrimary,
+            minHeight: 3,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _DeletableItem extends StatefulWidget {
   const _DeletableItem({super.key, required this.builder, required this.onDelete});
 
@@ -361,10 +427,26 @@ class _DeletableItemState extends State<_DeletableItem>
     super.dispose();
   }
 
-  void _delete() {
-    _ctrl.forward().then((_) {
-      if (mounted) widget.onDelete();
-    });
+  Future<void> _delete() async {
+    _ctrl.forward();
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.clearSnackBars();
+
+    bool undone = false;
+    final snackController = messenger.showSnackBar(SnackBar(
+      duration: const Duration(seconds: 5),
+      padding: EdgeInsets.zero,
+      content: _UndoSnackBarContent(
+        onUndo: () {
+          undone = true;
+          messenger.hideCurrentSnackBar();
+          if (mounted) _ctrl.reverse();
+        },
+      ),
+    ));
+
+    await snackController.closed;
+    if (!undone && mounted) widget.onDelete();
   }
 
   @override
