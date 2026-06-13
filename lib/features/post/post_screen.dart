@@ -328,6 +328,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     final settingsBox = ref.read(settingsBoxProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(post.author.name),
         actions: [

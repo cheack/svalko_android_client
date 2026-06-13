@@ -4,19 +4,35 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import '../../data/svalko_api.dart';
 import '../../core/encoding.dart';
 import '../../core/result.dart';
+import 'author_label.dart';
 
 Future<bool> showNewPostSheet(
   BuildContext context,
   SvalkoApi api,
   Box<String> settingsBox,
 ) async {
-  final result = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (_) => _NewPostSheet(api: api, settingsBox: settingsBox),
+  final result = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _NewPostScreen(api: api, settingsBox: settingsBox),
+    ),
   );
   return result == true;
+}
+
+class _NewPostScreen extends StatelessWidget {
+  const _NewPostScreen({required this.api, required this.settingsBox});
+  final SvalkoApi api;
+  final Box<String> settingsBox;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(title: const Text('Написать')),
+      body: _NewPostSheet(api: api, settingsBox: settingsBox),
+    );
+  }
 }
 
 class _NewPostSheet extends StatefulWidget {
@@ -140,23 +156,19 @@ class _NewPostSheetState extends State<_NewPostSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final inset = MediaQuery.of(context).viewInsets.bottom;
     final savedAuthor = widget.settingsBox.get(_authorKey);
 
     if (savedAuthor == null && !_formReady && !_formError) {
-      return const SizedBox(
-        height: 120,
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + inset),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisSize: MainAxisSize.max,
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _AuthorLabel(controller: _authorCtrl, theme: theme),
+          AuthorLabel(controller: _authorCtrl, theme: theme),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -177,47 +189,44 @@ class _NewPostSheetState extends State<_NewPostSheet> {
                 ),
             ],
           ),
-          Flexible(
-            child: TextField(
-              controller: _textCtrl,
-              focusNode: _focusNode,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-              minLines: 4,
-              maxLines: null,
-              textInputAction: TextInputAction.newline,
-              expands: false,
-              contextMenuBuilder: (context, editableTextState) {
-                final selection = editableTextState.textEditingValue.selection;
-                final hasSelection = selection.isValid && !selection.isCollapsed;
-                final items = [
-                  if (hasSelection) ...[
-                    for (final (tag, label) in [
-                      ('b', 'Жирный'),
-                      ('i', 'Курсив'),
-                      ('u', 'Подчёрк'),
-                      ('s', 'Зачёрк'),
-                    ])
-                      ContextMenuButtonItem(
-                        label: label,
-                        onPressed: () {
-                          ContextMenuController.removeAny();
-                          _wrapSelection(tag);
-                        },
-                      ),
-                  ],
-                  ...editableTextState.contextMenuButtonItems,
-                ];
-                return AdaptiveTextSelectionToolbar.buttonItems(
-                  anchors: editableTextState.contextMenuAnchors,
-                  buttonItems: items,
-                );
-              },
-            ),
+          TextField(
+            controller: _textCtrl,
+            focusNode: _focusNode,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            minLines: 5,
+            maxLines: 12,
+            textInputAction: TextInputAction.newline,
+            expands: false,
+            contextMenuBuilder: (context, editableTextState) {
+              final selection = editableTextState.textEditingValue.selection;
+              final hasSelection = selection.isValid && !selection.isCollapsed;
+              final items = [
+                if (hasSelection) ...[
+                  for (final (tag, label) in [
+                    ('b', 'Жирный'),
+                    ('i', 'Курсив'),
+                    ('u', 'Подчёрк'),
+                    ('s', 'Зачёрк'),
+                  ])
+                    ContextMenuButtonItem(
+                      label: label,
+                      onPressed: () {
+                        ContextMenuController.removeAny();
+                        _wrapSelection(tag);
+                      },
+                    ),
+                ],
+                ...editableTextState.contextMenuButtonItems,
+              ];
+              return AdaptiveTextSelectionToolbar.buttonItems(
+                anchors: editableTextState.contextMenuAnchors,
+                buttonItems: items,
+              );
+            },
           ),
           if (_submitError != null) ...[
             const SizedBox(height: 6),
-            Text(_submitError!,
-                style: TextStyle(color: theme.colorScheme.error)),
+            Text(_submitError!, style: TextStyle(color: theme.colorScheme.error)),
           ],
           if (_formError) ...[
             const SizedBox(height: 6),
@@ -237,41 +246,6 @@ class _NewPostSheetState extends State<_NewPostSheet> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _AuthorLabel extends StatelessWidget {
-  const _AuthorLabel({required this.controller, required this.theme});
-
-  final TextEditingController controller;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text('Я, ', style: theme.textTheme.bodyMedium),
-        Flexible(
-          child: IntrinsicWidth(
-            child: TextField(
-              controller: controller,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 2),
-                border: UnderlineInputBorder(),
-              ),
-              textInputAction: TextInputAction.next,
-            ),
-          ),
-        ),
-        Text(', хочу послать нижеследующее:', style: theme.textTheme.bodyMedium),
-      ],
     );
   }
 }
