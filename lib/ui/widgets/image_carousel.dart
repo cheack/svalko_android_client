@@ -268,6 +268,17 @@ class MediaImageState extends ConsumerState<MediaImage>
     super.dispose();
   }
 
+  void _startGifIfValid(AnimationController? controller) {
+    if (controller == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final duration = controller.duration;
+      if (duration != null && duration > Duration.zero) {
+        controller.repeat();
+      }
+    });
+  }
+
   static void _evictGifCacheIfNeeded(String url) {
     final cache = Gif.cache.caches;
     if (cache.length > _kMaxCachedGifs) {
@@ -360,7 +371,7 @@ class MediaImageState extends ConsumerState<MediaImage>
       return Gif(
             image: FileImage(_gifFile!),
             controller: _gifController!,
-            autostart: Autostart.loop,
+            autostart: Autostart.no,
             width: double.infinity,
             fit: widget.fit,
             alignment: widget.alignment,
@@ -370,6 +381,7 @@ class MediaImageState extends ConsumerState<MediaImage>
                 _readyLogged = true;
                 AppLogger.instance.network('gif ready: $name');
               }
+              _startGifIfValid(_gifController);
             },
           );
     }

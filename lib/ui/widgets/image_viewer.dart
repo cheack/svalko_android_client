@@ -440,6 +440,17 @@ class _FullscreenImageItemState extends State<_FullscreenImageItem>
     super.dispose();
   }
 
+  void _startGifIfValid(AnimationController? controller) {
+    if (controller == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final duration = controller.duration;
+      if (duration != null && duration > Duration.zero) {
+        controller.repeat();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -468,11 +479,12 @@ class _FullscreenImageItemState extends State<_FullscreenImageItem>
                     return Gif(
                       image: FileImage(snapshot.data!),
                       controller: _gifController!,
-                      autostart: Autostart.loop,
+                      autostart: Autostart.no,
                       fit: BoxFit.contain,
                       placeholder: (_) => const Center(
                         child: CircularProgressIndicator(color: Colors.white54),
                       ),
+                      onFetchCompleted: () => _startGifIfValid(_gifController),
                     );
                   },
                 )
