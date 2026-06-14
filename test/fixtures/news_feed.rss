@@ -1,33 +1,54 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<rss version="2.0">
+<rss version="0.92">
   <channel>
-    <title>Сялко</title>
+    <title>СВАЛКА!</title>
     <link>https://svalko.org/</link>
+    <description>Ежедневно обновляемая свалка.</description>
 
-    <!-- item with title, guid, author, date, image -->
+    <!-- title + image-only description -->
     <item>
-      <title>  При лег отдохнуть или сбрусло?  </title>
+      <title> При лег отдохнуть или сбрусло?</title>
       <pubDate>Wed, 10 Jun 2026 15:49:39 +0300</pubDate>
-      <author>no-reply@svalko.org (Бибоход)</author>
-      <link>https://svalko.org/1021136.html</link>
-      <description>&lt;img src=&quot;data/pic.webp&quot; /&gt; текст поста</description>
-      <guid>https://svalko.org/1021136.html</guid>
+      <author>no-reply@validated.rss.feed (Бибоход)</author>
+      <link>http://svalko.org/1021136.html</link>
+      <description>&lt;img src=&quot;data/2026_06_10_15_49pic.webp&quot; alt=&quot;https://example.com/pic.webp&quot; width=&quot;1270&quot; height=&quot;831&quot;/&gt;</description>
+      <guid>http://svalko.org/1021136.html</guid>
     </item>
 
-    <!-- item without title -->
+    <!-- self-closing empty title, image-only description -->
     <item>
-      <title></title>
-      <pubDate>Tue, 09 Jun 2026 10:00:00 +0300</pubDate>
-      <author>no-reply@svalko.org (Аноним)</author>
-      <link>https://svalko.org/1021000.html</link>
-      <description>Пост без заголовка</description>
-      <guid>https://svalko.org/1021000.html</guid>
+      <title/>
+      <pubDate>Thu, 04 Jun 2026 18:26:04 +0300</pubDate>
+      <author>no-reply@validated.rss.feed (Хопоронян)</author>
+      <link>http://svalko.org/1020734.html</link>
+      <description>&lt;img src=&quot;data/2026_06_04_18_26pic.jpg&quot; width=&quot;1124&quot; height=&quot;777&quot; /&gt;</description>
+      <guid>http://svalko.org/1020734.html</guid>
     </item>
 
-    <!-- item without guid — id must come from link -->
+    <!-- title + text before image in description -->
+    <item>
+      <title>А это на среду </title>
+      <pubDate>Wed, 27 May 2026 15:31:34 +0300</pubDate>
+      <author>no-reply@validated.rss.feed (Бурехобой)</author>
+      <link>http://svalko.org/1020048.html</link>
+      <description>А это на среду &lt;img src=&quot;data/2026_05_27_15_31pic.jpg&quot; width=&quot;700&quot; height=&quot;700&quot; /&gt;</description>
+      <guid>http://svalko.org/1020048.html</guid>
+    </item>
+
+    <!-- text-only, no image -->
+    <item>
+      <title>Учёные общаются с обезьянами с помощью языка жестов с 1960-х годов.</title>
+      <pubDate>Mon, 25 May 2026 12:03:28 +0300</pubDate>
+      <author>no-reply@validated.rss.feed (Мебиус)</author>
+      <link>http://svalko.org/1019849.html</link>
+      <description>Учёные общаются с обезьянами с помощью языка жестов с 1960-х годов; обезьяны ни разу не задали ни одного вопроса.</description>
+      <guid>http://svalko.org/1019849.html</guid>
+    </item>
+
+    <!-- no guid — id must come from link -->
     <item>
       <title>Пост без guid</title>
-      <link>https://svalko.org/1020500.html</link>
+      <link>http://svalko.org/1020500.html</link>
       <description>Описание</description>
     </item>
 
