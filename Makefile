@@ -13,3 +13,14 @@ bundle:
 	flutter build appbundle $(DEFINES) \
 		--build-name=$(BUILD_NAME) \
 		--build-number=$(BUILD_NUMBER)
+
+apk:
+	@echo "build-name:   $(BUILD_NAME)"
+	@echo "build-number: $(BUILD_NUMBER)"
+	@read -p "Продолжить? [y/N] " ans && [ "$$ans" = "y" ]
+	flutter build apk --release --split-per-abi $(DEFINES) \
+		--build-name=$(BUILD_NAME) \
+		--build-number=$(BUILD_NUMBER)
+	flutter build apk --release $(DEFINES) \
+		--build-name=$(BUILD_NAME) \
+		--build-number=$(BUILD_NUMBER)
