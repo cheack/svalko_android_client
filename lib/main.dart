@@ -59,17 +59,22 @@ void main() {
         }
       }
 
-      await NotificationService.instance.initialize(
-        onPostTap: _openPostFromNotification,
-      );
-      final launchPostId =
-          await NotificationService.instance.getLaunchPostId();
-
-      if (Platform.isAndroid) {
-        await NewsBackgroundWorker.initialize();
-        await NewsBackgroundWorker.updateSchedule(
-          enabled: settings.get(NewsSettingsKeys.notificationsEnabled) == 'true',
+      int? launchPostId;
+      try {
+        await NotificationService.instance.initialize(
+          onPostTap: _openPostFromNotification,
         );
+        launchPostId = await NotificationService.instance.getLaunchPostId();
+
+        if (Platform.isAndroid) {
+          await NewsBackgroundWorker.initialize();
+          await NewsBackgroundWorker.updateSchedule(
+            enabled:
+                settings.get(NewsSettingsKeys.notificationsEnabled) == 'true',
+          );
+        }
+      } catch (e, s) {
+        CrashReporter.instance.report(e, s);
       }
 
       runApp(
@@ -93,7 +98,7 @@ void main() {
 
       if (launchPostId != null) {
         WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _openPostFromNotification(launchPostId),
+          (_) => _openPostFromNotification(launchPostId!),
         );
       }
 
