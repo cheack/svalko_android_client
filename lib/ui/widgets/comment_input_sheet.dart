@@ -45,30 +45,10 @@ class _CommentScreen extends StatelessWidget {
   }
 }
 
-// Parses [:|uploadId.fileId|:] codes from upload handler HTML response.
-// deleteParam is just the fileId integer — server expects ?delete=<fileId>.
-List<_UploadedFile> _parseFiles(String html) {
-  final re = RegExp(r'\[:\|(\d+)\.(\d+)\|:\]');
-  return re
-      .allMatches(html)
-      .map((m) => _UploadedFile(
-            code: m.group(0)!,        // [:|397988.2|:]
-            deleteParam: m.group(2)!, // 2  (just the file ID)
-          ))
-      .toList();
-}
-
-class _UploadedFile {
-  _UploadedFile({required this.code, required this.deleteParam});
-  final String code;        // [:|397988.1|:]
-  final String deleteParam; // 397988.1
-}
-
 class _Attachment {
-  // localPath is null for files pre-existing on the server.
   _Attachment({this.localPath});
   final String? localPath;
-  _UploadedFile? uploaded;  // null while uploading a new file
+  UploadedFile? uploaded;  // null while uploading a new file
   String? uploadError;
   double progress = 0;
   bool removing = false;
@@ -134,7 +114,7 @@ class _CommentSheetState extends State<_CommentSheet> {
       final cachedPath = widget.settingsBox.get('img_cache_$code');
       final localPath = cachedPath != null && File(cachedPath).existsSync() ? cachedPath : null;
       _knownCodes.add(code);
-      _attachments.add(_Attachment(localPath: localPath)..uploaded = _UploadedFile(code: code, deleteParam: deleteParam));
+      _attachments.add(_Attachment(localPath: localPath)..uploaded = UploadedFile(code: code, deleteParam: deleteParam));
     }
   }
 
@@ -202,7 +182,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     }
 
     final html = (uploadResult as Ok<String, AppError>).value;
-    final files = _parseFiles(html);
+    final files = parseUploadedFiles(html);
     // The new file is the one not yet in _knownCodes.
     final newFile = files.where((f) => !_knownCodes.contains(f.code)).firstOrNull;
     if (newFile == null) {

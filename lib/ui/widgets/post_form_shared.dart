@@ -4,6 +4,21 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import '../../core/encoding.dart';
 import '../../data/svalko_api.dart';
 
+class UploadedFile {
+  const UploadedFile({required this.code, required this.deleteParam});
+  final String code;        // [:|397988.1|:]
+  final String deleteParam; // 1
+}
+
+/// Parses [:|uploadId.fileId|:] codes from upload handler HTML response.
+List<UploadedFile> parseUploadedFiles(String html) {
+  final re = RegExp(r'\[:\|(\d+)\.(\d+)\|:\]');
+  return re
+      .allMatches(html)
+      .map((m) => UploadedFile(code: m.group(0)!, deleteParam: m.group(2)!))
+      .toList();
+}
+
 void restoreAndTrackDraft(TextEditingController ctrl, Box<String> box, String key) {
   final saved = box.get(key);
   if (saved != null) ctrl.text = saved;
