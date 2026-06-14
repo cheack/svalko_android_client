@@ -65,16 +65,20 @@ void main() {
           onPostTap: _openPostFromNotification,
         );
         launchPostId = await NotificationService.instance.getLaunchPostId();
+      } catch (e, s) {
+        CrashReporter.instance.report(e, s);
+      }
 
-        if (Platform.isAndroid) {
+      if (Platform.isAndroid) {
+        try {
           await NewsBackgroundWorker.initialize();
           await NewsBackgroundWorker.updateSchedule(
             enabled:
                 settings.get(NewsSettingsKeys.notificationsEnabled) == 'true',
           );
+        } catch (e, s) {
+          CrashReporter.instance.report(e, s);
         }
-      } catch (e, s) {
-        CrashReporter.instance.report(e, s);
       }
 
       runApp(

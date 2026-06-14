@@ -24,6 +24,7 @@ class NewsNotificationsNotifier extends Notifier<bool> {
       unawaited(_primeLastSeen(box));
     }
     if (Platform.isAndroid) {
+      await NewsBackgroundWorker.initialize();
       await NewsBackgroundWorker.updateSchedule(enabled: value);
     }
   }
