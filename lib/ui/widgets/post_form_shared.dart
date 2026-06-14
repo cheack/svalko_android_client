@@ -4,6 +4,14 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import '../../core/encoding.dart';
 import '../../data/svalko_api.dart';
 
+void restoreAndTrackDraft(TextEditingController ctrl, Box<String> box, String key) {
+  final saved = box.get(key);
+  if (saved != null) ctrl.text = saved;
+  ctrl.addListener(() => box.put(key, ctrl.text));
+}
+
+void clearDraft(Box<String> box, String key) => box.delete(key);
+
 void wrapBbCode(String tag, TextEditingController ctrl, FocusNode focus) {
   final text = ctrl.text;
   final sel = ctrl.selection;

@@ -92,6 +92,7 @@ class _CommentSheet extends StatefulWidget {
 
 class _CommentSheetState extends State<_CommentSheet> {
   static const _authorKey = 'comment_author';
+  static const _draftKey = 'comment_draft';
 
   final _authorCtrl = TextEditingController();
   final _textCtrl = TextEditingController();
@@ -116,6 +117,7 @@ class _CommentSheetState extends State<_CommentSheet> {
       WidgetsBinding.instance.addPostFrameCallback(
           (_) => _focusNode.requestFocus());
     }
+    restoreAndTrackDraft(_textCtrl, widget.settingsBox, _draftKey);
     _loadForm(hasSavedAuthor: hasSavedAuthor);
   }
 
@@ -282,6 +284,7 @@ class _CommentSheetState extends State<_CommentSheet> {
       return;
     }
 
+    clearDraft(widget.settingsBox, _draftKey);
     Navigator.of(context).pop(true);
   }
 

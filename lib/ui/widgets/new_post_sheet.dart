@@ -47,6 +47,7 @@ class _NewPostSheet extends StatefulWidget {
 
 class _NewPostSheetState extends State<_NewPostSheet> {
   static const _authorKey = 'comment_author';
+  static const _draftKey = 'post_draft';
 
   final _authorCtrl = TextEditingController();
   final _textCtrl = TextEditingController();
@@ -67,6 +68,7 @@ class _NewPostSheetState extends State<_NewPostSheet> {
       WidgetsBinding.instance.addPostFrameCallback(
           (_) => _focusNode.requestFocus());
     }
+    restoreAndTrackDraft(_textCtrl, widget.settingsBox, _draftKey);
     _loadForm(hasSavedAuthor: hasSavedAuthor);
   }
 
@@ -124,6 +126,7 @@ class _NewPostSheetState extends State<_NewPostSheet> {
       return;
     }
 
+    clearDraft(widget.settingsBox, _draftKey);
     Navigator.of(context).pop(true);
   }
 
