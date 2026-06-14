@@ -17,10 +17,18 @@ bundle:
 apk:
 	@echo "build-name:   $(BUILD_NAME)"
 	@echo "build-number: $(BUILD_NUMBER)"
-	@read -p "Продолжить? [y/N] " ans && [ "$$ans" = "y" ]
-	flutter build apk --release --split-per-abi $(DEFINES) \
-		--build-name=$(BUILD_NAME) \
-		--build-number=$(BUILD_NUMBER)
-	flutter build apk --release $(DEFINES) \
-		--build-name=$(BUILD_NAME) \
-		--build-number=$(BUILD_NUMBER)
+	@echo "1) arm64-v8a   2) armeabi-v7a   3) x86_64   4) universal"
+	@read -p "Выбор (можно несколько, например 1 3): " choices; \
+	read -p "Продолжить? [y/N] " ans && [ "$$ans" = "y" ]; \
+	for c in $$choices; do \
+		case "$$c" in \
+			1) flutter build apk --release --target-platform android-arm64 $(DEFINES) \
+				--build-name=$(BUILD_NAME) --build-number=$(BUILD_NUMBER) ;; \
+			2) flutter build apk --release --target-platform android-arm $(DEFINES) \
+				--build-name=$(BUILD_NAME) --build-number=$(BUILD_NUMBER) ;; \
+			3) flutter build apk --release --target-platform android-x64 $(DEFINES) \
+				--build-name=$(BUILD_NAME) --build-number=$(BUILD_NUMBER) ;; \
+			4) flutter build apk --release $(DEFINES) \
+				--build-name=$(BUILD_NAME) --build-number=$(BUILD_NUMBER) ;; \
+		esac; \
+	done
