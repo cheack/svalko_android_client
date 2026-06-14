@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Resources referenced only by name from Dart (e.g. AndroidInitializationSettings('ic_notification'))
+    are invisible to the resource shrinker and will be stripped from release builds.
+    Add any such resource here to prevent removal.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification" />
