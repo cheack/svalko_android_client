@@ -16,6 +16,7 @@ import '../../models/post.dart';
 import '../../ui/theme.dart';
 import '../feed/widgets/post_card.dart';
 import '../news/news_settings_controller.dart';
+import 'debug_crash_tile.dart';
 import 'debug_news_tile.dart';
 import '../notifications/notification_service.dart';
 import '../post/widgets/comment_tile.dart';
@@ -252,6 +253,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           if (kDebugMode) ...[
             const _SectionHeader('Debug'),
             const DebugNewsTile(),
+            const DebugCrashTile(),
           ],
 
           // ── Кэш ───────────────────────────────────────────────────────────

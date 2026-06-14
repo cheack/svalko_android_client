@@ -38,12 +38,13 @@ class CrashReporter {
     } catch (_) {}
   }
 
-  Future<void> report(Object error, StackTrace stack) async {
-    if (_appSecret.isEmpty || _workerUrl.isEmpty) return;
+  // Returns true if the report was successfully sent, false otherwise.
+  Future<bool> report(Object error, StackTrace stack) async {
+    if (_appSecret.isEmpty || _workerUrl.isEmpty) return false;
 
     // Deduplicate — skip if same error reported twice in a row.
     final hash = '${error.runtimeType}:${stack.toString().substring(0, 120)}';
-    if (hash == _lastReportedHash) return;
+    if (hash == _lastReportedHash) return false;
     _lastReportedHash = hash;
 
     final stackLines = stack
@@ -67,6 +68,9 @@ class CrashReporter {
           contentType: Headers.jsonContentType,
         ),
       );
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
