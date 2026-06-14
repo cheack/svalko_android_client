@@ -352,6 +352,11 @@ class _CommentSheetState extends State<_CommentSheet> {
                             ? () => _insertCode(a.uploaded!.code)
                             : null,
                         onDelete: () => _delete(a),
+                        onError: a.uploadError != null
+                            ? () => ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(a.uploadError!)),
+                                )
+                            : null,
                       ),
                     ),
                   ),
@@ -382,11 +387,13 @@ class _AttachmentTile extends StatelessWidget {
     required this.attachment,
     required this.onInsert,
     required this.onDelete,
+    this.onError,
   });
 
   final _Attachment attachment;
   final VoidCallback? onInsert;
   final VoidCallback onDelete;
+  final VoidCallback? onError;
 
   static const double _size = 80;
 
@@ -450,13 +457,16 @@ class _AttachmentTile extends StatelessWidget {
                 // Error overlay
                 if (attachment.uploadError != null)
                   Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        color: Colors.black54,
-                        child: const Center(
-                          child: Icon(Icons.error_outline,
-                              color: Colors.white, size: 32),
+                    child: GestureDetector(
+                      onTap: onError,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          color: Colors.black54,
+                          child: const Center(
+                            child: Icon(Icons.error_outline,
+                                color: Colors.white, size: 32),
+                          ),
                         ),
                       ),
                     ),
@@ -481,26 +491,28 @@ class _AttachmentTile extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            SizedBox(
-              height: 28,
-              child: TextButton(
-                onPressed: onInsert,
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'В пост',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: onInsert != null
-                        ? colorScheme.primary
-                        : colorScheme.outline,
+            if (attachment.uploadError == null) ...[
+              const SizedBox(height: 4),
+              SizedBox(
+                height: 28,
+                child: TextButton(
+                  onPressed: onInsert,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'В пост',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: onInsert != null
+                          ? colorScheme.primary
+                          : colorScheme.outline,
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
