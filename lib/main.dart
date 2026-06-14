@@ -32,7 +32,7 @@ void main() {
       };
 
       PlatformDispatcher.instance.onError = (error, stack) {
-        CrashReporter.instance.report(error, stack);
+        CrashReporter.instance.report(error, stack, fatal: true);
         return true;
       };
 
@@ -108,7 +108,7 @@ void main() {
 
       _initDeepLinks();
     },
-    (error, stack) => CrashReporter.instance.report(error, stack),
+    (error, stack) => CrashReporter.instance.report(error, stack, fatal: true),
   );
 }
 

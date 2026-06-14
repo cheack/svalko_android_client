@@ -39,7 +39,7 @@ class CrashReporter {
   }
 
   // Returns true if the report was successfully sent, false otherwise.
-  Future<bool> report(Object error, StackTrace stack) async {
+  Future<bool> report(Object error, StackTrace stack, {bool fatal = false}) async {
     if (_appSecret.isEmpty || _workerUrl.isEmpty) return false;
 
     // Deduplicate — skip if same error reported twice in a row.
@@ -62,6 +62,7 @@ class CrashReporter {
           'stack': stackLines,
           'version': _appVersion ?? 'unknown',
           'device': _deviceInfo ?? 'unknown',
+          'fatal': fatal,
         },
         options: Options(
           headers: {'X-App-Secret': _appSecret},
