@@ -2,35 +2,31 @@
 
 Неофициальный мобильный клиент для [svalko.org](https://svalko.org).
 
-## Запуск
+## Настройка секретов
 
-```sh
-flutter run \
-  --dart-define=BUILD_HASH=$(git rev-parse --short HEAD) \
-  --dart-define=BUILD_DATE=$(date +%Y-%m-%d)
+Скопируй `secrets.json.example` → `secrets.json` и заполни значения:
+
+```json
+{
+  "APP_SECRET": "...",
+  "CRASH_HANDLER_URL": "https://your-worker.workers.dev"
+}
 ```
 
-## Сборка APK
+`secrets.json` не коммитится. Без него приложение работает, но краш-репортер отключён.
+
+## Запуск и сборка
 
 ```sh
-flutter build apk \
-  --build-number=$(git rev-list --count HEAD) \
-  --dart-define=BUILD_HASH=$(git rev-parse --short HEAD) \
-  --dart-define=BUILD_DATE=$(date +%Y-%m-%d)
+make run     # flutter run с подстановкой секретов
+make bundle  # flutter build appbundle (Google Play)
+make apk     # flutter build apk
 ```
 
-APK: `build/app/outputs/flutter-apk/app-release.apk`
+Версия берётся из последнего git-тега: `git tag 1.2.7 && make bundle`.
 
-## Сборка App Bundle (Google Play)
-
-```sh
-flutter build appbundle \
-  --build-number=$(git rev-list --count HEAD) \
-  --dart-define=BUILD_HASH=$(git rev-parse --short HEAD) \
-  --dart-define=BUILD_DATE=$(date +%Y-%m-%d)
-```
-
-AAB: `build/app/outputs/bundle/release/app-release.aab`
+- AAB: `build/app/outputs/bundle/release/app-release.aab`
+- APK: `build/app/outputs/flutter-apk/app-release.apk`
 
 ## Подпись релиза
 
@@ -51,3 +47,27 @@ keytool -genkey -v \
   -alias svalko \
   -keyalg RSA -keysize 2048 -validity 10000
 ```
+
+## Краш-репортер
+
+При необработанном исключении приложение отправляет `POST` на `CRASH_HANDLER_URL`.
+
+Заголовок:
+
+```
+X-App-Secret: <APP_SECRET>
+Content-Type: application/json
+```
+
+Тело:
+
+```json
+{
+  "error": "StateError: bad state",
+  "stack": "#0  ...\n#1  ...",
+  "version": "1.2.7+312",
+  "device": "Google Pixel 7, Android 14"
+}
+```
+
+`stack` — первые 12 непустых строк стектрейса. Повторная отправка одной и той же ошибки дедуплицируется (отправляется только один раз подряд).
