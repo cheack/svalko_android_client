@@ -20,7 +20,7 @@
 ```sh
 make run     # flutter run с подстановкой секретов
 make bundle  # flutter build appbundle (Google Play)
-make apk     # flutter build apk
+make apk     # flutter build apk (предложит выбрать ABI)
 ```
 
 Версия берётся из последнего git-тега: `git tag 1.2.7 && make bundle`.
@@ -66,8 +66,11 @@ Content-Type: application/json
   "error": "StateError: bad state",
   "stack": "#0  ...\n#1  ...",
   "version": "1.2.7+312",
-  "device": "Google Pixel 7, Android 14"
+  "device": "Google Pixel 7, Android 14",
+  "fatal": false
 }
 ```
 
 `stack` — первые 12 непустых строк стектрейса. Повторная отправка одной и той же ошибки дедуплицируется (отправляется только один раз подряд).
+
+`fatal: true` — ошибка поймана в `PlatformDispatcher.onError` или `runZonedGuarded`; без обработчика приложение бы упало. `fatal: false` — ошибка поймана в `FlutterError.onError` или блоке `try/catch`; приложение продолжало работать.
