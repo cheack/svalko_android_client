@@ -4,7 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-const _workerUrl = String.fromEnvironment('CRASH_WORKER_URL');
+const _workerUrl = String.fromEnvironment('CRASH_HANDLER_URL');
 const _appSecret = String.fromEnvironment('APP_SECRET');
 
 class CrashReporter {

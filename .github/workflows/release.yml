@@ -51,7 +51,7 @@ jobs:
             --dart-define=BUILD_HASH=$BUILD_HASH \
             --dart-define=BUILD_DATE=$BUILD_DATE \
             --dart-define=APP_SECRET=${{ secrets.APP_SECRET }} \
-            --dart-define=CRASH_WORKER_URL=${{ secrets.CRASH_WORKER_URL }}"
+            --dart-define=CRASH_HANDLER_URL=${{ secrets.CRASH_HANDLER_URL }}"
           flutter build apk --release --split-per-abi $DEFINES
           flutter build apk --release $DEFINES
 

@@ -22,7 +22,7 @@ class DebugCrashTile extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text(sent
                     ? 'Отправлено'
-                    : 'Не отправлено — CRASH_WORKER_URL или APP_SECRET не заданы'),
+                    : 'Не отправлено — CRASH_HANDLER_URL или APP_SECRET не заданы'),
               ));
             },
           ),
