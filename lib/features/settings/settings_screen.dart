@@ -236,6 +236,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             onChanged: (v) async {
               await ref.read(newsNotificationsProvider.notifier).set(v);
               if (v) {
+                await NotificationService.instance.initialize();
                 await NotificationService.instance.requestNotificationsPermission();
               }
               await _loadNotificationPermission();
