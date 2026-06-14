@@ -233,9 +233,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           SwitchListTile(
             title: const Text('Уведомлять о новых постах'),
             value: newsNotifications,
-            onChanged: (v) {
-              unawaited(ref.read(newsNotificationsProvider.notifier).set(v));
-              unawaited(_loadNotificationPermission());
+            onChanged: (v) async {
+              await ref.read(newsNotificationsProvider.notifier).set(v);
+              if (v) {
+                await NotificationService.instance.requestNotificationsPermission();
+              }
+              await _loadNotificationPermission();
             },
           ),
           if (newsNotifications && _notificationsAllowed == false)
