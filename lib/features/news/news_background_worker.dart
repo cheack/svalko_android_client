@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../../core/crash_reporter.dart';
 import '../../data/svalko_api.dart';
 import '../notifications/notification_service.dart';
 import 'news_check_service.dart';
@@ -49,7 +50,8 @@ void newsBackgroundCallbackDispatcher() {
       final newPosts = await checker.checkNewPosts();
       await notifications.showNewPosts(newPosts);
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      CrashReporter.instance.report(e, st);
       return false;
     }
   });
