@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import '../../data/svalko_api.dart';
-import '../../core/encoding.dart';
 import '../../core/result.dart';
 import 'author_label.dart';
+import 'post_form_shared.dart';
 
 Future<bool> showNewPostSheet(
   BuildContext context,
@@ -93,26 +93,6 @@ class _NewPostSheetState extends State<_NewPostSheet> {
     super.dispose();
   }
 
-  void _wrapSelection(String tag) {
-    final text = _textCtrl.text;
-    final sel = _textCtrl.selection;
-    final start = sel.start.clamp(0, text.length);
-    final end = sel.end.clamp(0, text.length);
-    final selected = text.substring(start, end);
-    final open = '[$tag]';
-    final close = '[/$tag]';
-    _textCtrl.value = TextEditingValue(
-      text: text.replaceRange(start, end, '$open$selected$close'),
-      selection: selected.isEmpty
-          ? TextSelection.collapsed(offset: start + open.length)
-          : TextSelection(
-              baseOffset: start + open.length,
-              extentOffset: start + open.length + selected.length,
-            ),
-    );
-    _focusNode.requestFocus();
-  }
-
   Future<void> _submit() async {
     final form = _form;
     if (form == null) return;
@@ -128,11 +108,7 @@ class _NewPostSheetState extends State<_NewPostSheet> {
       _submitError = null;
     });
 
-    widget.settingsBox.put(_authorKey, author);
-    final encoded = await encodeQueryWin1251(author);
-    final mynameCookie = 'myname=$encoded';
-    widget.settingsBox.put('mynameCookie', mynameCookie);
-    widget.api.mynameCookie = mynameCookie;
+    await saveAuthorCookie(widget.settingsBox, widget.api, _authorKey, author);
 
     final result = await widget.api.submitPost(
       author: author,
@@ -170,59 +146,11 @@ class _NewPostSheetState extends State<_NewPostSheet> {
         children: [
           AuthorLabel(controller: _authorCtrl, theme: theme),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              for (final (tag, label, style) in [
-                ('b', 'B', TextStyle(fontWeight: FontWeight.bold)),
-                ('i', 'I', TextStyle(fontStyle: FontStyle.italic)),
-                ('u', 'U', TextStyle(decoration: TextDecoration.underline)),
-                ('s', 'S', TextStyle(decoration: TextDecoration.lineThrough)),
-              ])
-                SizedBox(
-                  width: 36,
-                  height: 32,
-                  child: TextButton(
-                    onPressed: () => _wrapSelection(tag),
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    child: Text(label, style: style),
-                  ),
-                ),
-            ],
-          ),
-          TextField(
+          BbCodeToolbar(onWrap: (tag) => wrapBbCode(tag, _textCtrl, _focusNode)),
+          BbCodeTextField(
             controller: _textCtrl,
             focusNode: _focusNode,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            minLines: 5,
-            maxLines: 12,
-            textInputAction: TextInputAction.newline,
-            expands: false,
-            contextMenuBuilder: (context, editableTextState) {
-              final selection = editableTextState.textEditingValue.selection;
-              final hasSelection = selection.isValid && !selection.isCollapsed;
-              final items = [
-                if (hasSelection) ...[
-                  for (final (tag, label) in [
-                    ('b', 'Жирный'),
-                    ('i', 'Курсив'),
-                    ('u', 'Подчёрк'),
-                    ('s', 'Зачёрк'),
-                  ])
-                    ContextMenuButtonItem(
-                      label: label,
-                      onPressed: () {
-                        ContextMenuController.removeAny();
-                        _wrapSelection(tag);
-                      },
-                    ),
-                ],
-                ...editableTextState.contextMenuButtonItems,
-              ];
-              return AdaptiveTextSelectionToolbar.buttonItems(
-                anchors: editableTextState.contextMenuAnchors,
-                buttonItems: items,
-              );
-            },
+            onWrap: (tag) => wrapBbCode(tag, _textCtrl, _focusNode),
           ),
           if (_submitError != null) ...[
             const SizedBox(height: 6),
