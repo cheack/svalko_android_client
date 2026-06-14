@@ -20,6 +20,7 @@ dependencies:
 
   # HTTP
   dio: ^5.8.0+1
+  xml: ^7.0.1
 
   # HTML parser
   html: ^0.15.5
@@ -67,6 +68,8 @@ dependencies:
   flutter_cache_manager: ^3.4.1
   http: ^1.6.0
   video_thumbnail: ^0.5.6
+  flutter_local_notifications: ^22.0.0
+  workmanager: ^0.9.0+3
 
 dev_dependencies:
   flutter_test:

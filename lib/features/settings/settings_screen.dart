@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +15,9 @@ import '../../models/comment.dart';
 import '../../models/post.dart';
 import '../../ui/theme.dart';
 import '../feed/widgets/post_card.dart';
+import '../news/news_settings_controller.dart';
+import 'debug_news_tile.dart';
+import '../notifications/notification_service.dart';
 import '../post/widgets/comment_tile.dart';
 import 'post_gen.dart';
 
@@ -23,14 +28,39 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with WidgetsBindingObserver {
   int? _cacheBytes;
   bool _clearing = false;
+  bool? _notificationsAllowed;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadCacheSize();
+    _loadNotificationPermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _loadNotificationPermission();
+  }
+
+  Future<void> _loadNotificationPermission() async {
+    final allowed =
+        await NotificationService.instance.areNotificationsEnabled();
+    if (mounted) setState(() => _notificationsAllowed = allowed);
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    await NotificationService.instance.openNotificationSettings();
   }
 
   Future<void> _loadCacheSize() async {
@@ -97,6 +127,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final autoLoadMedia = ref.watch(autoLoadMediaProvider);
     final autoLoadVideo = ref.watch(autoLoadVideoProvider);
     final siteMode = ref.watch(siteModeProvider);
+    final newsNotifications = ref.watch(newsNotificationsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
@@ -195,6 +226,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             value: autoLoadVideo,
             onChanged: (v) => ref.read(autoLoadVideoProvider.notifier).set(v),
           ),
+
+          // ── Новости ───────────────────────────────────────────────────────
+          const _SectionHeader('Новости'),
+          SwitchListTile(
+            title: const Text('Уведомлять о новых постах'),
+            value: newsNotifications,
+            onChanged: (v) {
+              unawaited(ref.read(newsNotificationsProvider.notifier).set(v));
+              unawaited(_loadNotificationPermission());
+            },
+          ),
+          if (newsNotifications && _notificationsAllowed == false)
+            ListTile(
+              leading: const Icon(Icons.warning_amber_rounded),
+              title: const Text('Уведомления выключены в системе'),
+              subtitle: const Text('Без разрешения новые посты не появятся в шторке'),
+              trailing: TextButton(
+                onPressed: _requestNotificationPermission,
+                child: const Text('Разрешить'),
+              ),
+            ),
+
+          // ── Debug ─────────────────────────────────────────────────────────
+          if (kDebugMode) ...[
+            const _SectionHeader('Debug'),
+            const DebugNewsTile(),
+          ],
 
           // ── Кэш ───────────────────────────────────────────────────────────
           const _SectionHeader('Кэш'),

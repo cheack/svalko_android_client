@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Сялко</title>
+    <link>https://svalko.org/</link>
+
+    <!-- item with title, guid, author, date, image -->
+    <item>
+      <title>  При лег отдохнуть или сбрусло?  </title>
+      <pubDate>Wed, 10 Jun 2026 15:49:39 +0300</pubDate>
+      <author>no-reply@svalko.org (Бибоход)</author>
+      <link>https://svalko.org/1021136.html</link>
+      <description>&lt;img src=&quot;data/pic.webp&quot; /&gt; текст поста</description>
+      <guid>https://svalko.org/1021136.html</guid>
+    </item>
+
+    <!-- item without title -->
+    <item>
+      <title></title>
+      <pubDate>Tue, 09 Jun 2026 10:00:00 +0300</pubDate>
+      <author>no-reply@svalko.org (Аноним)</author>
+      <link>https://svalko.org/1021000.html</link>
+      <description>Пост без заголовка</description>
+      <guid>https://svalko.org/1021000.html</guid>
+    </item>
+
+    <!-- item without guid — id must come from link -->
+    <item>
+      <title>Пост без guid</title>
+      <link>https://svalko.org/1020500.html</link>
+      <description>Описание</description>
+    </item>
+
+  </channel>
+</rss>

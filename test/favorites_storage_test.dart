@@ -1,96 +1,12 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:svalko_client/features/favorites/favorites_storage.dart';
-
-// ---------------------------------------------------------------------------
-// In-memory Box<String> stub — no Hive initialisation needed.
-// Only values/put/delete are actually used by the notifier.
-// ---------------------------------------------------------------------------
-
-class _FakeBox implements Box<String> {
-  final _data = <dynamic, String>{};
-
-  @override
-  Iterable<String> get values => _data.values;
-
-  @override
-  Future<void> put(dynamic key, String value) async => _data[key] = value;
-
-  @override
-  Future<void> delete(dynamic key) async => _data.remove(key);
-
-  // --- BoxBase stubs ---------------------------------------------------------
-  @override
-  String get name => 'fake';
-  @override
-  bool get isOpen => true;
-  @override
-  String? get path => null;
-  @override
-  bool get lazy => false;
-  @override
-  Iterable<dynamic> get keys => _data.keys;
-  @override
-  int get length => _data.length;
-  @override
-  bool get isEmpty => _data.isEmpty;
-  @override
-  bool get isNotEmpty => _data.isNotEmpty;
-  @override
-  dynamic keyAt(int index) => _data.keys.elementAt(index);
-  @override
-  Stream<BoxEvent> watch({dynamic key}) => const Stream.empty();
-  @override
-  bool containsKey(dynamic key) => _data.containsKey(key);
-  @override
-  Future<void> putAt(int index, String value) async =>
-      throw UnimplementedError();
-  @override
-  Future<void> putAll(Map<dynamic, String> entries) async =>
-      entries.forEach((k, v) => _data[k] = v);
-  @override
-  Future<int> add(String value) async => throw UnimplementedError();
-  @override
-  Future<Iterable<int>> addAll(Iterable<String> values) async =>
-      throw UnimplementedError();
-  @override
-  Future<void> deleteAt(int index) async => throw UnimplementedError();
-  @override
-  Future<void> deleteAll(Iterable<dynamic> keys) async =>
-      keys.forEach(_data.remove);
-  @override
-  Future<void> compact() async {}
-  @override
-  Future<int> clear() async {
-    final n = _data.length;
-    _data.clear();
-    return n;
-  }
-  @override
-  Future<void> close() async {}
-  @override
-  Future<void> deleteFromDisk() async {}
-  @override
-  Future<void> flush() async {}
-
-  // --- Box-specific stubs ----------------------------------------------------
-  @override
-  Iterable<String> valuesBetween({dynamic startKey, dynamic endKey}) => [];
-  @override
-  String? get(dynamic key, {String? defaultValue}) =>
-      _data[key] ?? defaultValue;
-  @override
-  String? getAt(int index) => _data.values.elementAt(index);
-  @override
-  Map<dynamic, String> toMap() => Map.of(_data);
-}
+import 'support/fake_string_box.dart';
 
 // Build a ProviderContainer that uses an in-memory box instead of Hive.
-ProviderContainer _container(_FakeBox box) => ProviderContainer(
+ProviderContainer _container(FakeStringBox box) => ProviderContainer(
       overrides: [
         favoriteCommentsBoxProvider.overrideWithValue(box),
       ],
@@ -210,12 +126,12 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('FavoriteCommentsNotifier', () {
-    late _FakeBox box;
+    late FakeStringBox box;
     late ProviderContainer container;
     late FavoriteCommentsNotifier notifier;
 
     setUp(() {
-      box = _FakeBox();
+      box = FakeStringBox();
       container = _container(box);
       notifier = container.read(favoriteCommentsProvider.notifier);
     });
@@ -297,7 +213,7 @@ void main() {
       notifier.add(_full());
       final exported = notifier.exportList();
 
-      final box2 = _FakeBox();
+      final box2 = FakeStringBox();
       final c2 = _container(box2);
       final n2 = c2.read(favoriteCommentsProvider.notifier);
       n2.importList(exported);

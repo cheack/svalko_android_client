@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'package:app_links/app_links.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
@@ -14,6 +15,9 @@ import 'core/settings_storage.dart';
 import 'data/svalko_api.dart';
 import 'features/favorites/favorites_storage.dart';
 import 'features/feed/feed_controller.dart';
+import 'features/news/news_background_worker.dart';
+import 'features/news/news_check_service.dart';
+import 'features/notifications/notification_service.dart';
 
 void main() {
   runZonedGuarded(
@@ -55,6 +59,19 @@ void main() {
         }
       }
 
+      await NotificationService.instance.initialize(
+        onPostTap: _openPostFromNotification,
+      );
+      final launchPostId =
+          await NotificationService.instance.getLaunchPostId();
+
+      if (Platform.isAndroid) {
+        await NewsBackgroundWorker.initialize();
+        await NewsBackgroundWorker.updateSchedule(
+          enabled: settings.get(NewsSettingsKeys.notificationsEnabled) == 'true',
+        );
+      }
+
       runApp(
         ProviderScope(
           overrides: [
@@ -74,10 +91,27 @@ void main() {
         ),
       );
 
+      if (launchPostId != null) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _openPostFromNotification(launchPostId),
+        );
+      }
+
       _initDeepLinks();
     },
     (error, stack) => CrashReporter.instance.report(error, stack),
   );
+}
+
+void _openPostFromNotification(int postId) {
+  final navigator = navigatorKey.currentState;
+  if (navigator == null) {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _openPostFromNotification(postId),
+    );
+    return;
+  }
+  navigator.pushNamed('/post', arguments: postId);
 }
 
 void _initDeepLinks() {

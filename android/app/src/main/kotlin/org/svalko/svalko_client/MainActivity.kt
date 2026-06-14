@@ -2,6 +2,7 @@ package org.svalko.svalko_client
 
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -20,6 +21,18 @@ class MainActivity : FlutterActivity() {
                     return@setMethodCallHandler
                 }
                 openInDefaultBrowser(url)
+                result.success(null)
+            } else {
+                result.notImplemented()
+            }
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "org.svalko/notifications",
+        ).setMethodCallHandler { call, result ->
+            if (call.method == "openNotificationSettings") {
+                openNotificationSettings()
                 result.success(null)
             } else {
                 result.notImplemented()
@@ -47,5 +60,23 @@ class MainActivity : FlutterActivity() {
         }
 
         startActivity(intent)
+    }
+
+    private fun openNotificationSettings() {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        runCatching {
+            startActivity(intent)
+        }.onFailure {
+            val fallback = Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.parse("package:$packageName"),
+            ).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(fallback)
+        }
     }
 }

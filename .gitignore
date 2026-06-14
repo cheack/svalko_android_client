@@ -1,6 +1,9 @@
 # Claude Code
 .claude/
 
+# Codex local state
+.codex/
+
 # Secrets (never commit)
 secrets.json
 android/key.properties

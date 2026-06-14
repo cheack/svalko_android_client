@@ -1,9 +1,11 @@
+import 'dart:convert' show utf8;
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
 import 'package:html/parser.dart' as html_parser;
 import '../core/config.dart';
+import '../core/crash_reporter.dart';
 import '../core/encoding.dart';
 import '../core/app_logger.dart';
 import '../core/logging_interceptor.dart';
@@ -135,6 +137,25 @@ class SvalkoApi {
 
   Future<Result<String, AppError>> fetchImagesPage() =>
       _get(Config.imagesUrl);
+
+  Future<Result<String, AppError>> fetchNewsRss() async {
+    try {
+      final response = await _dio.get<dynamic>(
+        Config.rssUrl,
+        options: _withCookie(Options(responseType: ResponseType.bytes)),
+      );
+      final data = response.data;
+      final bytes = data is Uint8List
+          ? data
+          : Uint8List.fromList(data as List<int>);
+      return Ok(utf8.decode(bytes));
+    } on DioException catch (e) {
+      return Err(_mapDioError(e));
+    } catch (e, st) {
+      CrashReporter.instance.report(e, st);
+      return const Err(AppError.unknown);
+    }
+  }
 
   Future<Result<String, AppError>> fetchTrendsPage() =>
       _get('${Config.baseUrl}/trends.html');
