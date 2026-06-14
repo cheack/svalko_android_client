@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -93,6 +94,7 @@ class _CommentSheet extends StatefulWidget {
 class _CommentSheetState extends State<_CommentSheet> {
   static const _authorKey = 'comment_author';
   static const _draftKey = 'comment_draft';
+  static const _attachmentsKey = 'comment_attachments';
 
   final _authorCtrl = TextEditingController();
   final _textCtrl = TextEditingController();
@@ -118,7 +120,30 @@ class _CommentSheetState extends State<_CommentSheet> {
           (_) => _focusNode.requestFocus());
     }
     restoreAndTrackDraft(_textCtrl, widget.settingsBox, _draftKey);
+    _restoreAttachments();
     _loadForm(hasSavedAuthor: hasSavedAuthor);
+  }
+
+  void _restoreAttachments() {
+    final saved = widget.settingsBox.get(_attachmentsKey);
+    if (saved == null) return;
+    final list = jsonDecode(saved) as List<dynamic>;
+    for (final item in list) {
+      final code = item['code'] as String;
+      final deleteParam = item['deleteParam'] as String;
+      final cachedPath = widget.settingsBox.get('img_cache_$code');
+      final localPath = cachedPath != null && File(cachedPath).existsSync() ? cachedPath : null;
+      _knownCodes.add(code);
+      _attachments.add(_Attachment(localPath: localPath)..uploaded = _UploadedFile(code: code, deleteParam: deleteParam));
+    }
+  }
+
+  void _saveAttachments() {
+    final data = _attachments
+        .where((a) => a.uploaded != null && a.uploaded!.code.isNotEmpty)
+        .map((a) => {'code': a.uploaded!.code, 'deleteParam': a.uploaded!.deleteParam})
+        .toList();
+    widget.settingsBox.put(_attachmentsKey, jsonEncode(data));
   }
 
   Future<void> _loadForm({required bool hasSavedAuthor}) async {
@@ -134,30 +159,6 @@ class _CommentSheetState extends State<_CommentSheet> {
       _authorCtrl.text = form.suggestedAuthor;
       _focusNode.requestFocus();
     }
-    _loadExistingFiles(form);
-  }
-
-  Future<void> _loadExistingFiles(CommentFormData form) async {
-    final result = await widget.api.fetchUploadedFilesList(
-      uploadId: form.uploadId,
-      uploadKey: form.uploadKey,
-    );
-    if (!mounted || result is Err) return;
-    final html = (result as Ok<String, AppError>).value;
-    final files = _parseFiles(html);
-    if (files.isEmpty) return;
-    setState(() {
-      for (final f in files) {
-        _knownCodes.add(f.code);
-        final cachedPath = widget.settingsBox.get('img_cache_${f.code}');
-        final attachment = _Attachment(
-          localPath: cachedPath != null && File(cachedPath).existsSync()
-              ? cachedPath
-              : null,
-        )..uploaded = f;
-        _attachments.add(attachment);
-      }
-    });
   }
 
   @override
@@ -203,10 +204,11 @@ class _CommentSheetState extends State<_CommentSheet> {
     final html = (uploadResult as Ok<String, AppError>).value;
     final files = _parseFiles(html);
     // The new file is the one not yet in _knownCodes.
-    final newFile = files.firstWhere(
-      (f) => !_knownCodes.contains(f.code),
-      orElse: () => files.isNotEmpty ? files.first : _UploadedFile(code: '', deleteParam: ''),
-    );
+    final newFile = files.where((f) => !_knownCodes.contains(f.code)).firstOrNull;
+    if (newFile == null) {
+      setState(() => attachment.uploadError = 'Не удалось загрузить');
+      return;
+    }
 
     setState(() {
       attachment.uploaded = newFile;
@@ -214,9 +216,8 @@ class _CommentSheetState extends State<_CommentSheet> {
         _knownCodes.add(f.code);
       }
     });
-    if (newFile.code.isNotEmpty) {
-      widget.settingsBox.put('img_cache_${newFile.code}', path);
-    }
+    widget.settingsBox.put('img_cache_${newFile.code}', path);
+    _saveAttachments();
   }
 
   Future<void> _delete(_Attachment attachment) async {
@@ -228,6 +229,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     if (!mounted) return;
 
     setState(() => _attachments.remove(attachment));
+    _saveAttachments();
 
     if (form == null || uploaded == null) return;
     _knownCodes.remove(uploaded.code);
@@ -285,6 +287,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     }
 
     clearDraft(widget.settingsBox, _draftKey);
+    widget.settingsBox.delete(_attachmentsKey);
     Navigator.of(context).pop(true);
   }
 
