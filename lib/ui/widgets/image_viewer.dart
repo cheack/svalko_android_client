@@ -8,6 +8,19 @@ import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
 import 'media_actions.dart';
 
+bool isGifUrl(String url) => url.toLowerCase().contains('.gif');
+
+void startGifIfValid(AnimationController? controller, bool Function() isMounted) {
+  if (controller == null) return;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!isMounted()) return;
+    final duration = controller.duration;
+    if (duration != null && duration > Duration.zero) {
+      controller.repeat();
+    }
+  });
+}
+
 void showFullscreenImage(BuildContext context, String url) {
   showFullscreenCarousel(context, [url], 0);
 }
@@ -419,7 +432,7 @@ class _FullscreenImageItemState extends State<_FullscreenImageItem>
   late final TransformationController _transformationController;
   Future<File>? _gifFile;
 
-  bool get _isGif => widget.url.toLowerCase().contains('.gif');
+  bool get _isGif => isGifUrl(widget.url);
 
   @override
   void initState() {
@@ -438,17 +451,6 @@ class _FullscreenImageItemState extends State<_FullscreenImageItem>
     _transformationController.dispose();
     _gifController?.dispose();
     super.dispose();
-  }
-
-  void _startGifIfValid(AnimationController? controller) {
-    if (controller == null) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final duration = controller.duration;
-      if (duration != null && duration > Duration.zero) {
-        controller.repeat();
-      }
-    });
   }
 
   @override
@@ -484,7 +486,7 @@ class _FullscreenImageItemState extends State<_FullscreenImageItem>
                       placeholder: (_) => const Center(
                         child: CircularProgressIndicator(color: Colors.white54),
                       ),
-                      onFetchCompleted: () => _startGifIfValid(_gifController),
+                      onFetchCompleted: () => startGifIfValid(_gifController, () => mounted),
                     );
                   },
                 )

@@ -202,7 +202,7 @@ class MediaImageState extends ConsumerState<MediaImage>
   static String _name(String url) =>
       Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
 
-  bool get _isGif => widget.url.toLowerCase().contains('.gif');
+  bool get _isGif => isGifUrl(widget.url);
 
   /// Derives the server-generated static preview URL from the full GIF URL.
   static String? _gifPreviewUrl(String url) {
@@ -266,17 +266,6 @@ class MediaImageState extends ConsumerState<MediaImage>
     _gifController?.dispose();
     _evictGifCacheIfNeeded(widget.url);
     super.dispose();
-  }
-
-  void _startGifIfValid(AnimationController? controller) {
-    if (controller == null) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final duration = controller.duration;
-      if (duration != null && duration > Duration.zero) {
-        controller.repeat();
-      }
-    });
   }
 
   static void _evictGifCacheIfNeeded(String url) {
@@ -381,7 +370,7 @@ class MediaImageState extends ConsumerState<MediaImage>
                 _readyLogged = true;
                 AppLogger.instance.network('gif ready: $name');
               }
-              _startGifIfValid(_gifController);
+              startGifIfValid(_gifController, () => mounted);
             },
           );
     }
