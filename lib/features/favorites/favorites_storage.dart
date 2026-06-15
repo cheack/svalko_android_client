@@ -8,7 +8,13 @@ final favoritesBoxProvider =
 final favoriteCommentsBoxProvider =
     Provider<Box<String>>((_) => throw UnimplementedError());
 
-class FavoritePost {
+abstract class _Favoritable {
+  int get id;
+  DateTime get addedAt;
+  Map<String, dynamic> toJson();
+}
+
+class FavoritePost implements _Favoritable {
   const FavoritePost({
     required this.id,
     required this.authorName,
@@ -18,13 +24,14 @@ class FavoritePost {
     this.previewText,
   });
 
-  final int id;
+  @override final int id;
   final String authorName;
   final DateTime publishedAt;
-  final DateTime addedAt;
+  @override final DateTime addedAt;
   final String? firstImageUrl;
   final String? previewText;
 
+  @override
   Map<String, dynamic> toJson() => {
         'id': id,
         'authorName': authorName,
@@ -44,95 +51,7 @@ class FavoritePost {
       );
 }
 
-class FavoritesNotifier extends Notifier<List<FavoritePost>> {
-  @override
-  List<FavoritePost> build() {
-    final box = ref.watch(favoritesBoxProvider);
-    return box.values
-        .map((v) {
-          try {
-            return FavoritePost.fromJson(
-                jsonDecode(v) as Map<String, dynamic>);
-          } catch (_) {
-            return null;
-          }
-        })
-        .whereType<FavoritePost>()
-        .toList()
-      ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
-  }
-
-  bool isFavorite(int postId) => state.any((f) => f.id == postId);
-
-  void add(FavoritePost post) {
-    final box = ref.read(favoritesBoxProvider);
-    box.put('${post.id}', jsonEncode(post.toJson()));
-    state = [post, ...state.where((f) => f.id != post.id)]
-      ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
-  }
-
-  void remove(int postId) {
-    final box = ref.read(favoritesBoxProvider);
-    box.delete('$postId');
-    state = state.where((f) => f.id != postId).toList();
-  }
-
-  void toggle(FavoritePost post) {
-    if (isFavorite(post.id)) {
-      remove(post.id);
-    } else {
-      add(post);
-    }
-  }
-
-  /// Returns list of post JSON maps for combined export.
-  List<Map<String, dynamic>> exportList() =>
-      state.map((f) => f.toJson()).toList();
-
-  /// Returns JSON string with all favorite posts (legacy single-type export).
-  String exportJson() =>
-      jsonEncode(state.map((f) => f.toJson()).toList());
-
-  /// Merges favorites from a JSON list. Returns count of newly added items.
-  int importList(List<dynamic> list) {
-    final incoming = list
-        .map((e) {
-          try {
-            return FavoritePost.fromJson(e as Map<String, dynamic>);
-          } catch (_) {
-            return null;
-          }
-        })
-        .whereType<FavoritePost>()
-        .toList();
-
-    final existingIds = state.map((f) => f.id).toSet();
-    final newItems = incoming.where((f) => !existingIds.contains(f.id)).toList();
-
-    final box = ref.read(favoritesBoxProvider);
-    for (final f in newItems) {
-      box.put('${f.id}', jsonEncode(f.toJson()));
-    }
-    if (newItems.isNotEmpty) {
-      state = [...newItems, ...state]
-        ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
-    }
-    return newItems.length;
-  }
-
-  /// Merges favorites from a JSON string (legacy format). Returns count added.
-  int importJson(String json) => importList(jsonDecode(json) as List<dynamic>);
-}
-
-final favoritesProvider =
-    NotifierProvider<FavoritesNotifier, List<FavoritePost>>(
-        FavoritesNotifier.new);
-
-// ---------------------------------------------------------------------------
-// Favorite comments
-// ---------------------------------------------------------------------------
-
-class FavoriteComment {
+class FavoriteComment implements _Favoritable {
   const FavoriteComment({
     required this.id,
     required this.postId,
@@ -148,12 +67,12 @@ class FavoriteComment {
     this.isKum = false,
   });
 
-  final int id;
+  @override final int id;
   final int postId;
   final int commentPage;
   final String authorName;
   final DateTime publishedAt;
-  final DateTime addedAt;
+  @override final DateTime addedAt;
   final String authorProfileUrl;
   final String? previewText;
   final String? textHtml;
@@ -161,6 +80,7 @@ class FavoriteComment {
   final List<String> videoUrls;
   final bool isKum;
 
+  @override
   Map<String, dynamic> toJson() => {
         'id': id,
         'postId': postId,
@@ -197,44 +117,52 @@ class FavoriteComment {
       );
 }
 
-class FavoriteCommentsNotifier extends Notifier<List<FavoriteComment>> {
+// ---------------------------------------------------------------------------
+// Shared base notifier
+// ---------------------------------------------------------------------------
+
+abstract class _FavoriteNotifier<T extends _Favoritable>
+    extends Notifier<List<T>> {
+  Provider<Box<String>> get _boxProvider;
+  T _fromJson(Map<String, dynamic> json);
+
+  static int _byAddedAt(_Favoritable a, _Favoritable b) =>
+      b.addedAt.compareTo(a.addedAt);
+
   @override
-  List<FavoriteComment> build() {
-    final box = ref.watch(favoriteCommentsBoxProvider);
+  List<T> build() {
+    final box = ref.watch(_boxProvider);
     return box.values
         .map((v) {
           try {
-            return FavoriteComment.fromJson(
-                jsonDecode(v) as Map<String, dynamic>);
+            return _fromJson(jsonDecode(v) as Map<String, dynamic>);
           } catch (_) {
             return null;
           }
         })
-        .whereType<FavoriteComment>()
+        .whereType<T>()
         .toList()
-      ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
+      ..sort(_byAddedAt);
   }
 
-  bool isFavorite(int commentId) => state.any((f) => f.id == commentId);
+  bool isFavorite(int id) => state.any((f) => f.id == id);
 
-  void add(FavoriteComment comment) {
-    final box = ref.read(favoriteCommentsBoxProvider);
-    box.put('${comment.id}', jsonEncode(comment.toJson()));
-    state = [comment, ...state.where((f) => f.id != comment.id)]
-      ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
+  void add(T item) {
+    ref.read(_boxProvider).put('${item.id}', jsonEncode(item.toJson()));
+    state = [item, ...state.where((f) => f.id != item.id)]
+      ..sort(_byAddedAt);
   }
 
-  void remove(int commentId) {
-    final box = ref.read(favoriteCommentsBoxProvider);
-    box.delete('$commentId');
-    state = state.where((f) => f.id != commentId).toList();
+  void remove(int id) {
+    ref.read(_boxProvider).delete('$id');
+    state = state.where((f) => f.id != id).toList();
   }
 
-  void toggle(FavoriteComment comment) {
-    if (isFavorite(comment.id)) {
-      remove(comment.id);
+  void toggle(T item) {
+    if (isFavorite(item.id)) {
+      remove(item.id);
     } else {
-      add(comment);
+      add(item);
     }
   }
 
@@ -245,28 +173,61 @@ class FavoriteCommentsNotifier extends Notifier<List<FavoriteComment>> {
     final incoming = list
         .map((e) {
           try {
-            return FavoriteComment.fromJson(e as Map<String, dynamic>);
+            return _fromJson(e as Map<String, dynamic>);
           } catch (_) {
             return null;
           }
         })
-        .whereType<FavoriteComment>()
+        .whereType<T>()
         .toList();
-
     final existingIds = state.map((f) => f.id).toSet();
     final newItems =
         incoming.where((f) => !existingIds.contains(f.id)).toList();
-
-    final box = ref.read(favoriteCommentsBoxProvider);
+    final box = ref.read(_boxProvider);
     for (final f in newItems) {
       box.put('${f.id}', jsonEncode(f.toJson()));
     }
     if (newItems.isNotEmpty) {
-      state = [...newItems, ...state]
-        ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
+      state = [...newItems, ...state]..sort(_byAddedAt);
     }
     return newItems.length;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Favorite posts
+// ---------------------------------------------------------------------------
+
+class FavoritesNotifier extends _FavoriteNotifier<FavoritePost> {
+  @override
+  Provider<Box<String>> get _boxProvider => favoritesBoxProvider;
+
+  @override
+  FavoritePost _fromJson(Map<String, dynamic> json) =>
+      FavoritePost.fromJson(json);
+
+  /// Returns JSON string with all favorite posts (legacy single-type export).
+  String exportJson() => jsonEncode(exportList());
+
+  /// Merges favorites from a JSON string (legacy format). Returns count added.
+  int importJson(String json) => importList(jsonDecode(json) as List<dynamic>);
+}
+
+final favoritesProvider =
+    NotifierProvider<FavoritesNotifier, List<FavoritePost>>(
+        FavoritesNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Favorite comments
+// ---------------------------------------------------------------------------
+
+class FavoriteCommentsNotifier extends _FavoriteNotifier<FavoriteComment> {
+  @override
+  Provider<Box<String>> get _boxProvider => favoriteCommentsBoxProvider;
+
+  @override
+  FavoriteComment _fromJson(Map<String, dynamic> json) =>
+      FavoriteComment.fromJson(json);
 }
 
 final favoriteCommentsProvider =
