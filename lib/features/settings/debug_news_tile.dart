@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'debug_tile_helpers.dart';
+
 import '../../core/result.dart';
 import '../../core/settings_storage.dart';
 import '../../data/svalko_api.dart';
@@ -45,35 +47,21 @@ class DebugNewsTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
-        _subHeader('По количеству (pipeline, обновляет lastSeenId)'),
+        debugSubHeader('По количеству (pipeline, обновляет lastSeenId)'),
         for (final count in _counts)
-          _tile(
+          debugTile(
             title: '$count ${_postWord(count)}',
             onPressed: () => _runPipeline(ref, count),
           ),
-        _subHeader('По типу медиа (напрямую → showNewPosts)'),
+        debugSubHeader('По типу медиа (напрямую → showNewPosts)'),
         for (final s in _mediaScenarios)
-          _tile(
+          debugTile(
             title: s.label,
             onPressed: () => _showMediaPost(ref, s.label, s.imageUrl, s.html),
           ),
       ],
     );
   }
-
-  Widget _subHeader(String text) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-    child: Align(
-      alignment: Alignment.centerLeft,
-      child: Text(text, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-    ),
-  );
-
-  Widget _tile({required String title, required VoidCallback onPressed}) =>
-      ListTile(
-        title: Text(title),
-        trailing: TextButton(onPressed: onPressed, child: const Text('Отправить')),
-      );
 
   Future<void> _runPipeline(WidgetRef ref, int count) async {
     final box = ref.read(settingsBoxProvider);

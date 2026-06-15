@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/crash_reporter.dart';
+import 'debug_tile_helpers.dart';
 
 class DebugCrashTile extends StatelessWidget {
   const DebugCrashTile({super.key});
@@ -9,9 +10,9 @@ class DebugCrashTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _subHeader('Crash reporter'),
+        debugSubHeader('Crash reporter'),
         Builder(
-          builder: (context) => _tile(
+          builder: (context) => debugTile(
             title: 'Тестовый exception',
             onPressed: () async {
               final sent = await CrashReporter.instance.report(
@@ -28,7 +29,7 @@ class DebugCrashTile extends StatelessWidget {
           ),
         ),
         Builder(
-          builder: (context) => _tile(
+          builder: (context) => debugTile(
             title: 'Настоящий краш',
             onPressed: () async {
               final confirmed = await showDialog<bool>(
@@ -61,17 +62,4 @@ class DebugCrashTile extends StatelessWidget {
     );
   }
 
-  Widget _subHeader(String text) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-    child: Align(
-      alignment: Alignment.centerLeft,
-      child: Text(text, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-    ),
-  );
-
-  Widget _tile({required String title, required VoidCallback onPressed}) =>
-      ListTile(
-        title: Text(title),
-        trailing: TextButton(onPressed: onPressed, child: const Text('Отправить')),
-      );
 }
