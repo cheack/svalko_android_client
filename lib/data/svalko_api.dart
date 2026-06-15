@@ -144,11 +144,7 @@ class SvalkoApi {
         Config.rssUrl,
         options: _withCookie(Options(responseType: ResponseType.bytes)),
       );
-      final data = response.data;
-      final bytes = data is Uint8List
-          ? data
-          : Uint8List.fromList(data as List<int>);
-      return Ok(utf8.decode(bytes));
+      return Ok(utf8.decode(_toBytes(response.data)));
     } on DioException catch (e) {
       return Err(_mapDioError(e));
     } catch (e, st) {
@@ -260,9 +256,7 @@ class SvalkoApi {
           .map((h) => RegExp(r'PHPSESSID=[^;]+').firstMatch(h)?.group(0))
           .whereType<String>()
           .firstOrNull ?? '';
-      final data = response.data;
-      final bytes = data is Uint8List ? data : Uint8List.fromList(data as List<int>);
-      final html = await decodeWin1251(bytes);
+      final html = await _decodeResponse(response);
       final doc = html_parser.parse(html);
       final uploadId = doc.querySelector('input[name="upload_id"]')?.attributes['value'] ?? '';
       final uploadKey = doc.querySelector('input[name="upload_key"]')?.attributes['value'] ?? '';
@@ -315,11 +309,7 @@ class SvalkoApi {
         ),
         onSendProgress: onProgress,
       );
-      final data = response.data;
-      final Uint8List bytes = data is Uint8List
-          ? data
-          : Uint8List.fromList(data as List<int>);
-      return Ok(await decodeWin1251(bytes));
+      return Ok(await _decodeResponse(response));
     } on DioException catch (e) {
       return Err(_mapDioError(e));
     } catch (_) {
@@ -422,11 +412,7 @@ class SvalkoApi {
           responseType: ResponseType.bytes,
         ),
       );
-      final data = response.data;
-      final Uint8List bytes = data is Uint8List
-          ? data
-          : Uint8List.fromList(data as List<int>);
-      return Ok(await decodeWin1251(bytes));
+      return Ok(await _decodeResponse(response));
     } on DioException catch (e) {
       return Err(_mapDioError(e));
     } catch (_) {
@@ -442,11 +428,7 @@ class SvalkoApi {
         '${Config.baseUrl}$path',
         options: _withCookie(Options(followRedirects: false, responseType: ResponseType.bytes)),
       );
-      final data = response.data;
-      final Uint8List bytes = data is Uint8List
-          ? data
-          : Uint8List.fromList(data as List<int>);
-      return Ok(await decodeWin1251(bytes));
+      return Ok(await _decodeResponse(response));
     } on DioException catch (e) {
       return Err(_mapDioError(e));
     } catch (_) {
@@ -464,11 +446,7 @@ class SvalkoApi {
           responseType: ResponseType.bytes,
         ),
       );
-      final data = response.data;
-      final Uint8List bytes = data is Uint8List
-          ? data
-          : Uint8List.fromList(data as List<int>);
-      return Ok((await decodeWin1251(bytes)).trim());
+      return Ok((await _decodeResponse(response)).trim());
     } on DioException catch (e) {
       return Err(_mapDioError(e));
     } catch (_) {
@@ -505,24 +483,19 @@ class SvalkoApi {
         url,
         options: _withCookie(cacheOptions?.toOptions()),
       );
-      final data = response.data;
-      final Uint8List bytes;
-      if (data is Uint8List) {
-        bytes = data;
-      } else if (data is List<int>) {
-        // FileCacheStore may deserialize bytes as List<int>, not Uint8List
-        bytes = Uint8List.fromList(data);
-      } else {
-        return const Err(AppError.unknown);
-      }
-      final html = await decodeWin1251(bytes);
-      return Ok(html);
+      return Ok(await _decodeResponse(response));
     } on DioException catch (e) {
       return Err(_mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
   }
+
+  static Uint8List _toBytes(dynamic data) =>
+      data is Uint8List ? data : Uint8List.fromList(data as List<int>);
+
+  Future<String> _decodeResponse(Response<dynamic> r) =>
+      decodeWin1251(_toBytes(r.data));
 
   AppError _mapDioError(DioException e) => switch (e.type) {
         DioExceptionType.connectionTimeout ||
