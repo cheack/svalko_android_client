@@ -157,8 +157,6 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final hasComplex = _hasComplexStyles();
-    final cardPattern = theme.extension<SvalkoSkinExt>()?.cardPattern;
-
     final cs = theme.colorScheme;
     final dividers = theme.extension<SvalkoSkinExt>()?.cardDividers ?? false;
     final flashAnim = _flashAnim;
@@ -178,14 +176,7 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
       padding: outerPadding,
       child: Stack(
         children: [
-          Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: cs.surfaceContainer,
-          image: cardPattern,
-          borderRadius: dividers ? null : BorderRadius.circular(4),
-          border: dividers ? null : Border.all(color: cs.outline, width: 1),
-        ),
+          SkinCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
