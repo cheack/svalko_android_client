@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/settings_storage.dart';
 import '../../models/search_result.dart';
 import '../../ui/skin_ext.dart';
 import '../../ui/widgets/comment_html.dart';
+import '../../ui/widgets/font_scaled_body.dart';
 import 'search_controller.dart';
 import 'search_dialog.dart';
 
@@ -50,7 +50,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(searchControllerProvider(widget.params));
-    final fontSize = ref.watch(fontSizeProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -63,15 +62,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ],
       ),
-      body: Builder(
-        builder: (ctx) => MediaQuery(
-          data: MediaQuery.of(ctx).copyWith(
-            textScaler:
-                TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
-          ),
-          child: _buildBody(ctx, state),
-        ),
-      ),
+      body: FontScaledBody(child: _buildBody(context, state)),
     );
   }
 
@@ -148,9 +139,6 @@ class _SearchResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final skinExt = theme.extension<SvalkoSkinExt>();
-    final dividers = skinExt?.cardDividers ?? false;
-    final cardPattern = skinExt?.cardPattern;
 
     final d = result.publishedAt;
     final dateStr =
@@ -163,15 +151,7 @@ class _SearchResultCard extends StatelessWidget {
             ? (result.postId, result.commentId)
             : result.postId,
       ),
-      child: Container(
-        width: double.infinity,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: cs.surfaceContainer,
-          image: cardPattern,
-          borderRadius: dividers ? null : BorderRadius.circular(4),
-          border: dividers ? null : Border.all(color: cs.outline, width: 1),
-        ),
+      child: SkinCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

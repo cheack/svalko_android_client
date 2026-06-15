@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/settings_storage.dart';
 import '../../models/last_item.dart';
 import '../../ui/skin_ext.dart';
+import '../../ui/widgets/font_scaled_body.dart';
 import '../navigation/app_drawer.dart';
 import 'last_controller.dart';
 
@@ -13,7 +13,6 @@ class LastScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(lastProvider);
-    final fontSize = ref.watch(fontSizeProvider);
     final theme = Theme.of(context);
     final appBarFg = theme.appBarTheme.foregroundColor ?? Colors.white;
 
@@ -50,46 +49,40 @@ class LastScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: Builder(
-          builder: (ctx) => MediaQuery(
-            data: MediaQuery.of(ctx).copyWith(
-              textScaler: TextScaler.linear(
-                  fontSize / FontSizeNotifier.defaultSize),
-            ),
-            child: async.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(e.toString()),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () =>
-                          ref.read(lastProvider.notifier).refresh(),
-                      child: const Text('Повторить'),
-                    ),
-                  ],
-                ),
+        body: FontScaledBody(
+          child: async.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(e.toString()),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () =>
+                        ref.read(lastProvider.notifier).refresh(),
+                    child: const Text('Повторить'),
+                  ),
+                ],
               ),
-              data: (data) {
-                final (comments, images) = data;
-                return TabBarView(
-                  children: [
-                    _CommentsTab(
-                      comments: comments,
-                      onRefresh: () =>
-                          ref.read(lastProvider.notifier).refresh(),
-                    ),
-                    _ImagesTab(
-                      images: images,
-                      onRefresh: () =>
-                          ref.read(lastProvider.notifier).refresh(),
-                    ),
-                  ],
-                );
-              },
             ),
+            data: (data) {
+              final (comments, images) = data;
+              return TabBarView(
+                children: [
+                  _CommentsTab(
+                    comments: comments,
+                    onRefresh: () =>
+                        ref.read(lastProvider.notifier).refresh(),
+                  ),
+                  _ImagesTab(
+                    images: images,
+                    onRefresh: () =>
+                        ref.read(lastProvider.notifier).refresh(),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -108,8 +101,6 @@ class _CommentsTab extends StatelessWidget {
     final cs = theme.colorScheme;
     final skinExt = theme.extension<SvalkoSkinExt>();
     final dividers = skinExt?.cardDividers ?? false;
-    final cardPattern = skinExt?.cardPattern;
-
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: ListView.builder(
@@ -184,18 +175,7 @@ class _CommentsTab extends StatelessWidget {
           final card = GestureDetector(
             onTap: () => Navigator.of(ctx)
                 .pushNamed('/post', arguments: (c.postId, c.commentId)),
-            child: Container(
-              width: double.infinity,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: cs.surfaceContainer,
-                image: cardPattern,
-                borderRadius:
-                    dividers ? null : BorderRadius.circular(4),
-                border: dividers
-                    ? null
-                    : Border.all(color: cs.outline, width: 1),
-              ),
+            child: SkinCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -32,6 +32,33 @@ class SvalkoSkinExt extends ThemeExtension<SvalkoSkinExt> {
   SvalkoSkinExt lerp(ThemeExtension<SvalkoSkinExt>? other, double t) => this;
 }
 
+/// Card container that applies the skin decoration (background color, pattern,
+/// border or divider-mode styling) from [SvalkoSkinExt].
+class SkinCard extends StatelessWidget {
+  const SkinCard({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final skinExt = theme.extension<SvalkoSkinExt>();
+    final dividers = skinExt?.cardDividers ?? false;
+    return Container(
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer,
+        image: skinExt?.cardPattern,
+        borderRadius: dividers ? null : BorderRadius.circular(4),
+        border: dividers ? null : Border.all(color: cs.outline, width: 1),
+      ),
+      child: child,
+    );
+  }
+}
+
 /// Wraps [child] in a [ColoredBox] using [SvalkoSkinExt.headerColor] when set.
 /// Falls through transparently for skins that have no header color.
 class SkinHeader extends StatelessWidget {
