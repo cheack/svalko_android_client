@@ -10,6 +10,7 @@ import '../../core/app_logger.dart';
 import '../../core/settings_storage.dart';
 import 'image_viewer.dart';
 import 'media_actions.dart';
+import 'media_load_badge.dart';
 import 'shimmer_placeholder.dart';
 
 class ImageCarousel extends StatefulWidget {
@@ -281,11 +282,6 @@ class MediaImageState extends ConsumerState<MediaImage>
     }
   }
 
-  String _formatBytes(int bytes) {
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).round()} КБ';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} МБ';
-  }
-
   Widget _gifBackground() {
     final preview = _gifPreviewUrl(widget.url);
     if (preview == null) return widget.loadingWidget ?? const ShimmerPlaceholder();
@@ -325,23 +321,8 @@ class MediaImageState extends ConsumerState<MediaImage>
       alignment: Alignment.center,
       children: [
         _gifBackground(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.play_arrow_rounded, size: 36, color: Colors.white),
-              const SizedBox(height: 4),
-              Text(
-                _remoteSize != null ? 'GIF · ${_formatBytes(_remoteSize!)}' : 'GIF',
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-            ],
-          ),
+        MediaLoadBadge(
+          label: _remoteSize != null ? 'GIF · ${formatMediaBytes(_remoteSize!)}' : 'GIF',
         ),
       ],
     ),

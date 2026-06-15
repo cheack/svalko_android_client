@@ -11,6 +11,7 @@ import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../core/app_logger.dart';
 import '../../core/settings_storage.dart';
+import 'media_load_badge.dart';
 
 class VideoPlayerWidget extends ConsumerStatefulWidget {
   const VideoPlayerWidget({super.key, required this.url});
@@ -52,11 +53,6 @@ class _VideoPlayerWidgetState extends ConsumerState<VideoPlayerWidget> {
   String _ext() {
     final ext = widget.url.split('.').last.split('?').first.toUpperCase();
     return ext.length <= 4 ? ext : 'ВИДЕО';
-  }
-
-  String _formatBytes(int bytes) {
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).round()} КБ';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} МБ';
   }
 
   Future<File> _thumbCacheFile() async {
@@ -192,27 +188,12 @@ class _VideoPlayerWidgetState extends ConsumerState<VideoPlayerWidget> {
                 if (_tapped)
                   const CircularProgressIndicator(color: Colors.white)
                 else
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.play_arrow_rounded, size: 36, color: Colors.white),
-                        const SizedBox(height: 4),
-                        Text(
-                          _thumbnail == null
-                              ? 'Загрузка превью...'
-                              : _remoteSize != null
-                                  ? '${_ext()} · ${_formatBytes(_remoteSize!)}'
-                                  : _ext(),
-                          style: const TextStyle(fontSize: 12, color: Colors.white70),
-                        ),
-                      ],
-                    ),
+                  MediaLoadBadge(
+                    label: _thumbnail == null
+                        ? 'Загрузка превью...'
+                        : _remoteSize != null
+                            ? '${_ext()} · ${formatMediaBytes(_remoteSize!)}'
+                            : _ext(),
                   ),
               ],
             ),
