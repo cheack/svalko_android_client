@@ -156,6 +156,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       allowMultiple: false,
+      compressionQuality: 0,
     );
     if (result == null || result.files.single.path == null) return;
 
