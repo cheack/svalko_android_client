@@ -109,6 +109,7 @@ class BbCodeTextField extends StatelessWidget {
       minLines: 5,
       maxLines: 12,
       textCapitalization: TextCapitalization.sentences,
+      spellCheckConfiguration: SpellCheckConfiguration(),
       textInputAction: TextInputAction.newline,
       expands: false,
       contextMenuBuilder: (context, editableTextState) {
