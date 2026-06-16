@@ -580,19 +580,7 @@ class _PostMenuState extends ConsumerState<_PostMenu> {
   }
 
   void _toggleFav() {
-    final post = widget.post;
-    ref.read(favoritesProvider.notifier).toggle(
-          FavoritePost(
-            id: post.id,
-            authorName: post.author.name,
-            publishedAt: post.publishedAt,
-            addedAt: DateTime.now(),
-            firstImageUrl: post.imageUrls.firstOrNull,
-            previewText: post.text != null && post.text!.isNotEmpty
-                ? post.text!.substring(0, post.text!.length.clamp(0, 120))
-                : null,
-          ),
-        );
+    ref.read(favoritesProvider.notifier).toggle(FavoritePost.fromPost(widget.post));
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import '../../models/post.dart';
 
 final favoritesBoxProvider =
     Provider<Box<String>>((_) => throw UnimplementedError());
@@ -40,6 +41,17 @@ class FavoritePost implements _Favoritable {
         if (firstImageUrl != null) 'firstImageUrl': firstImageUrl,
         if (previewText != null) 'previewText': previewText,
       };
+
+  factory FavoritePost.fromPost(Post post) => FavoritePost(
+        id: post.id,
+        authorName: post.author.name,
+        publishedAt: post.publishedAt,
+        addedAt: DateTime.now(),
+        firstImageUrl: post.imageUrls.firstOrNull,
+        previewText: post.text != null && post.text!.isNotEmpty
+            ? post.text!.substring(0, post.text!.length.clamp(0, 120))
+            : null,
+      );
 
   factory FavoritePost.fromJson(Map<String, dynamic> json) => FavoritePost(
         id: json['id'] as int,
