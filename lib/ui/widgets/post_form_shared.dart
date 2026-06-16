@@ -108,6 +108,7 @@ class BbCodeTextField extends StatelessWidget {
       decoration: const InputDecoration(border: OutlineInputBorder()),
       minLines: 5,
       maxLines: 12,
+      textCapitalization: TextCapitalization.sentences,
       textInputAction: TextInputAction.newline,
       expands: false,
       contextMenuBuilder: (context, editableTextState) {
