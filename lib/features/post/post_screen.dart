@@ -18,8 +18,8 @@ import '../../ui/widgets/post_header.dart';
 import '../../ui/widgets/video_embed_player.dart';
 import '../../ui/widgets/video_link_card.dart';
 import '../../ui/widgets/video_player_widget.dart';
-import '../../core/result.dart';
 import '../../models/post.dart';
+import '../../ui/widgets/inline_spinner.dart';
 import '../../models/feed_source.dart';
 import '../../ui/skin_ext.dart';
 import '../../ui/widgets/kum_shake.dart';
@@ -70,16 +70,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   Future<void> _openRandom() async {
     if (_loadingRandom) return;
     setState(() => _loadingRandom = true);
-    final result = await ref.read(repositoryProvider).getRandomPostId();
-    if (!mounted) return;
-    setState(() => _loadingRandom = false);
-    switch (result) {
-      case Ok(:final value):
-        Navigator.of(context).pushReplacementNamed('/random-post', arguments: value);
-      case Err(:final error):
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.toString())));
-    }
+    await navigateToRandomPost(ref, context, (id) {
+      Navigator.of(context).pushReplacementNamed('/random-post', arguments: id);
+    });
+    if (mounted) setState(() => _loadingRandom = false);
   }
 
   void _onScroll() {
@@ -336,7 +330,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
             if (_loadingRandom)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12),
-                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                child: InlineSpinner(),
               )
             else
               IconButton(

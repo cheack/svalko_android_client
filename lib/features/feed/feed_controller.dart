@@ -35,6 +35,22 @@ void navigateToDateFeed(BuildContext context, WidgetRef ref, DateTime dt) {
   Navigator.of(context).pushNamed('/date', arguments: feed);
 }
 
+Future<void> navigateToRandomPost(
+  WidgetRef ref,
+  BuildContext context,
+  void Function(int id) navigate,
+) async {
+  final result = await ref.read(repositoryProvider).getRandomPostId();
+  if (!context.mounted) return;
+  switch (result) {
+    case Ok(:final value):
+      navigate(value);
+    case Err(:final error):
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.toString())));
+  }
+}
+
 final repositoryProvider = Provider<SvalkoRepository>(
   (ref) => SvalkoRepository(
     api: ref.watch(apiProvider),

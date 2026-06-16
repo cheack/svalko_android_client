@@ -10,6 +10,7 @@ import '../../features/feed/feed_controller.dart';
 import '../../features/last/last_controller.dart';
 import '../../features/navigation/tags_cache.dart';
 import '../../models/tag.dart';
+import '../../ui/widgets/inline_spinner.dart';
 import '../../ui/widgets/new_post_sheet.dart';
 
 class AppDrawer extends ConsumerStatefulWidget {
@@ -99,18 +100,11 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
   Future<void> _openRandom() async {
     if (_loadingRandom) return;
     setState(() => _loadingRandom = true);
-    final result =
-        await ref.read(repositoryProvider).getRandomPostId();
-    if (!mounted) return;
-    setState(() => _loadingRandom = false);
-    switch (result) {
-      case Ok(:final value):
-        Navigator.of(context).pop();
-        Navigator.of(context).pushNamed('/random-post', arguments: value);
-      case Err(:final error):
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.toString())));
-    }
+    await navigateToRandomPost(ref, context, (id) {
+      Navigator.of(context).pop();
+      Navigator.of(context).pushNamed('/random-post', arguments: id);
+    });
+    if (mounted) setState(() => _loadingRandom = false);
   }
 
   @override
@@ -174,11 +168,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
             ),
             ListTile(
               leading: _loadingRandom
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                  ? const InlineSpinner()
                   : const Icon(Icons.shuffle_outlined),
               title: Text(s.navRandom),
               onTap: _openRandom,
@@ -268,7 +258,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
             ),
             ListTile(
               leading: _fojjerLoading
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const InlineSpinner()
                   : const Icon(Icons.campaign_outlined),
               title: Text(_fojjerText),
               onTap: _shoutFojjer,
