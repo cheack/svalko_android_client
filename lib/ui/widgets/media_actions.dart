@@ -89,6 +89,7 @@ Future<void> showMediaSheet(
   final s = _s(context);
   return showModalBottomSheet<void>(
     context: context,
+    routeSettings: const RouteSettings(name: '/media-actions'),
     builder: (sheetCtx) => SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,

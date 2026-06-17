@@ -18,6 +18,7 @@ Future<bool> showCommentSheet(
 ) async {
   final result = await Navigator.of(context).push<bool>(
     MaterialPageRoute(
+      settings: const RouteSettings(name: '/comment'),
       fullscreenDialog: true,
       builder: (_) => _CommentScreen(
         api: api,

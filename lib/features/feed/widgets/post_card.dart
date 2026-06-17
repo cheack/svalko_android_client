@@ -168,6 +168,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     final postUrl = '${Config.baseUrl}/$id.html';
     await showModalBottomSheet<void>(
       context: context,
+      routeSettings: const RouteSettings(name: '/post-actions'),
       builder: (sheetCtx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

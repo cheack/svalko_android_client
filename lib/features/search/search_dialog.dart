@@ -6,6 +6,7 @@ import 'search_controller.dart';
 Future<SearchParams?> showSearchDialog(BuildContext context, WidgetRef ref) {
   return showDialog<SearchParams>(
     context: context,
+    routeSettings: const RouteSettings(name: '/search'),
     builder: (_) => _SearchDialog(initial: ref.read(lastSearchParamsProvider)),
   );
 }

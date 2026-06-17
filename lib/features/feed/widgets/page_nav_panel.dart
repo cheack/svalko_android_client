@@ -25,6 +25,7 @@ class PageNavPanel extends StatelessWidget {
   void _showPicker(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      routeSettings: const RouteSettings(name: '/page-picker'),
       builder: (ctx) => _PagePickerSheet(
         currentPage: currentPage,
         maxPage: maxPage,

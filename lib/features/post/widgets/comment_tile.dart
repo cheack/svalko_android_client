@@ -99,6 +99,7 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
     final url = _commentUrl();
     showModalBottomSheet<void>(
       context: context,
+      routeSettings: const RouteSettings(name: '/comment-menu'),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -129,6 +130,7 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
     final url = _commentUrl();
     showModalBottomSheet<void>(
       context: context,
+      routeSettings: const RouteSettings(name: '/comment-styles'),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
