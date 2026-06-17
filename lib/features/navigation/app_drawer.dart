@@ -126,7 +126,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            color: theme.appBarTheme.backgroundColor ?? theme.colorScheme.primary,
+            color: theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
             height: topPadding,
           ),
           Expanded(child: Column(

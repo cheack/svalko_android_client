@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -169,9 +170,26 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final visiblePage = _visiblePage;
 
     final scaffold = Scaffold(
+      extendBodyBehindAppBar: true,
       drawer: AppDrawer(activePage: widget.source is MainFeed ? 'home' : null),
       drawerEdgeDragWidth: 80,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: ThemeData.estimateBrightnessForColor(
+                    Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
+                  ) == Brightness.dark
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              color: (Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.surface).withValues(alpha: 0.85),
+            ),
+          ),
+        ),
         title: Text(_title(s)),
         actions: [
           IconButton(
@@ -230,6 +248,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               },
               child: ListView.builder(
                 controller: _scrollController,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + kToolbarHeight,
+                ),
                 itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
                 itemBuilder: (ctx, i) {
                   if (i == state.posts.length) {
