@@ -83,6 +83,7 @@ class _CommentSheetState extends State<_CommentSheet> {
   CommentFormData? _form;
   bool _formError = false;
   bool _submitting = false;
+  bool _picking = false;
   String? _submitError;
 
   final _attachments = <_Attachment>[];
@@ -151,8 +152,10 @@ class _CommentSheetState extends State<_CommentSheet> {
 
   Future<void> _pickAndUpload() async {
     final form = _form;
-    if (form == null) return;
+    if (form == null || _picking) return;
+    setState(() => _picking = true);
 
+    try {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       allowMultiple: false,
@@ -199,6 +202,9 @@ class _CommentSheetState extends State<_CommentSheet> {
     });
     widget.settingsBox.put('img_cache_${newFile.code}', path);
     _saveAttachments();
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
   }
 
   Future<void> _delete(_Attachment attachment) async {
