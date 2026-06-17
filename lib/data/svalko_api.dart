@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
 import 'package:html/parser.dart' as html_parser;
+import '../core/breadcrumb_collector.dart';
+import '../core/breadcrumb_dio_interceptor.dart';
 import '../core/config.dart';
 import '../core/crash_reporter.dart';
 import '../core/encoding.dart';
@@ -65,6 +67,7 @@ class SvalkoApi {
         maxRedirects: 5,
       ),
     );
+    dio.interceptors.add(BreadcrumbDioInterceptor(BreadcrumbCollector.instance));
     dio.interceptors.add(LoggingInterceptor());
     if (store != null) {
       dio.interceptors.add(

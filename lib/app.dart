@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/breadcrumb_collector.dart';
 import 'core/settings_storage.dart';
 import 'features/about/about_screen.dart';
 import 'features/favorites/favorites_screen.dart';
@@ -30,6 +31,7 @@ class SvalkoApp extends ConsumerWidget {
 
     return MaterialApp(
       navigatorKey: navigatorKey,
+      navigatorObservers: [BreadcrumbCollector.instance.navigatorObserver],
       title: 'Свалко',
       theme: themeForSkin(skin),
       localizationsDelegates: const [
@@ -41,7 +43,7 @@ class SvalkoApp extends ConsumerWidget {
       initialRoute: '/',
       onGenerateRoute: (settings) {
         if (settings.name == '/') {
-          return MaterialPageRoute(builder: (_) => const FeedScreen());
+          return MaterialPageRoute(settings: settings,builder: (_) => const FeedScreen());
         }
         if (settings.name == '/post' || settings.name == '/random-post') {
           final args = settings.arguments;
@@ -61,7 +63,7 @@ class SvalkoApp extends ConsumerWidget {
             commentId = null;
             initialPage = null;
           }
-          return MaterialPageRoute(
+          return MaterialPageRoute(settings: settings,
             builder: (_) => PostScreen(
               postId: postId,
               highlightCommentId: commentId,
@@ -72,7 +74,7 @@ class SvalkoApp extends ConsumerWidget {
         }
         if (settings.name == '/tag') {
           final tag = settings.arguments as Tag;
-          return MaterialPageRoute(
+          return MaterialPageRoute(settings: settings,
             builder: (_) => FeedScreen(
               source: TagFeed(tagId: tag.id, tagName: tag.name),
             ),
@@ -80,7 +82,7 @@ class SvalkoApp extends ConsumerWidget {
         }
         if (settings.name == '/author') {
           final author = settings.arguments as Author;
-          return MaterialPageRoute(
+          return MaterialPageRoute(settings: settings,
             builder: (_) => FeedScreen(
               source: AuthorFeed(
                 authorName: author.name,
@@ -91,40 +93,40 @@ class SvalkoApp extends ConsumerWidget {
         }
         if (settings.name == '/approver') {
           final feed = settings.arguments as ApproverFeed;
-          return MaterialPageRoute(
+          return MaterialPageRoute(settings: settings,
             builder: (_) => FeedScreen(source: feed),
           );
         }
         if (settings.name == '/date') {
           final feed = settings.arguments as DateFeed;
-          return MaterialPageRoute(
+          return MaterialPageRoute(settings: settings,
             builder: (_) => FeedScreen(source: feed),
           );
         }
         if (settings.name == '/last') {
-          return MaterialPageRoute(builder: (_) => const LastScreen());
+          return MaterialPageRoute(settings: settings,builder: (_) => const LastScreen());
         }
         if (settings.name == '/images') {
-          return MaterialPageRoute(builder: (_) => const ImagesScreen());
+          return MaterialPageRoute(settings: settings,builder: (_) => const ImagesScreen());
         }
         if (settings.name == '/settings') {
-          return MaterialPageRoute(builder: (_) => const SettingsScreen());
+          return MaterialPageRoute(settings: settings,builder: (_) => const SettingsScreen());
         }
         if (settings.name == '/logs') {
-          return MaterialPageRoute(builder: (_) => const LogsScreen());
+          return MaterialPageRoute(settings: settings,builder: (_) => const LogsScreen());
         }
         if (settings.name == '/about') {
-          return MaterialPageRoute(builder: (_) => const AboutScreen());
+          return MaterialPageRoute(settings: settings,builder: (_) => const AboutScreen());
         }
         if (settings.name == '/favorites') {
-          return MaterialPageRoute(builder: (_) => const FavoritesScreen());
+          return MaterialPageRoute(settings: settings,builder: (_) => const FavoritesScreen());
         }
         if (settings.name == '/trends') {
-          return MaterialPageRoute(builder: (_) => const TrendsScreen());
+          return MaterialPageRoute(settings: settings,builder: (_) => const TrendsScreen());
         }
         if (settings.name == '/search') {
           final params = settings.arguments as SearchParams;
-          return MaterialPageRoute(
+          return MaterialPageRoute(settings: settings,
             builder: (_) => SearchScreen(params: params),
           );
         }

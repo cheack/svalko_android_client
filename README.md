@@ -67,10 +67,13 @@ Content-Type: application/json
   "stack": "#0  ...\n#1  ...",
   "version": "1.2.7+312",
   "device": "Google Pixel 7, Android 14",
-  "fatal": false
+  "fatal": false,
+  "breadcrumbs": [...]
 }
 ```
 
 `stack` — первые 12 непустых строк стектрейса. Повторная отправка одной и той же ошибки дедуплицируется (отправляется только один раз подряд).
 
 `fatal: true` — ошибка поймана в `PlatformDispatcher.onError` или `runZonedGuarded`; без обработчика приложение бы упало. `fatal: false` — ошибка поймана в `FlutterError.onError` или блоке `try/catch`; приложение продолжало работать.
+
+Вместе с ошибкой отправляются последние 30 действий пользователя (`breadcrumbs`): навигация между экранами и HTTP-запросы.

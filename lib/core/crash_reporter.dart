@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'breadcrumb_collector.dart';
 
 const _defaultWorkerUrl = String.fromEnvironment('CRASH_HANDLER_URL');
 const _defaultAppSecret = String.fromEnvironment('APP_SECRET');
@@ -13,23 +14,36 @@ class CrashReporter {
     Dio? dio,
     String workerUrl = _defaultWorkerUrl,
     String appSecret = _defaultAppSecret,
+    BreadcrumbCollector? breadcrumbs,
   })  : _dio = dio ??
             Dio(BaseOptions(
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 10),
             )),
         _workerUrl = workerUrl,
-        _appSecret = appSecret;
+        _appSecret = appSecret,
+        _breadcrumbs = breadcrumbs ?? BreadcrumbCollector.instance;
 
   static final instance = CrashReporter._();
 
   @visibleForTesting
-  static CrashReporter test({required Dio dio, String workerUrl = 'http://test', String appSecret = 'secret'}) =>
-      CrashReporter._(dio: dio, workerUrl: workerUrl, appSecret: appSecret);
+  static CrashReporter test({
+    required Dio dio,
+    String workerUrl = 'http://test',
+    String appSecret = 'secret',
+    BreadcrumbCollector? breadcrumbs,
+  }) =>
+      CrashReporter._(
+        dio: dio,
+        workerUrl: workerUrl,
+        appSecret: appSecret,
+        breadcrumbs: breadcrumbs ?? BreadcrumbCollector(),
+      );
 
   final Dio _dio;
   final String _workerUrl;
   final String _appSecret;
+  final BreadcrumbCollector _breadcrumbs;
 
   String? _appVersion;
   String? _deviceInfo;
@@ -77,6 +91,7 @@ class CrashReporter {
           'version': _appVersion ?? 'unknown',
           'device': _deviceInfo ?? 'unknown',
           'fatal': fatal,
+          'breadcrumbs': _breadcrumbs.snapshot(),
         },
         options: Options(
           headers: {'X-App-Secret': _appSecret},
