@@ -7,6 +7,7 @@ import '../../core/settings_storage.dart';
 import '../../features/feed/feed_controller.dart';
 import '../../models/image_item.dart';
 import '../../ui/widgets/image_viewer.dart';
+import '../../ui/widgets/blur_app_bar.dart';
 import '../navigation/app_drawer.dart';
 import 'images_controller.dart';
 
@@ -64,9 +65,10 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
     final s = AppStrings.of(ref.watch(languageProvider));
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       drawer: const AppDrawer(activePage: 'images'),
       drawerEdgeDragWidth: 80,
-      appBar: AppBar(title: Text(s.navImages)),
+      appBar: buildBlurAppBar(context, title: Text(s.navImages)),
       body: _buildBody(state, s),
     );
   }
@@ -97,7 +99,12 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
       controller: _scrollController,
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.only(
+            top: blurAppBarTopPadding(context),
+            left: 4,
+            right: 4,
+            bottom: 4,
+          ),
           sliver: SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (ctx, i) {

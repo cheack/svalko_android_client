@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/result.dart';
 import '../../data/parsers/trends_parser.dart';
 import '../../features/feed/feed_controller.dart';
+import '../../ui/widgets/blur_app_bar.dart';
 import '../../ui/widgets/shimmer_placeholder.dart';
 
 final _trendsProvider = FutureProvider<List<TrendsBlock>>((ref) async {
@@ -23,7 +24,9 @@ class TrendsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
+      extendBodyBehindAppBar: true,
+      appBar: buildBlurAppBar(
+        context,
         title: const Text('Свалканалитическая сводка'),
         actions: [
           IconButton(
@@ -36,7 +39,10 @@ class TrendsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text('Ошибка загрузки')),
         data: (blocks) => ListView.builder(
-          padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).padding.bottom),
+          padding: EdgeInsets.only(
+            top: blurAppBarTopPadding(context),
+            bottom: 24 + MediaQuery.of(context).padding.bottom,
+          ),
           itemCount: blocks.length,
           itemBuilder: (context, i) {
             final block = blocks[i];

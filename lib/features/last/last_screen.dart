@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/last_item.dart';
 import '../../ui/skin_ext.dart';
+import '../../ui/widgets/blur_app_bar.dart';
 import '../../ui/widgets/font_scaled_body.dart';
 import '../navigation/app_drawer.dart';
 import 'last_controller.dart';
@@ -22,9 +23,11 @@ class LastScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         drawer: const AppDrawer(activePage: 'last'),
         drawerEdgeDragWidth: 80,
-        appBar: AppBar(
+        appBar: buildBlurAppBar(
+          context,
           title: const Text('Ласты'),
           actions: [
             if (skip > 0)
@@ -49,7 +52,13 @@ class LastScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: FontScaledBody(
+        body: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            padding: MediaQuery.of(context).padding.copyWith(
+              top: blurAppBarTopPadding(context, bottomHeight: kTextTabBarHeight),
+            ),
+          ),
+          child: FontScaledBody(
           child: async.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
@@ -85,6 +94,7 @@ class LastScreen extends ConsumerWidget {
             },
           ),
         ),
+        ),
       ),
     );
   }
@@ -105,7 +115,7 @@ class _CommentsTab extends StatelessWidget {
       onRefresh: onRefresh,
       child: ListView.builder(
         padding: EdgeInsets.only(
-          top: 8,
+          top: MediaQuery.of(context).padding.top,
           bottom: 8 + MediaQuery.of(context).padding.bottom,
         ),
         itemCount: comments.length,
@@ -246,7 +256,12 @@ class _ImagesTab extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: GridView.builder(
-        padding: const EdgeInsets.all(4),
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top,
+          left: 4,
+          right: 4,
+          bottom: 4,
+        ),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 4,

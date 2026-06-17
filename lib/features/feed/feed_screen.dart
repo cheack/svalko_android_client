@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +13,7 @@ import 'widgets/calendar_sheet.dart';
 import 'widgets/page_nav_panel.dart';
 import 'widgets/post_card.dart';
 import '../../ui/skin_ext.dart';
+import '../../ui/widgets/blur_app_bar.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key, this.source = const MainFeed()});
@@ -173,23 +173,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       extendBodyBehindAppBar: true,
       drawer: AppDrawer(activePage: widget.source is MainFeed ? 'home' : null),
       drawerEdgeDragWidth: 80,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        systemOverlayStyle: ThemeData.estimateBrightnessForColor(
-                    Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
-                  ) == Brightness.dark
-                  ? SystemUiOverlayStyle.light
-                  : SystemUiOverlayStyle.dark,
-        flexibleSpace: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              color: (Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.surface).withValues(alpha: 0.85),
-            ),
-          ),
-        ),
+      appBar: buildBlurAppBar(
+        context,
         title: Text(_title(s)),
         actions: [
           IconButton(
@@ -248,9 +233,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               },
               child: ListView.builder(
                 controller: _scrollController,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + kToolbarHeight,
-                ),
+                padding: EdgeInsets.only(top: blurAppBarTopPadding(context)),
                 itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
                 itemBuilder: (ctx, i) {
                   if (i == state.posts.length) {

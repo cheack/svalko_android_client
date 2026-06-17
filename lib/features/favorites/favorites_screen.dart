@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/settings_storage.dart';
 import '../../models/author.dart';
+import '../../ui/widgets/blur_app_bar.dart';
 import '../../models/comment.dart';
 import '../post/widgets/comment_tile.dart';
 import '../navigation/app_drawer.dart';
@@ -160,9 +161,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       length: 2,
       child: ScaffoldMessenger(
         child: Scaffold(
+          extendBodyBehindAppBar: true,
           drawer: const AppDrawer(activePage: 'favorites'),
           drawerEdgeDragWidth: 80,
-          appBar: AppBar(
+          appBar: buildBlurAppBar(
+            context,
             title: const Text('Избранное'),
             actions: [
               PopupMenuButton<_MenuAction>(
@@ -216,6 +219,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           body: MediaQuery(
             data: MediaQuery.of(context).copyWith(
               textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
+              padding: MediaQuery.of(context).padding.copyWith(
+                top: blurAppBarTopPadding(context, bottomHeight: kTextTabBarHeight),
+              ),
             ),
             child: TabBarView(
               children: [
@@ -264,10 +270,7 @@ class _PostsTabState extends State<_PostsTab> with _DeletableItems<_PostsTab> {
         ),
       );
     }
-    return MediaQuery.removePadding(
-      context: context,
-      removeTop: true,
-      child: ListView.separated(
+    return ListView.separated(
         itemCount: widget.favorites.length,
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
@@ -327,8 +330,7 @@ class _PostsTabState extends State<_PostsTab> with _DeletableItems<_PostsTab> {
 
           return wrapAnimated(fav.id, tile, () => widget.notifier.remove(fav.id));
         },
-      ),
-    );
+      );
   }
 }
 
@@ -376,11 +378,11 @@ class _CommentsTabState extends ConsumerState<_CommentsTab>
       );
     }
 
-    return MediaQuery.removePadding(
-      context: context,
-      removeTop: true,
-      child: ListView.separated(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 12),
+    return ListView.separated(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top,
+          bottom: MediaQuery.of(context).padding.bottom + 12,
+        ),
         itemCount: comments.length,
         separatorBuilder: (_, _) => const SizedBox(height: 4),
         itemBuilder: (context, index) {
@@ -401,8 +403,7 @@ class _CommentsTabState extends ConsumerState<_CommentsTab>
 
           return wrapAnimated(fav.id, tile, () => notifier.remove(fav.id));
         },
-      ),
-    );
+      );
   }
 }
 

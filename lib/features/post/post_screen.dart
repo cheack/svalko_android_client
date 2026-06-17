@@ -22,6 +22,7 @@ import '../../models/post.dart';
 import '../../ui/widgets/inline_spinner.dart';
 import '../../models/feed_source.dart';
 import '../../ui/skin_ext.dart';
+import '../../ui/widgets/blur_app_bar.dart';
 import '../../ui/widgets/kum_shake.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
@@ -323,7 +324,9 @@ class _PostScreenState extends ConsumerState<PostScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
+      extendBodyBehindAppBar: true,
+      appBar: buildBlurAppBar(
+        context,
         title: Text(post.author.name),
         actions: [
           if (widget.showShuffle)
@@ -391,7 +394,10 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         child: ListView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(bottom: 88 + MediaQuery.of(context).padding.bottom),
+        padding: EdgeInsets.only(
+          top: blurAppBarTopPadding(context),
+          bottom: 88 + MediaQuery.of(context).padding.bottom,
+        ),
         children: [
           Builder(builder: (ctx) {
             final dividers = Theme.of(ctx).extension<SvalkoSkinExt>()?.cardDividers ?? false;
