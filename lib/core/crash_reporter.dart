@@ -2,20 +2,34 @@ import 'dart:async';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-const _workerUrl = String.fromEnvironment('CRASH_HANDLER_URL');
-const _appSecret = String.fromEnvironment('APP_SECRET');
+const _defaultWorkerUrl = String.fromEnvironment('CRASH_HANDLER_URL');
+const _defaultAppSecret = String.fromEnvironment('APP_SECRET');
 
 class CrashReporter {
-  CrashReporter._();
+  CrashReporter._({
+    Dio? dio,
+    String workerUrl = _defaultWorkerUrl,
+    String appSecret = _defaultAppSecret,
+  })  : _dio = dio ??
+            Dio(BaseOptions(
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 10),
+            )),
+        _workerUrl = workerUrl,
+        _appSecret = appSecret;
 
   static final instance = CrashReporter._();
 
-  final _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
+  @visibleForTesting
+  static CrashReporter test({required Dio dio, String workerUrl = 'http://test', String appSecret = 'secret'}) =>
+      CrashReporter._(dio: dio, workerUrl: workerUrl, appSecret: appSecret);
+
+  final Dio _dio;
+  final String _workerUrl;
+  final String _appSecret;
 
   String? _appVersion;
   String? _deviceInfo;
@@ -43,12 +57,12 @@ class CrashReporter {
     if (_appSecret.isEmpty || _workerUrl.isEmpty) return false;
 
     // Deduplicate — skip if same error reported twice in a row.
-    final hash = '${error.runtimeType}:${stack.toString().substring(0, 120)}';
+    final stackStr = stack.toString();
+    final hash = '${error.runtimeType}:${stackStr.substring(0, stackStr.length.clamp(0, 120))}';
     if (hash == _lastReportedHash) return false;
     _lastReportedHash = hash;
 
-    final stackLines = stack
-        .toString()
+    final stackLines = stackStr
         .split('\n')
         .where((l) => l.trim().isNotEmpty)
         .take(12)
