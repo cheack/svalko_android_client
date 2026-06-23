@@ -97,6 +97,53 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     });
   }
 
+  void _showTagsDialog(BuildContext context, AppStrings s, List<Tag> tags, String? activeTag) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(s.navTags),
+        contentPadding: EdgeInsets.zero,
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            itemCount: tags.length,
+            itemBuilder: (_, i) {
+              final tag = tags[i];
+              final isActive = tag.name == activeTag;
+              return ListTile(
+                dense: true,
+                selected: isActive,
+                title: Text(
+                  '#${tag.name}',
+                  style: isActive ? const TextStyle(fontWeight: FontWeight.bold) : null,
+                ),
+                trailing: tag.count != null
+                    ? Text('${tag.count}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ))
+                    : null,
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pop(); // close drawer
+                  Navigator.of(context).pushNamed('/tag', arguments: tag);
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _openRandom() async {
     if (_loadingRandom) return;
     setState(() => _loadingRandom = true);
@@ -121,181 +168,219 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
 
     final topPadding = MediaQuery.of(context).padding.top;
 
-    return Drawer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            color: theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
-            height: topPadding,
-          ),
-          Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.home_outlined),
-              title: Text(s.navHome),
-              selected: widget.activePage == 'home',
-              onTap: () {
-                ref.read(activeTagProvider.notifier).state = null;
-                Navigator.of(context).popUntil((r) => r.isFirst);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.history_outlined),
-              title: const Text('Ласты'),
-              selected: widget.activePage == 'last',
-              onTap: () => _navTo('last', () {
-                ref.read(lastProvider.notifier).resetToFirst();
-                Navigator.of(context).pushNamed('/last');
-              }),
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('Написать!'),
-              onTap: () async {
-                Navigator.of(context).pop();
-                final api = ref.read(apiProvider);
-                final settingsBox = ref.read(settingsBoxProvider);
-                if (!context.mounted) return;
-                final sent = await showNewPostSheet(context, api, settingsBox);
-                if (sent && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Пост отправлен')),
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: _loadingRandom
-                  ? const InlineSpinner()
-                  : const Icon(Icons.shuffle_outlined),
-              title: Text(s.navRandom),
-              onTap: _openRandom,
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(s.navImages),
-              selected: widget.activePage == 'images',
-              onTap: () => _navTo('images', () => Navigator.of(context).pushNamed('/images')),
-            ),
-            ListTile(
-              leading: const Icon(Icons.bookmark_outline),
-              title: const Text('Избранное'),
-              selected: widget.activePage == 'favorites',
-              onTap: () => _navTo('favorites', () => Navigator.of(context).pushNamed('/favorites')),
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-              child: Text(
-                s.navTags,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.secondary,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-            Expanded(
-              child: tagsAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (_, _) => const Center(child: Text('Ошибка загрузки')),
-                data: (tags) {
-                  _tags = tags;
-                  return ListView.builder(
-                    controller: _tagsScrollController,
-                    padding: EdgeInsets.zero,
-                    itemCount: tags.length,
-                    itemBuilder: (ctx, i) {
-                      final tag = tags[i];
-                      final isActive = tag.name == activeTag;
-                      return ListTile(
-                        dense: true,
-                        visualDensity: const VisualDensity(vertical: -2),
-                        selected: isActive,
-                        title: Text(
-                          '#${tag.name}',
-                          style: isActive
-                              ? const TextStyle(fontWeight: FontWeight.bold)
-                              : null,
-                        ),
-                        trailing: tag.count != null
-                            ? Text(
-                                '${tag.count}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.outline,
-                                ),
-                              )
-                            : null,
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context)
-                              .pushNamed('/tag', arguments: tag);
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: const Text('Настройки'),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/settings');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('О приложении'),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/about');
-              },
-            ),
-            ListTile(
-              leading: _fojjerLoading
-                  ? const InlineSpinner()
-                  : const Icon(Icons.campaign_outlined),
-              title: Text(_fojjerText),
-              onTap: _shoutFojjer,
-            ),
-            const Divider(height: 1),
-            InkWell(
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/trends');
-              },
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 10, 16, 10 + MediaQuery.of(context).padding.bottom),
-                child: Row(
-                  children: [
-                    CachedNetworkImage(
-                      imageUrl: '${Config.baseUrl}/trends_images.php?informer=1',
-                      width: 110,
-                      height: 38,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, _, _) => const SizedBox(width: 110, height: 38),
-                    ),
-                    const SizedBox(width: 4),
-                    CachedNetworkImage(
-                      imageUrl: '${Config.baseUrl}/trends_images.php?informer=1&mode=1',
-                      width: 60,
-                      height: 38,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, _, _) => const SizedBox(width: 60, height: 38),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          )),
-        ],
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    final bottomItems = [
+      const Divider(height: 1),
+      ListTile(
+        leading: const Icon(Icons.settings_outlined),
+        title: const Text('Настройки'),
+        onTap: () {
+          Navigator.of(context).pop();
+          Navigator.of(context).pushNamed('/settings');
+        },
       ),
+      ListTile(
+        leading: const Icon(Icons.info_outline),
+        title: const Text('О приложении'),
+        onTap: () {
+          Navigator.of(context).pop();
+          Navigator.of(context).pushNamed('/about');
+        },
+      ),
+      ListTile(
+        leading: _fojjerLoading
+            ? const InlineSpinner()
+            : const Icon(Icons.campaign_outlined),
+        title: Text(_fojjerText),
+        onTap: _shoutFojjer,
+      ),
+      const Divider(height: 1),
+      InkWell(
+        onTap: () {
+          Navigator.of(context).pop();
+          Navigator.of(context).pushNamed('/trends');
+        },
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 10, 16, 10 + bottomPadding),
+          child: Row(
+            children: [
+              CachedNetworkImage(
+                imageUrl: '${Config.baseUrl}/trends_images.php?informer=1',
+                width: 110,
+                height: 38,
+                fit: BoxFit.cover,
+                errorWidget: (_, _, _) => const SizedBox(width: 110, height: 38),
+              ),
+              const SizedBox(width: 4),
+              CachedNetworkImage(
+                imageUrl: '${Config.baseUrl}/trends_images.php?informer=1&mode=1',
+                width: 60,
+                height: 38,
+                fit: BoxFit.cover,
+                errorWidget: (_, _, _) => const SizedBox(width: 60, height: 38),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    final topNavItems = <Widget>[
+      ListTile(
+        leading: const Icon(Icons.home_outlined),
+        title: Text(s.navHome),
+        selected: widget.activePage == 'home',
+        onTap: () {
+          ref.read(activeTagProvider.notifier).state = null;
+          Navigator.of(context).popUntil((r) => r.isFirst);
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.history_outlined),
+        title: const Text('Ласты'),
+        selected: widget.activePage == 'last',
+        onTap: () => _navTo('last', () {
+          ref.read(lastProvider.notifier).resetToFirst();
+          Navigator.of(context).pushNamed('/last');
+        }),
+      ),
+      ListTile(
+        leading: const Icon(Icons.edit_outlined),
+        title: const Text('Написать!'),
+        onTap: () async {
+          Navigator.of(context).pop();
+          final api = ref.read(apiProvider);
+          final settingsBox = ref.read(settingsBoxProvider);
+          if (!context.mounted) return;
+          final sent = await showNewPostSheet(context, api, settingsBox);
+          if (sent && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Пост отправлен')),
+            );
+          }
+        },
+      ),
+      ListTile(
+        leading: _loadingRandom
+            ? const InlineSpinner()
+            : const Icon(Icons.shuffle_outlined),
+        title: Text(s.navRandom),
+        onTap: _openRandom,
+      ),
+      ListTile(
+        leading: const Icon(Icons.photo_library_outlined),
+        title: Text(s.navImages),
+        selected: widget.activePage == 'images',
+        onTap: () => _navTo('images', () => Navigator.of(context).pushNamed('/images')),
+      ),
+      ListTile(
+        leading: const Icon(Icons.bookmark_outline),
+        title: const Text('Избранное'),
+        selected: widget.activePage == 'favorites',
+        onTap: () => _navTo('favorites', () => Navigator.of(context).pushNamed('/favorites')),
+      ),
+    ];
+
+    return Drawer(
+      child: LayoutBuilder(builder: (context, constraints) {
+        final topBar = Container(
+          color: theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
+          height: topPadding,
+        );
+
+        // Portrait: enough room to show all fixed items + tags list.
+        if (constraints.maxHeight >= 600) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              topBar,
+              ...topNavItems,
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                child: Text(
+                  s.navTags,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.secondary,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: tagsAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (_, _) => const Center(child: Text('Ошибка загрузки')),
+                  data: (tags) {
+                    _tags = tags;
+                    return ListView.builder(
+                      controller: _tagsScrollController,
+                      padding: EdgeInsets.zero,
+                      itemCount: tags.length,
+                      itemBuilder: (ctx, i) {
+                        final tag = tags[i];
+                        final isActive = tag.name == activeTag;
+                        return ListTile(
+                          dense: true,
+                          visualDensity: const VisualDensity(vertical: -2),
+                          selected: isActive,
+                          title: Text(
+                            '#${tag.name}',
+                            style: isActive
+                                ? const TextStyle(fontWeight: FontWeight.bold)
+                                : null,
+                          ),
+                          trailing: tag.count != null
+                              ? Text(
+                                  '${tag.count}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                )
+                              : null,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pushNamed('/tag', arguments: tag);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              ...bottomItems,
+            ],
+          );
+        }
+
+        // Landscape: all items in one scrollable list, tags collapsed.
+        final tagsTile = tagsAsync.when(
+          loading: () => ListTile(leading: const InlineSpinner(), title: Text(s.navTags)),
+          error: (_, _) => ListTile(leading: const Icon(Icons.label_outline), title: Text(s.navTags)),
+          data: (tags) {
+            _tags = tags;
+            return ListTile(
+              leading: const Icon(Icons.label_outline),
+              title: Text(s.navTags),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showTagsDialog(context, s, tags, activeTag),
+            );
+          },
+        );
+
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              topBar,
+              ...topNavItems,
+              const Divider(height: 1),
+              tagsTile,
+              ...bottomItems,
+            ],
+          ),
+        );
+      }),
     );
   }
 }

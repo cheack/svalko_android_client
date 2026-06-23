@@ -195,6 +195,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               onPressed: () async {
                 final source = await showModalBottomSheet<DateFeed>(
                   context: context,
+                  isScrollControlled: true,
                   routeSettings: const RouteSettings(name: '/calendar'),
                   builder: (_) => CalendarSheet(
                     fallbackMonth: state.calendar!,

@@ -25,6 +25,7 @@ class PageNavPanel extends StatelessWidget {
   void _showPicker(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       routeSettings: const RouteSettings(name: '/page-picker'),
       builder: (ctx) => _PagePickerSheet(
         currentPage: currentPage,
@@ -121,6 +122,7 @@ class _PagePickerSheetState extends State<_PagePickerSheet> {
     final page = _value.round();
 
     return SafeArea(
+      child: SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
         child: Column(
@@ -152,6 +154,7 @@ class _PagePickerSheetState extends State<_PagePickerSheet> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

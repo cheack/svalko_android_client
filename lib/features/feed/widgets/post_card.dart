@@ -169,28 +169,31 @@ class _PostCardState extends ConsumerState<PostCard> {
     final postUrl = '${Config.baseUrl}/$id.html';
     await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       routeSettings: const RouteSettings(name: '/post-actions'),
       builder: (sheetCtx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.open_in_browser_outlined),
-              title: Text(s.openInBrowser),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                openInBrowser(context, postUrl);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.share_outlined),
-              title: Text(s.shareLink),
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                Share.share(postUrl);
-              },
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.open_in_browser_outlined),
+                title: Text(s.openInBrowser),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  openInBrowser(context, postUrl);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.share_outlined),
+                title: Text(s.shareLink),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  Share.share(postUrl);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

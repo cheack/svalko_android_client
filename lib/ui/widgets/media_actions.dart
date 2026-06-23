@@ -89,28 +89,31 @@ Future<void> showMediaSheet(
   final s = _s(context);
   return showModalBottomSheet<void>(
     context: context,
+    isScrollControlled: true,
     routeSettings: const RouteSettings(name: '/media-actions'),
     builder: (sheetCtx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(isVideo ? s.saveVideo : s.savePhoto),
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              saveMedia(context, url, isVideo: isVideo);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.share_outlined),
-            title: Text(s.share),
-            onTap: () {
-              Navigator.pop(sheetCtx);
-              shareMedia(context, url, isVideo: isVideo);
-            },
-          ),
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.download_outlined),
+              title: Text(isVideo ? s.saveVideo : s.savePhoto),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                saveMedia(context, url, isVideo: isVideo);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: Text(s.share),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                shareMedia(context, url, isVideo: isVideo);
+              },
+            ),
+          ],
+        ),
       ),
     ),
   );

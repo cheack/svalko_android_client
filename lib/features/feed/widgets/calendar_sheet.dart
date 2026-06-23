@@ -185,6 +185,7 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
         (c.year == limit.year && c.month >= limit.month));
 
     return SafeArea(
+      child: SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         child: Column(
@@ -276,6 +277,7 @@ class _CalendarSheetState extends ConsumerState<CalendarSheet> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

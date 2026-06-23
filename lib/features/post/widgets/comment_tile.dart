@@ -99,28 +99,31 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
     final url = _commentUrl();
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       routeSettings: const RouteSettings(name: '/comment-menu'),
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.open_in_browser_outlined),
-              title: const Text('Открыть в браузере'),
-              onTap: () {
-                Navigator.pop(ctx);
-                openInBrowser(context, url);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.copy_outlined),
-              title: const Text('Скопировать ссылку'),
-              onTap: () {
-                Navigator.pop(ctx);
-                Clipboard.setData(ClipboardData(text: url));
-              },
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.open_in_browser_outlined),
+                title: const Text('Открыть в браузере'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  openInBrowser(context, url);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.copy_outlined),
+                title: const Text('Скопировать ссылку'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Clipboard.setData(ClipboardData(text: url));
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -130,26 +133,29 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
     final url = _commentUrl();
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       routeSettings: const RouteSettings(name: '/comment-styles'),
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'Этот комментарий содержит стили, которые невозможно отобразить правильно.',
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  'Этот комментарий содержит стили, которые невозможно отобразить правильно.',
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.open_in_browser_outlined),
-              title: const Text('Открыть в браузере'),
-              onTap: () {
-                Navigator.pop(ctx);
-                openInBrowser(context, url);
-              },
-            ),
-          ],
+              ListTile(
+                leading: const Icon(Icons.open_in_browser_outlined),
+                title: const Text('Открыть в браузере'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  openInBrowser(context, url);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
