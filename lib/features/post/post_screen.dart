@@ -436,28 +436,36 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                     ),
                   ),
                   if (post.imageUrls.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: ImageCarousel(urls: post.imageUrls, maxHeight: 480),
+                    SelectionContainer.disabled(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: ImageCarousel(urls: post.imageUrls, maxHeight: 480),
+                      ),
                     ),
                   for (final url in post.videoUrls)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: GestureDetector(
-                        onLongPress: () => showMediaSheet(context, url, isVideo: true),
-                        child: VideoPlayerWidget(url: url),
+                    SelectionContainer.disabled(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: GestureDetector(
+                          onLongPress: () => showMediaSheet(context, url, isVideo: true),
+                          child: VideoPlayerWidget(url: url),
+                        ),
                       ),
                     ),
                   for (final link in post.externalLinks)
                     if (VideoEmbedPlayer.isSupported(link))
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: VideoEmbedPlayer(url: link),
+                      SelectionContainer.disabled(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: VideoEmbedPlayer(url: link),
+                        ),
                       )
                     else if (VideoLinkCard.isSupported(link))
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: VideoLinkCard(url: link),
+                      SelectionContainer.disabled(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: VideoLinkCard(url: link),
+                        ),
                       ),
                   if (post.textHtml != null && post.textHtml!.isNotEmpty)
                     Padding(

@@ -275,36 +275,42 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                     if (widget.compact)
                       for (final url in _extractVideoLinks(comment.text!))
                         if (VideoLinkCard.isSupported(url))
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: VideoLinkCard(url: url),
+                          SelectionContainer.disabled(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: VideoLinkCard(url: url),
+                            ),
                           ),
                   ],
                   for (final url in comment.imageUrls) ...[
                     const SizedBox(height: 6),
-                    GestureDetector(
-                      onTap: () => showFullscreenImage(context, url),
-                      onLongPress: () => showMediaSheet(context, url),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxHeight: widget.compact ? 260 : 360),
-                        child: MediaImage(
-                          url: url,
-                          fit: BoxFit.contain,
-                          loadingWidget: const ShimmerPlaceholder(),
+                    SelectionContainer.disabled(
+                      child: GestureDetector(
+                        onTap: () => showFullscreenImage(context, url),
+                        onLongPress: () => showMediaSheet(context, url),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: widget.compact ? 260 : 360),
+                          child: MediaImage(
+                            url: url,
+                            fit: BoxFit.contain,
+                            loadingWidget: const ShimmerPlaceholder(),
+                          ),
                         ),
                       ),
                     ),
                   ],
                   for (final url in comment.videoUrls) ...[
                     const SizedBox(height: 6),
-                    GestureDetector(
-                      onLongPress: () => showMediaSheet(context, url, isVideo: true),
-                      child: widget.compact
-                          ? ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 260),
-                              child: VideoPlayerWidget(url: url),
-                            )
-                          : VideoPlayerWidget(url: url),
+                    SelectionContainer.disabled(
+                      child: GestureDetector(
+                        onLongPress: () => showMediaSheet(context, url, isVideo: true),
+                        child: widget.compact
+                            ? ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 260),
+                                child: VideoPlayerWidget(url: url),
+                              )
+                            : VideoPlayerWidget(url: url),
+                      ),
                     ),
                   ],
                   const SizedBox(height: 8),
