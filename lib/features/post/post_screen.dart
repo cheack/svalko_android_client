@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/l10n.dart';
+import '../../core/open_url.dart';
 import '../../core/settings_storage.dart';
-import '../../features/favorites/favorites_storage.dart';
 import '../../ui/widgets/post_action_buttons.dart';
 import '../feed/feed_controller.dart';
 import 'post_controller.dart';
@@ -340,6 +340,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                 icon: const Icon(Icons.shuffle),
                 onPressed: _openRandom,
               ),
+          PostFavButton(post: post),
           _PostMenu(post: post, scrollController: _scrollController),
         ],
       ),
@@ -565,16 +566,16 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   }
 }
 
-class _PostMenu extends ConsumerStatefulWidget {
+class _PostMenu extends StatefulWidget {
   const _PostMenu({required this.post, required this.scrollController});
   final Post post;
   final ScrollController scrollController;
 
   @override
-  ConsumerState<_PostMenu> createState() => _PostMenuState();
+  State<_PostMenu> createState() => _PostMenuState();
 }
 
-class _PostMenuState extends ConsumerState<_PostMenu> {
+class _PostMenuState extends State<_PostMenu> {
   final _menuController = MenuController();
 
   @override
@@ -593,16 +594,9 @@ class _PostMenuState extends ConsumerState<_PostMenu> {
     if (_menuController.isOpen) _menuController.close();
   }
 
-  void _toggleFav() {
-    ref.read(favoritesProvider.notifier).toggle(FavoritePost.fromPost(widget.post));
-  }
-
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
-    final isFav = ref.watch(
-      favoritesProvider.select((list) => list.any((f) => f.id == post.id)),
-    );
     return MenuAnchor(
       controller: _menuController,
       menuChildren: [
@@ -612,9 +606,9 @@ class _PostMenuState extends ConsumerState<_PostMenu> {
           child: const Text('Поделиться'),
         ),
         MenuItemButton(
-          leadingIcon: Icon(isFav ? Icons.bookmark : Icons.bookmark_outline),
-          onPressed: _toggleFav,
-          child: Text(isFav ? 'Убрать из избранного' : 'В избранное'),
+          leadingIcon: const Icon(Icons.open_in_browser_outlined),
+          onPressed: () => openInBrowser(context, PostShareButton.postUrl(post.id)),
+          child: const Text('Открыть в браузере'),
         ),
       ],
       builder: (_, controller, _) => IconButton(
