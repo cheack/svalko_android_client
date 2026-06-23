@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/build_info.dart';
+import '../../../ui/widgets/blur_app_bar.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -29,7 +30,7 @@ class _AboutScreenState extends State<AboutScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('О приложении')),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        padding: EdgeInsets.symmetric(horizontal: 24 + landscapeHPadding(context), vertical: 32),
         children: [
           Image.asset('assets/splash.png', height: 72, fit: BoxFit.contain),
           const SizedBox(height: 24),

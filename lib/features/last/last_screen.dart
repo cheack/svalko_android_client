@@ -117,6 +117,8 @@ class _CommentsTab extends StatelessWidget {
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top,
           bottom: 8 + MediaQuery.of(context).padding.bottom,
+          left: landscapeHPadding(context),
+          right: landscapeHPadding(context),
         ),
         itemCount: comments.length,
         itemBuilder: (ctx, i) {
@@ -262,8 +264,8 @@ class _ImagesTab extends StatelessWidget {
           right: 4,
           bottom: 4,
         ),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: MediaQuery.of(context).orientation == Orientation.landscape ? 4 : 3,
           crossAxisSpacing: 4,
           mainAxisSpacing: 4,
           childAspectRatio: 1,

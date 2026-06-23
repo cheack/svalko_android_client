@@ -398,6 +398,8 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         padding: EdgeInsets.only(
           top: blurAppBarTopPadding(context),
           bottom: 88 + MediaQuery.of(context).padding.bottom,
+          left: landscapeHPadding(context),
+          right: landscapeHPadding(context),
         ),
         children: [
           Builder(builder: (ctx) {

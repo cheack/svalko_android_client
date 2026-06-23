@@ -42,6 +42,8 @@ class TrendsScreen extends ConsumerWidget {
           padding: EdgeInsets.only(
             top: blurAppBarTopPadding(context),
             bottom: 24 + MediaQuery.of(context).padding.bottom,
+            left: landscapeHPadding(context),
+            right: landscapeHPadding(context),
           ),
           itemCount: blocks.length,
           itemBuilder: (context, i) {

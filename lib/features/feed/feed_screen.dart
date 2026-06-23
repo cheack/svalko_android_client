@@ -234,7 +234,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               },
               child: ListView.builder(
                 controller: _scrollController,
-                padding: EdgeInsets.only(top: blurAppBarTopPadding(context)),
+                padding: EdgeInsets.only(
+                  top: blurAppBarTopPadding(context),
+                  left: landscapeHPadding(context),
+                  right: landscapeHPadding(context),
+                ),
                 itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
                 itemBuilder: (ctx, i) {
                   if (i == state.posts.length) {

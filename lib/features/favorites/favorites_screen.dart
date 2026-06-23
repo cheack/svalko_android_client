@@ -271,6 +271,11 @@ class _PostsTabState extends State<_PostsTab> with _DeletableItems<_PostsTab> {
       );
     }
     return ListView.separated(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top,
+          left: landscapeHPadding(context),
+          right: landscapeHPadding(context),
+        ),
         itemCount: widget.favorites.length,
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
@@ -382,6 +387,8 @@ class _CommentsTabState extends ConsumerState<_CommentsTab>
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top,
           bottom: MediaQuery.of(context).padding.bottom + 12,
+          left: landscapeHPadding(context),
+          right: landscapeHPadding(context),
         ),
         itemCount: comments.length,
         separatorBuilder: (_, _) => const SizedBox(height: 4),

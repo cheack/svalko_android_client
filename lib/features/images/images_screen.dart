@@ -123,8 +123,8 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
               },
               childCount: state.items.length,
             ),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).orientation == Orientation.landscape ? 4 : 3,
               mainAxisSpacing: 4,
               crossAxisSpacing: 4,
             ),

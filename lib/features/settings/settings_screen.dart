@@ -17,6 +17,7 @@ import '../../ui/theme.dart';
 import '../feed/widgets/post_card.dart';
 import '../news/news_settings_controller.dart';
 import 'debug_crash_tile.dart';
+import '../../ui/widgets/blur_app_bar.dart';
 import 'debug_news_tile.dart';
 import '../notifications/notification_service.dart';
 import '../post/widgets/comment_tile.dart';
@@ -137,6 +138,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           visualDensity: const VisualDensity(vertical: -2),
         ),
         child: ListView(
+        padding: EdgeInsets.symmetric(horizontal: landscapeHPadding(context)),
         children: [
           // ── Режим ─────────────────────────────────────────────────────────
           const _SectionHeader('Режим'),
