@@ -86,9 +86,29 @@ class _AboutScreenState extends State<AboutScreen> {
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.campaign_outlined),
+            title: const Text('t.me/svalko_android'),
+            subtitle: const Text('Новости и релизы'),
+            onTap: () => launchUrl(
+              Uri.parse('https://t.me/svalko_android'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.forum_outlined),
+            title: const Text('t.me/svalko_android_backlog'),
+            subtitle: const Text('Багрепорты и фичреквесты'),
+            onTap: () => launchUrl(
+              Uri.parse('https://t.me/svalko_android_backlog'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.telegram),
             title: const Text('t.me/svalo4ka'),
-            subtitle: const Text('Telegram'),
+            subtitle: const Text('Общество защиты низкорослых победилов '),
             onTap: () => launchUrl(
               Uri.parse('https://t.me/svalo4ka'),
               mode: LaunchMode.externalApplication,
