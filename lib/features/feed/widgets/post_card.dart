@@ -72,6 +72,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       clipBehavior: Clip.antiAlias,
       shape: dividers ? const RoundedRectangleBorder() : null,
       child: InkWell(
+        onTap: widget.onTap,
         onLongPress: () => _showPostSheet(context, s, widget.post.id),
         child: Stack(
           children: [
