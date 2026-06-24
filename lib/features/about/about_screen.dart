@@ -662,8 +662,8 @@ class _AboutScreenState extends State<AboutScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.language_outlined, key: _linkIconKeys[0]),
-                  title: Text(key: _linkTitleKeys[0], 'svalko.org'),
-                  subtitle: Text(key: _linkSubtitleKeys[0], 'Открыть сайт'),
+                  title: Text(key: _linkTitleKeys[0], 'Открыть сайт'),
+                  subtitle: Text(key: _linkSubtitleKeys[0], 'svalko.org'),
                   onTap: () => launchUrl(
                     Uri.parse('https://svalko.org'),
                     mode: LaunchMode.externalApplication,
@@ -672,8 +672,11 @@ class _AboutScreenState extends State<AboutScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.campaign_outlined, key: _linkIconKeys[1]),
-                  title: Text(key: _linkTitleKeys[1], 't.me/svalko_android'),
-                  subtitle: Text(key: _linkSubtitleKeys[1], 'Новости и релизы'),
+                  title: Text(key: _linkTitleKeys[1], 'Новости и релизы'),
+                  subtitle: Text(
+                    key: _linkSubtitleKeys[1],
+                    't.me/svalko_android',
+                  ),
                   onTap: () => launchUrl(
                     Uri.parse('https://t.me/svalko_android'),
                     mode: LaunchMode.externalApplication,
@@ -684,11 +687,11 @@ class _AboutScreenState extends State<AboutScreen> {
                   leading: Icon(Icons.forum_outlined, key: _linkIconKeys[2]),
                   title: Text(
                     key: _linkTitleKeys[2],
-                    't.me/svalko_android_backlog',
+                    'Багрепорты и фичреквесты',
                   ),
                   subtitle: Text(
                     key: _linkSubtitleKeys[2],
-                    'Багрепорты и фичреквесты',
+                    't.me/svalko_android_backlog',
                   ),
                   onTap: () => launchUrl(
                     Uri.parse('https://t.me/svalko_android_backlog'),
@@ -698,11 +701,11 @@ class _AboutScreenState extends State<AboutScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.telegram, key: _linkIconKeys[3]),
-                  title: Text(key: _linkTitleKeys[3], 't.me/svalo4ka'),
-                  subtitle: Text(
-                    key: _linkSubtitleKeys[3],
+                  title: Text(
+                    key: _linkTitleKeys[3],
                     'Общество защиты низкорослых победилов',
                   ),
+                  subtitle: Text(key: _linkSubtitleKeys[3], 't.me/svalo4ka'),
                   onTap: () => launchUrl(
                     Uri.parse('https://t.me/svalo4ka'),
                     mode: LaunchMode.externalApplication,
