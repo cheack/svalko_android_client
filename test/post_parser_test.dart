@@ -84,7 +84,9 @@ void main() {
     late List<dynamic> comments;
 
     setUpAll(() {
-      final html = File('test/fixtures/youtube_comment_page.html').readAsStringSync();
+      final html = File(
+        'test/fixtures/youtube_comment_page.html',
+      ).readAsStringSync();
       final result = PostParser.parse(html, youtubePostId)!;
       comments = result.comments;
     });
@@ -115,7 +117,9 @@ void main() {
     late List<dynamic> comments;
 
     setUpAll(() {
-      final html = File('test/fixtures/kum_comment_page.html').readAsStringSync();
+      final html = File(
+        'test/fixtures/kum_comment_page.html',
+      ).readAsStringSync();
       final result = PostParser.parse(html, kumPostId)!;
       comments = result.comments;
     });
@@ -140,7 +144,9 @@ void main() {
     late PostParseResult result;
 
     setUpAll(() {
-      final html = File('test/fixtures/kum_pagination_page.html').readAsStringSync();
+      final html = File(
+        'test/fixtures/kum_pagination_page.html',
+      ).readAsStringSync();
       result = PostParser.parse(html, kumPostId)!;
     });
 
@@ -160,6 +166,73 @@ void main() {
       final html = File('test/fixtures/post_page.html').readAsStringSync();
       final r = PostParser.parse(html, postId)!;
       expect(r.pagination.isKum, isFalse);
+    });
+  });
+
+  group('PostParser — media-only post body', () {
+    test('does not keep empty html under image carousel', () {
+      const mediaOnlyPostId = 12345;
+      const html = '''
+        <html><body>
+          <div class="single">
+            <a name="a12345"></a>
+            <div class="info">
+              <span class="author"><a href="?author=tester">tester</a></span>
+              2026-06-24 12:34:56<br/>
+            </div>
+            <div class="text">
+              <a target="_blank" href="javascript:image_view('x', 'foo.jpg')">
+                <img src="/data/thumbs/foo.jpg" />
+              </a>
+              <br/>
+              <br/>
+              <div class="tags"></div>
+            </div>
+          </div>
+        </body></html>
+      ''';
+
+      final result = PostParser.parse(html, mediaOnlyPostId)!;
+
+      expect(
+        result.post.imageUrls,
+        equals(['https://svalko.org/data/foo.jpg']),
+      );
+      expect(result.post.externalLinks, isEmpty);
+      expect(result.post.textHtml, isNull);
+    });
+
+    test('keeps regular external links after media cleanup', () {
+      const postId = 12346;
+      const html = '''
+        <html><body>
+          <div class="single">
+            <a name="a12346"></a>
+            <div class="info">
+              <span class="author"><a href="?author=tester">tester</a></span>
+              2026-06-24 12:34:56<br/>
+            </div>
+            <div class="text">
+              <a href="https://example.com/pic.jpg"><img src="/data/thumb.jpg" /></a>
+              <br/>
+              <br/>
+              <br/>
+              <a href="https://example.com/article">читать дальше</a>
+              <div class="tags"></div>
+            </div>
+          </div>
+        </body></html>
+      ''';
+
+      final result = PostParser.parse(html, postId)!;
+
+      expect(
+        result.post.externalLinks,
+        equals(['https://example.com/article']),
+      );
+      expect(result.post.textHtml, contains('читать дальше'));
+      expect(result.post.textHtml, isNot(contains('pic.jpg')));
+      expect(result.post.textHtml, isNot(startsWith('<br')));
     });
   });
 }

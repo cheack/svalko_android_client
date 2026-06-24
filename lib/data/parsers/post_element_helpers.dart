@@ -66,17 +66,23 @@ String? parseApprovedBy(Element el) =>
 List<String> parseImageUrls(Element el) {
   final textDiv = el.querySelector('.text');
   if (textDiv == null) return const [];
-  return textDiv.querySelectorAll('img').map((img) {
-    final parent = img.parent;
-    if (parent?.classes.contains('video') == true) return '';
-    final href = parent?.attributes['href'] ?? '';
-    final imageViewMatch = _imageViewRe.firstMatch(href);
-    if (imageViewMatch != null) return '${Config.baseUrl}/data/${imageViewMatch.group(1)}';
-    if (parent?.classes.contains('gifplayer') == true && href.isNotEmpty) {
-      return resolveUrl(href);
-    }
-    return resolveUrl(img.attributes['src'] ?? '');
-  }).where((u) => u.isNotEmpty).toList();
+  return textDiv
+      .querySelectorAll('img')
+      .map((img) {
+        final parent = img.parent;
+        if (parent?.classes.contains('video') == true) return '';
+        final href = parent?.attributes['href'] ?? '';
+        final imageViewMatch = _imageViewRe.firstMatch(href);
+        if (imageViewMatch != null) {
+          return '${Config.baseUrl}/data/${imageViewMatch.group(1)}';
+        }
+        if (parent?.classes.contains('gifplayer') == true && href.isNotEmpty) {
+          return resolveUrl(href);
+        }
+        return resolveUrl(img.attributes['src'] ?? '');
+      })
+      .where((u) => u.isNotEmpty)
+      .toList();
 }
 
 List<String> parseVideoUrls(Element el) {
@@ -94,6 +100,7 @@ List<String> parseExternalLinks(Element el) {
   if (textDiv == null) return const [];
   return textDiv
       .querySelectorAll('a[href]')
+      .where((a) => !_isImageOnlyMediaAnchor(a))
       .map((a) => a.attributes['href'] ?? '')
       .where((h) => h.startsWith('http'))
       .toList();
@@ -120,7 +127,9 @@ String? parseText(Element el) {
 
 void stripHtmlComments(Element el) {
   for (final node in el.nodes.toList()) {
-    if (node.nodeType == Node.COMMENT_NODE) node.remove();
+    if (node.nodeType == Node.COMMENT_NODE) {
+      node.remove();
+    }
   }
 }
 
@@ -129,18 +138,82 @@ String? parsePostHtml(Element el) {
   if (textDiv == null) return null;
   final clone = textDiv.clone(true);
   clone.querySelector('.tags')?.remove();
-  for (final img in clone.querySelectorAll('img')) {
-    img.remove();
+  for (final a in clone.querySelectorAll('a').where(_isRenderedMediaAnchor)) {
+    a.remove();
   }
   for (final video in clone.querySelectorAll('video')) {
     video.remove();
   }
-  for (final a in clone.querySelectorAll('a.gifplayer')) {
-    a.remove();
+  for (final img in clone.querySelectorAll('img')) {
+    img.remove();
   }
   stripHtmlComments(clone);
+  _removeEmptyAnchors(clone);
+  _trimEmptyEdges(clone);
+  if (!_hasRenderableHtml(clone)) return null;
   final html = clone.innerHtml.trim();
   return html.isEmpty ? null : html;
+}
+
+bool _isRenderedMediaAnchor(Element a) =>
+    a.classes.contains('gifplayer') ||
+    a.classes.contains('video') ||
+    _isImageOnlyMediaAnchor(a);
+
+bool _isImageOnlyMediaAnchor(Element a) {
+  if (a.localName != 'a' || a.querySelector('img') == null) return false;
+  final clone = a.clone(true);
+  for (final img in clone.querySelectorAll('img')) {
+    img.remove();
+  }
+  return clone.text.replaceAll('\u00a0', ' ').trim().isEmpty;
+}
+
+void _removeEmptyAnchors(Element el) {
+  for (final a in el.querySelectorAll('a').toList()) {
+    if (a.text.replaceAll('\u00a0', ' ').trim().isEmpty &&
+        a.querySelector('img, video') == null) {
+      a.remove();
+    }
+  }
+}
+
+void _trimEmptyEdges(Element el) {
+  bool trimStart;
+  do {
+    trimStart = false;
+    final first = el.nodes.firstOrNull;
+    if (_isIgnorableEdgeNode(first)) {
+      first!.remove();
+      trimStart = true;
+    }
+  } while (trimStart);
+
+  bool trimEnd;
+  do {
+    trimEnd = false;
+    final last = el.nodes.lastOrNull;
+    if (_isIgnorableEdgeNode(last)) {
+      last!.remove();
+      trimEnd = true;
+    }
+  } while (trimEnd);
+}
+
+bool _isIgnorableEdgeNode(Node? node) {
+  if (node == null) return false;
+  if (node.nodeType == Node.TEXT_NODE) {
+    return (node.text ?? '').replaceAll('\u00a0', ' ').trim().isEmpty;
+  }
+  return node is Element && node.localName == 'br';
+}
+
+bool _hasRenderableHtml(Element el) {
+  if (el.text.replaceAll('\u00a0', ' ').trim().isNotEmpty) return true;
+  return el.querySelector(
+        'img, video, iframe, audio, table, ul, ol, blockquote, pre, code',
+      ) !=
+      null;
 }
 
 /// Parses which vote values are available for [postId] from the vote span.
@@ -189,7 +262,8 @@ List<int> parseAvailableVotes(Element el, int postId) {
   final borodaSpan = rateDiv.querySelector('#boroda_voted_$postId');
   bool? boroda;
   if (borodaSpan != null) {
-    final hidden = borodaSpan.attributes['style']?.contains('display: none') ?? false;
+    final hidden =
+        borodaSpan.attributes['style']?.contains('display: none') ?? false;
     boroda = !hidden && borodaSpan.text.trim().isNotEmpty;
   }
 
