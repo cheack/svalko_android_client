@@ -16,6 +16,8 @@ const _physicsScale = 80.0;
 const _returnDuration = Duration(milliseconds: 650);
 const _dragEnableDelay = Duration(milliseconds: 900);
 const _topThrowPocketHeight = 2400.0;
+const _grenadeBlastRadius = 180.0;
+const _grenadeBlastStrength = 42.0;
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -46,6 +48,8 @@ class _AboutScreenState extends State<AboutScreen> {
   Offset _lastDragPosition = Offset.zero;
   DateTime? _lastDragTime;
   Offset _dragVelocity = Offset.zero;
+  bool _draggingGrenade = false;
+  Offset _grenadePosition = Offset.zero;
 
   final _stackKey = GlobalKey();
   final _logoKey = GlobalKey();
@@ -393,6 +397,7 @@ class _AboutScreenState extends State<AboutScreen> {
   void _cancelEasterEgg() {
     if (_returningHome) return;
     _draggedWord = null;
+    _draggingGrenade = false;
     for (final word in _words) {
       word.returnX = word.x;
       word.returnY = word.y;
@@ -407,6 +412,58 @@ class _AboutScreenState extends State<AboutScreen> {
     _ticker?.dispose();
     _ticker = Ticker(_onTick)..start();
     setState(() {});
+  }
+
+  void _onGrenadePanStart(DragStartDetails details) {
+    if (_returningHome) return;
+    final position = _globalToStack(details.globalPosition);
+    if (position == null) return;
+    setState(() {
+      _draggingGrenade = true;
+      _grenadePosition = position;
+    });
+  }
+
+  void _onGrenadePanUpdate(DragUpdateDetails details) {
+    final position = _globalToStack(details.globalPosition);
+    if (position == null) return;
+    setState(() => _grenadePosition = position);
+  }
+
+  void _onGrenadePanEnd(DragEndDetails details) {
+    _blastAt(_grenadePosition);
+    if (mounted) {
+      setState(() => _draggingGrenade = false);
+    }
+  }
+
+  void _onGrenadePanCancel() {
+    if (mounted) {
+      setState(() => _draggingGrenade = false);
+    }
+  }
+
+  Offset? _globalToStack(Offset globalPosition) {
+    final box = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    return box?.globalToLocal(globalPosition);
+  }
+
+  void _blastAt(Offset center) {
+    for (final word in _words) {
+      final body = word.body;
+      if (body == null || word == _draggedWord) continue;
+      final offset = Offset(word.x - center.dx, word.y - center.dy);
+      final distance = max(offset.distance, 1.0);
+      if (distance > _grenadeBlastRadius) continue;
+
+      word.released = true;
+      body.setType(BodyType.dynamic);
+      final strength =
+          pow(1 - distance / _grenadeBlastRadius, 0.65) * _grenadeBlastStrength;
+      final direction = Vector2(offset.dx / distance, offset.dy / distance);
+      body.linearVelocity.add(direction..scale(strength));
+      body.angularVelocity += (_random.nextDouble() - 0.5) * 24;
+    }
   }
 
   void _onPanStart(DragStartDetails details) {
@@ -679,13 +736,73 @@ class _AboutScreenState extends State<AboutScreen> {
             Positioned(
               top: 8,
               right: 8,
-              child: IconButton(
-                icon: const Icon(Icons.undo),
-                onPressed: _returningHome ? null : _cancelEasterEgg,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _GrenadeButton(
+                    dragging: false,
+                    onPanStart: _onGrenadePanStart,
+                    onPanUpdate: _onGrenadePanUpdate,
+                    onPanEnd: _onGrenadePanEnd,
+                    onPanCancel: _onGrenadePanCancel,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.undo),
+                    onPressed: _returningHome ? null : _cancelEasterEgg,
+                  ),
+                ],
               ),
+            ),
+          if (_easterEggActive && _draggingGrenade)
+            Positioned(
+              left: _grenadePosition.dx - 24,
+              top: _grenadePosition.dy - 24,
+              child: IgnorePointer(child: _GrenadeButton(dragging: true)),
             ),
         ],
       ),
+    );
+  }
+}
+
+class _GrenadeButton extends StatelessWidget {
+  const _GrenadeButton({
+    required this.dragging,
+    this.onPanStart,
+    this.onPanUpdate,
+    this.onPanEnd,
+    this.onPanCancel,
+  });
+
+  final bool dragging;
+  final GestureDragStartCallback? onPanStart;
+  final GestureDragUpdateCallback? onPanUpdate;
+  final GestureDragEndCallback? onPanEnd;
+  final GestureDragCancelCallback? onPanCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final button = Material(
+      color: dragging
+          ? Theme.of(context).colorScheme.primaryContainer
+          : Colors.transparent,
+      shape: const CircleBorder(),
+      child: SizedBox.square(
+        dimension: 48,
+        child: Icon(
+          Icons.local_fire_department_outlined,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
+    );
+
+    if (dragging) return button;
+    return GestureDetector(
+      onPanStart: onPanStart,
+      onPanUpdate: onPanUpdate,
+      onPanEnd: onPanEnd,
+      onPanCancel: onPanCancel,
+      child: button,
     );
   }
 }
