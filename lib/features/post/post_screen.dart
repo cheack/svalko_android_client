@@ -23,6 +23,7 @@ import '../../ui/widgets/inline_spinner.dart';
 import '../../models/feed_source.dart';
 import '../../ui/skin_ext.dart';
 import '../../ui/widgets/blur_app_bar.dart';
+import '../../ui/widgets/marquee_title.dart';
 import '../../ui/widgets/kum_shake.dart';
 
 class PostScreen extends ConsumerStatefulWidget {
@@ -327,7 +328,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
       extendBodyBehindAppBar: true,
       appBar: buildBlurAppBar(
         context,
-        title: Text(post.author.name),
+        title: MarqueeTitle(post.author.name),
         actions: [
           if (widget.showShuffle)
             if (_loadingRandom)

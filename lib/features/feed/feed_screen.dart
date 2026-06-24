@@ -14,6 +14,7 @@ import 'widgets/page_nav_panel.dart';
 import 'widgets/post_card.dart';
 import '../../ui/skin_ext.dart';
 import '../../ui/widgets/blur_app_bar.dart';
+import '../../ui/widgets/marquee_title.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key, this.source = const MainFeed()});
@@ -175,7 +176,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       drawerEdgeDragWidth: 80,
       appBar: buildBlurAppBar(
         context,
-        title: Text(_title(s)),
+        title: MarqueeTitle(_title(s)),
+        titleSpacing: 8,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),

@@ -8,6 +8,7 @@ AppBar buildBlurAppBar(
   List<Widget>? actions,
   Widget? leading,
   PreferredSizeWidget? bottom,
+  double? titleSpacing,
 }) {
   final appBarColor = Theme.of(context).appBarTheme.backgroundColor ??
       Theme.of(context).colorScheme.surface;
@@ -26,6 +27,7 @@ AppBar buildBlurAppBar(
       ),
     ),
     title: title,
+    titleSpacing: titleSpacing,
     actions: actions,
     leading: leading,
     bottom: bottom,
