@@ -101,7 +101,7 @@ class _PostCardState extends ConsumerState<PostCard> {
               ),
             ),
             if (widget.post.imageUrls.isNotEmpty)
-              ImageCarousel(urls: widget.post.imageUrls),
+              ImageCarousel(urls: widget.post.imageUrls, onPostTap: widget.onTap),
             if (widget.post.imageUrls.isEmpty && widget.post.videoUrls.isNotEmpty)
               VideoPlayerWidget(url: widget.post.videoUrls.first),
             for (final link in widget.post.externalLinks)

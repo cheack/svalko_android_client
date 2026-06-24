@@ -13,11 +13,33 @@ import 'media_actions.dart';
 import 'media_load_badge.dart';
 import 'shimmer_placeholder.dart';
 
+/// Returns true if [tap] falls within the rendered image area when [BoxFit.contain]
+/// is applied to an image with [aspectRatio] inside a [containerW]×[containerH] box,
+/// centered (Alignment.center).
+bool isInsideContainedImage(
+    Offset tap, double containerW, double containerH, double aspectRatio) {
+  final double imageW, imageH;
+  if (containerW / containerH >= aspectRatio) {
+    imageH = containerH;
+    imageW = containerH * aspectRatio;
+  } else {
+    imageW = containerW;
+    imageH = containerW / aspectRatio;
+  }
+  final left = (containerW - imageW) / 2;
+  final top = (containerH - imageH) / 2;
+  return tap.dx >= left &&
+      tap.dx <= left + imageW &&
+      tap.dy >= top &&
+      tap.dy <= top + imageH;
+}
+
 class ImageCarousel extends StatefulWidget {
-  const ImageCarousel({super.key, required this.urls, this.maxHeight = 320});
+  const ImageCarousel({super.key, required this.urls, this.maxHeight = 320, this.onPostTap});
 
   final List<String> urls;
   final double maxHeight;
+  final VoidCallback? onPostTap;
 
   @override
   State<ImageCarousel> createState() => _ImageCarouselState();
@@ -26,6 +48,8 @@ class ImageCarousel extends StatefulWidget {
 class _ImageCarouselState extends State<ImageCarousel> {
   int _current = 0;
   late final PageController _pageController;
+  final Map<int, double> _aspectRatios = {};
+  Offset _lastTapPosition = Offset.zero;
 
   @override
   void initState() {
@@ -39,8 +63,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
     super.dispose();
   }
 
-  Widget _image(String url, {required BoxFit fit, Alignment alignment = Alignment.topCenter, Widget? loadingWidget}) =>
-      MediaImage(url: url, fit: fit, alignment: alignment, loadingWidget: loadingWidget);
+  Widget _image(String url, {required BoxFit fit, Alignment alignment = Alignment.topCenter, Widget? loadingWidget, void Function(Size)? onSize}) =>
+      MediaImage(url: url, fit: fit, alignment: alignment, loadingWidget: loadingWidget, onSize: onSize);
 
   @override
   Widget build(BuildContext context) {
@@ -69,14 +93,36 @@ class _ImageCarouselState extends State<ImageCarousel> {
           constraints: BoxConstraints(maxHeight: widget.maxHeight),
           child: PageView.builder(
                   controller: _pageController,
+                  physics: const _SnappyPagePhysics(),
                   itemCount: urls.length,
                   onPageChanged: (i) => setState(() => _current = i),
                   itemBuilder: (context, i) {
                     final url = urls[i];
-                    return GestureDetector(
-                      onTap: () => showFullscreenCarousel(context, urls, i),
-                      onLongPress: () => showMediaSheet(context, url),
-                      child: _image(url, fit: BoxFit.contain, alignment: Alignment.center),
+                    return LayoutBuilder(
+                      builder: (context, constraints) => GestureDetector(
+                        onTap: () {
+                          final ratio = _aspectRatios[i];
+                          if (ratio != null &&
+                              !isInsideContainedImage(
+                                _lastTapPosition,
+                                constraints.maxWidth,
+                                constraints.maxHeight,
+                                ratio,
+                              )) {
+                            widget.onPostTap?.call();
+                          } else {
+                            showFullscreenCarousel(context, urls, i);
+                          }
+                        },
+                        onTapDown: (details) => _lastTapPosition = details.localPosition,
+                        onLongPress: () => showMediaSheet(context, url),
+                        child: _image(
+                          url,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                          onSize: (size) => _aspectRatios[i] = size.width / size.height,
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -90,8 +136,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
                 ? _NavArrow(
                     icon: Icons.chevron_left,
                     onTap: () => _pageController.previousPage(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
                     ),
                   )
                 : const SizedBox.shrink(),
@@ -104,8 +150,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
                 ? _NavArrow(
                     icon: Icons.chevron_right,
                     onTap: () => _pageController.nextPage(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
                     ),
                   )
                 : const SizedBox.shrink(),
@@ -144,6 +190,21 @@ class _ImageCarouselState extends State<ImageCarousel> {
   }
 }
 
+class _SnappyPagePhysics extends PageScrollPhysics {
+  const _SnappyPagePhysics({super.parent});
+
+  @override
+  _SnappyPagePhysics applyTo(ScrollPhysics? ancestor) =>
+      _SnappyPagePhysics(parent: buildParent(ancestor));
+
+  @override
+  SpringDescription get spring => SpringDescription.withDampingRatio(
+        mass: 0.5,
+        stiffness: 500.0,
+        ratio: 1.1,
+      );
+}
+
 class _NavArrow extends StatelessWidget {
   const _NavArrow({required this.icon, required this.onTap});
 
@@ -175,12 +236,14 @@ class MediaImage extends ConsumerStatefulWidget {
     required this.fit,
     this.alignment = Alignment.topCenter,
     this.loadingWidget,
+    this.onSize,
   });
 
   final String url;
   final BoxFit fit;
   final Alignment alignment;
   final Widget? loadingWidget;
+  final void Function(Size)? onSize;
 
   @override
   ConsumerState<MediaImage> createState() => MediaImageState();
@@ -192,6 +255,7 @@ const int _kMaxCachedGifs = 4;
 class MediaImageState extends ConsumerState<MediaImage>
     with SingleTickerProviderStateMixin {
   bool _readyLogged = false;
+  bool _sizeCaptured = false;
   late final GifController? _gifController;
   File? _gifFile;
   double? _downloadProgress;
@@ -366,6 +430,18 @@ class MediaImageState extends ConsumerState<MediaImage>
         if (!_readyLogged) {
           _readyLogged = true;
           AppLogger.instance.network('img ready: $name');
+        }
+        if (!_sizeCaptured && widget.onSize != null) {
+          _sizeCaptured = true;
+          imageProvider.resolve(const ImageConfiguration()).addListener(
+            ImageStreamListener(
+              (info, _) => widget.onSize!(Size(
+                info.image.width.toDouble(),
+                info.image.height.toDouble(),
+              )),
+              onError: (_, _) {},
+            ),
+          );
         }
         return Image(
           image: imageProvider,
