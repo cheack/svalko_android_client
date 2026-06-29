@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "661536931806",
+    "project_id": "svalko",
+    "storage_bucket": "svalko.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:661536931806:android:eb72d0daf31ec33786a74f",
+        "android_client_info": {
+          "package_name": "org.svalko.svalko_client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN0Aq85BiQcv_eWNh8XGADq8xvtAfjE2c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:661536931806:android:360c75fcd87abf1486a74f",
+        "android_client_info": {
+          "package_name": "org.svalko.svalko_client.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN0Aq85BiQcv_eWNh8XGADq8xvtAfjE2c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

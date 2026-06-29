@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -133,6 +134,30 @@ class NotificationService {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<void> showPush(RemoteMessage message) async {
+    await initialize();
+    final notification = message.notification;
+    if (notification == null) return;
+
+    final title = notification.title ?? '';
+    final body = notification.body ?? '';
+
+    await _plugin.show(
+      id: message.hashCode,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          AppNotificationChannels.news.id,
+          AppNotificationChannels.news.name,
+          channelDescription: AppNotificationChannels.news.description,
+          styleInformation: BigTextStyleInformation(body),
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+    );
   }
 
   void _handleNotificationResponse(NotificationResponse response) {

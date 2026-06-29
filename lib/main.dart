@@ -3,6 +3,9 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:app_links/app_links.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +38,14 @@ void main() {
         CrashReporter.instance.report(error, stack, fatal: true);
         return true;
       };
+
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission();
+      await messaging.subscribeToTopic('all');
+      FirebaseMessaging.onMessage.listen(
+        (msg) => NotificationService.instance.showPush(msg),
+      );
 
       await CrashReporter.instance.init();
 
