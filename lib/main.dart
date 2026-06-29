@@ -46,6 +46,14 @@ void main() {
       FirebaseMessaging.onMessage.listen(
         (msg) => NotificationService.instance.showPush(msg),
       );
+      FirebaseMessaging.onMessageOpenedApp.listen(_showPushDialog);
+      messaging.getInitialMessage().then((msg) {
+        if (msg != null) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _showPushDialog(msg),
+          );
+        }
+      });
 
       await CrashReporter.instance.init();
 
@@ -120,6 +128,25 @@ void main() {
       _initDeepLinks();
     },
     (error, stack) => CrashReporter.instance.report(error, stack, fatal: true),
+  );
+}
+
+void _showPushDialog(RemoteMessage message) {
+  final text = message.data['message'] as String?;
+  if (text == null || text.isEmpty) return;
+  final context = navigatorKey.currentContext;
+  if (context == null) return;
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      content: Text(text),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
   );
 }
 
