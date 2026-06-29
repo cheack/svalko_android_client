@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'breadcrumb_collector.dart';
@@ -47,6 +48,7 @@ class CrashReporter {
 
   String? _appVersion;
   String? _deviceInfo;
+  String? _fcmToken;
   String? _lastReportedHash;
 
   Future<void> init() async {
@@ -67,6 +69,7 @@ class CrashReporter {
         final di = await DeviceInfoPlugin().iosInfo;
         _deviceInfo = '${di.utsname.machine}, iOS ${di.systemVersion}';
       }
+      _fcmToken = await FirebaseMessaging.instance.getToken();
     } catch (_) {}
   }
 
@@ -94,6 +97,7 @@ class CrashReporter {
           'stack': stackLines,
           'version': _appVersion ?? 'unknown',
           'device': _deviceInfo ?? 'unknown',
+          'fcm_token': _fcmToken,
           'fatal': fatal,
           'breadcrumbs': _breadcrumbs.snapshot(),
         },
