@@ -53,7 +53,11 @@ class CrashReporter {
     if (_appSecret.isEmpty || _workerUrl.isEmpty) return;
     try {
       final info = await PackageInfo.fromPlatform();
-      _appVersion = '${info.version}+${info.buildNumber}';
+      final store = info.installerStore;
+      final source = store == 'com.android.vending'
+          ? 'Google Play'
+          : (store == null || store.isEmpty ? 'manual install' : store);
+      _appVersion = '${info.version}+${info.buildNumber} ($source)';
 
       if (Platform.isAndroid) {
         final di = await DeviceInfoPlugin().androidInfo;
