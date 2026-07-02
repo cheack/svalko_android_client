@@ -406,6 +406,7 @@ class _FullscreenCarouselPageState
               setState(() => _current = i);
             },
             itemBuilder: (_, i) => _FullscreenImageItem(
+              key: ValueKey(widget.urls[i]),
               url: widget.urls[i],
               onScaleChanged: (scale) => _imageScales[i] = scale,
             ),
@@ -417,7 +418,7 @@ class _FullscreenCarouselPageState
 }
 
 class _FullscreenImageItem extends StatefulWidget {
-  const _FullscreenImageItem({required this.url, required this.onScaleChanged});
+  const _FullscreenImageItem({super.key, required this.url, required this.onScaleChanged});
 
   final String url;
   final ValueChanged<double> onScaleChanged;

@@ -64,7 +64,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
   }
 
   Widget _image(String url, {required BoxFit fit, Alignment alignment = Alignment.topCenter, Widget? loadingWidget, void Function(Size)? onSize}) =>
-      MediaImage(url: url, fit: fit, alignment: alignment, loadingWidget: loadingWidget, onSize: onSize);
+      MediaImage(key: ValueKey(url), url: url, fit: fit, alignment: alignment, loadingWidget: loadingWidget, onSize: onSize);
 
   @override
   Widget build(BuildContext context) {

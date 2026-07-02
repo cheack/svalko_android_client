@@ -297,6 +297,7 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                         child: ConstrainedBox(
                           constraints: BoxConstraints(maxHeight: widget.compact ? 260 : 360),
                           child: MediaImage(
+                            key: ValueKey(url),
                             url: url,
                             fit: BoxFit.contain,
                             loadingWidget: const ShimmerPlaceholder(),
