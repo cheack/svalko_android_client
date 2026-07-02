@@ -30,6 +30,7 @@ void main() {
 
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
+        if (details.silent) return;
         CrashReporter.instance
             .report(details.exception, details.stack ?? StackTrace.empty);
       };
