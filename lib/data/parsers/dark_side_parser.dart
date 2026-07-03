@@ -15,11 +15,27 @@ abstract final class DarkSideParser {
     return (posts: _parsePosts(doc), pagination: _parsePagination(doc));
   }
 
+  /// Parses the standalone post page (e.g. reached via /random.html), which
+  /// has no `a[name]` anchor or post-list wrapper — just one content/author row.
+  static DarkSidePost? parseSinglePost(String htmlContent, {required int id}) {
+    final doc = html_parser.parse(htmlContent);
+    final contentTd = doc.querySelector('td[align="left"][width="100%"]');
+    final row = contentTd?.parent;
+    if (contentTd == null || row == null) return null;
+    return _parsePostRow(id: id, contentTd: contentTd, row: row);
+  }
+
   static List<DarkSidePost> _parsePosts(Document doc) {
     final result = <DarkSidePost>[];
     for (final anchor in doc.querySelectorAll('a[name]')) {
       try {
-        final post = _parsePostAnchor(anchor);
+        final name = anchor.attributes['name'] ?? '';
+        if (!name.startsWith('a')) continue;
+        final id = int.tryParse(name.substring(1));
+        final contentTd = anchor.parent;
+        final row = contentTd?.parent;
+        if (id == null || contentTd == null || row == null) continue;
+        final post = _parsePostRow(id: id, contentTd: contentTd, row: row);
         if (post != null) result.add(post);
       } catch (_) {
         // skip broken post, keep parsing the rest
@@ -28,16 +44,11 @@ abstract final class DarkSideParser {
     return result;
   }
 
-  static DarkSidePost? _parsePostAnchor(Element anchor) {
-    final name = anchor.attributes['name'] ?? '';
-    if (!name.startsWith('a')) return null;
-    final id = int.tryParse(name.substring(1));
-    if (id == null) return null;
-
-    final contentTd = anchor.parent;
-    final row = contentTd?.parent;
-    if (contentTd == null || row == null) return null;
-
+  static DarkSidePost? _parsePostRow({
+    required int id,
+    required Element contentTd,
+    required Element row,
+  }) {
     final author = row.querySelector('.author b')?.text.trim() ?? '';
     final publishedAt =
         tryParseDateTime(row.querySelector('.author nobr')?.text.trim() ?? '');

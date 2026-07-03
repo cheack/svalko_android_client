@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/breadcrumb_collector.dart';
 import 'core/settings_storage.dart';
 import 'features/about/about_screen.dart';
+import 'features/dark_side/dark_side_random_post_screen.dart';
 import 'features/favorites/favorites_screen.dart';
 import 'features/feed/feed_screen.dart';
 import 'features/last/last_screen.dart';
@@ -70,6 +71,12 @@ class SvalkoApp extends ConsumerWidget {
               initialCommentPage: initialPage,
               showShuffle: settings.name == '/random-post',
             ),
+          );
+        }
+        if (settings.name == '/dark-side-post') {
+          final id = settings.arguments as int;
+          return MaterialPageRoute(settings: settings,
+            builder: (_) => DarkSideRandomPostScreen(postId: id),
           );
         }
         if (settings.name == '/tag') {

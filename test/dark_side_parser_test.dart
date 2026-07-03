@@ -6,11 +6,13 @@ import 'package:svalko_client/data/parsers/dark_side_parser.dart';
 void main() {
   late String html;
   late String htmlWithImage;
+  late String randomPostHtml;
 
   setUpAll(() {
     html = File('test/fixtures/dark_side_feed_page.html').readAsStringSync();
     htmlWithImage =
         File('test/fixtures/dark_side_feed_page_with_image.html').readAsStringSync();
+    randomPostHtml = File('test/fixtures/dark_side_random_post.html').readAsStringSync();
     Config.setBaseUrl('https://dark.side.of.svalko.org');
   });
 
@@ -55,6 +57,26 @@ void main() {
     test('pagination maxPage is at least currentPage', () {
       final result = DarkSideParser.parse(html);
       expect(result.pagination.maxPage, greaterThanOrEqualTo(result.pagination.currentPage));
+    });
+  });
+
+  group('DarkSideParser.parseSinglePost', () {
+    test('parses the standalone post page (e.g. from /random.html)', () {
+      final post = DarkSideParser.parseSinglePost(randomPostHtml, id: 130343);
+      expect(post, isNotNull);
+      expect(post!.id, 130343);
+      expect(post.author, 'Бибот');
+      expect(post.publishedAt, DateTime(2020, 1, 28, 21, 40, 5));
+      expect(post.externalLinks, isNotEmpty);
+      expect(
+        post.externalLinks.first,
+        startsWith('https://upload.wikimedia.org/'),
+      );
+    });
+
+    test('returns null for markup that does not match the expected shape', () {
+      final post = DarkSideParser.parseSinglePost('<html><body>nope</body></html>', id: 1);
+      expect(post, isNull);
     });
   });
 }

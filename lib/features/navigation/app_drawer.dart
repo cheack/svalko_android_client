@@ -147,9 +147,13 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
   Future<void> _openRandom() async {
     if (_loadingRandom) return;
     setState(() => _loadingRandom = true);
+    final isDarkSide = ref.read(siteModeProvider) == SiteMode.darkSide;
     await navigateToRandomPost(ref, context, (id) {
       Navigator.of(context).pop();
-      Navigator.of(context).pushNamed('/random-post', arguments: id);
+      Navigator.of(context).pushNamed(
+        isDarkSide ? '/dark-side-post' : '/random-post',
+        arguments: id,
+      );
     });
     if (mounted) setState(() => _loadingRandom = false);
   }

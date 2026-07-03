@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/dark_side_post.dart';
 import '../../ui/widgets/blur_app_bar.dart';
-import '../../ui/widgets/image_carousel.dart';
-import '../../ui/widgets/post_header.dart';
 import '../feed/widgets/page_nav_panel.dart';
 import '../navigation/app_drawer.dart';
 import 'dark_side_feed_controller.dart';
+import 'dark_side_post_tile.dart';
 
 class DarkSideFeedScreen extends ConsumerWidget {
   const DarkSideFeedScreen({super.key});
@@ -87,7 +85,7 @@ class DarkSideFeedScreen extends ConsumerWidget {
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
-                return _DarkSidePostTile(post: state.posts[i]);
+                return DarkSidePostTile(post: state.posts[i]);
               },
             ),
           ),
@@ -113,28 +111,4 @@ class DarkSideFeedScreen extends ConsumerWidget {
       ],
     );
   }
-}
-
-class _DarkSidePostTile extends StatelessWidget {
-  const _DarkSidePostTile({required this.post});
-
-  final DarkSidePost post;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PostHeader(
-            author: post.author.isEmpty ? 'Аноним' : post.author,
-            publishedAt: post.publishedAt,
-          ),
-          if (post.imageUrls.isNotEmpty)
-            ImageCarousel(urls: post.imageUrls, maxHeight: 400),
-          if (post.text != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Text(post.text!),
-            ),
-        ],
-      );
 }
