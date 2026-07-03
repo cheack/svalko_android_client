@@ -71,7 +71,8 @@ class DarkSideFeedScreen extends ConsumerWidget {
 
     return Stack(
       children: [
-        RefreshIndicator(
+        SelectionArea(
+          child: RefreshIndicator(
           onRefresh: ctrl.refresh,
           edgeOffset: blurAppBarTopPadding(context),
           child: NotificationListener<ScrollNotification>(
@@ -82,7 +83,11 @@ class DarkSideFeedScreen extends ConsumerWidget {
               return false;
             },
             child: ListView.separated(
-              padding: EdgeInsets.only(top: blurAppBarTopPadding(context)),
+              padding: EdgeInsets.only(
+                top: blurAppBarTopPadding(context),
+                left: landscapeHPadding(context),
+                right: landscapeHPadding(context),
+              ),
               itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
               separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (ctx, i) {
@@ -95,6 +100,7 @@ class DarkSideFeedScreen extends ConsumerWidget {
                 return DarkSidePostTile(post: state.posts[i]);
               },
             ),
+          ),
           ),
         ),
         if (currentPage < maxPage || currentPage > 0)

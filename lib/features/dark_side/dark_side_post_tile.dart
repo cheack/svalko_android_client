@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/open_url.dart';
 import '../../models/dark_side_post.dart';
 import '../../ui/widgets/image_carousel.dart';
+import '../../ui/widgets/post_action_buttons.dart';
 import '../../ui/widgets/post_header.dart' show PostHeader;
 
 class DarkSidePostTile extends StatelessWidget {
@@ -20,7 +21,9 @@ class DarkSidePostTile extends StatelessWidget {
             authorPostCount: post.authorPostCount,
           ),
           if (post.imageUrls.isNotEmpty)
-            ImageCarousel(urls: post.imageUrls, maxHeight: 400),
+            SelectionContainer.disabled(
+              child: ImageCarousel(urls: post.imageUrls, maxHeight: 400),
+            ),
           if (post.hasText)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
@@ -28,17 +31,29 @@ class DarkSidePostTile extends StatelessWidget {
             ),
           if (post.approverComment != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Text(
-                post.approvedBy != null
-                    ? '${post.approvedBy}: ${post.approverComment}'
-                    : post.approverComment!,
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: _DarkSideRichText(
+                parts: [
+                  if (post.approvedBy != null) DarkSideText('${post.approvedBy}: '),
+                  ...post.approverCommentParts,
+                ],
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
                     ?.copyWith(fontStyle: FontStyle.italic),
               ),
             ),
+          SelectionContainer.disabled(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 12, 4),
+              child: Row(
+                children: [
+                  DarkSidePostFavButton(post: post, iconSize: 18, visualDensity: VisualDensity.compact),
+                  PostShareButton(postId: post.id, iconSize: 18, visualDensity: VisualDensity.compact),
+                ],
+              ),
+            ),
+          ),
         ],
       );
 }
@@ -61,7 +76,7 @@ class _DarkSideHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Column(
@@ -98,9 +113,10 @@ class _DarkSideHeader extends StatelessWidget {
 }
 
 class _DarkSideRichText extends StatefulWidget {
-  const _DarkSideRichText({required this.parts});
+  const _DarkSideRichText({required this.parts, this.style});
 
   final List<DarkSideTextPart> parts;
+  final TextStyle? style;
 
   @override
   State<_DarkSideRichText> createState() => _DarkSideRichTextState();
@@ -128,7 +144,7 @@ class _DarkSideRichTextState extends State<_DarkSideRichText> {
     final linkColor = theme.colorScheme.primary;
     return Text.rich(
       TextSpan(
-        style: theme.textTheme.bodyMedium,
+        style: widget.style ?? theme.textTheme.bodyMedium,
         children: [
           for (final part in widget.parts)
             switch (part) {

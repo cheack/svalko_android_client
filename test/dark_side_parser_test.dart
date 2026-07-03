@@ -82,6 +82,15 @@ void main() {
       final post = result.posts.firstWhere((p) => p.id == 224228);
       expect(post.authorPostCount, 2616);
     });
+
+    test('auto-linkifies plain-text URLs in the approver attribution', () {
+      final result = DarkSideParser.parse(htmlWithImage);
+      final post = result.posts.firstWhere((p) => p.id == 223602);
+      expect(post.approverComment, 'рекомендую https://imwerden.de/multi-volume-set-1000047-page-1');
+      final links = post.approverCommentParts.whereType<DarkSideLink>();
+      expect(links, hasLength(1));
+      expect(links.first.url, 'https://imwerden.de/multi-volume-set-1000047-page-1');
+    });
   });
 
   group('DarkSideParser.parseSinglePost', () {

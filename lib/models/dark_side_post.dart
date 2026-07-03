@@ -29,6 +29,7 @@ class DarkSidePost {
     required this.textParts,
     this.approvedBy,
     this.approverComment,
+    this.approverCommentParts = const [],
     this.authorPostCount,
   });
 
@@ -39,6 +40,10 @@ class DarkSidePost {
   final List<String> imageUrls;
   final String? approvedBy;
   final String? approverComment;
+  /// [approverComment] split into text/link parts — plain-text URLs in the
+  /// attribution line (e.g. "Unwaiter: рекомендую https://...") are not real
+  /// `<a>` tags on the site, so they're auto-linkified here.
+  final List<DarkSideTextPart> approverCommentParts;
   /// Total post count for [author], parsed from "Всего постов: N".
   final int? authorPostCount;
 
@@ -50,4 +55,14 @@ class DarkSidePost {
 
   bool get hasText =>
       textParts.any((p) => p is! DarkSideText || p.text.trim().isNotEmpty);
+
+  /// Concatenated plain text of [textParts] (link labels included), for
+  /// previews where clickability doesn't matter.
+  String get plainText => textParts
+      .map((p) => switch (p) {
+            DarkSideText(:final text) => text,
+            DarkSideLink(:final label) => label,
+          })
+      .join()
+      .trim();
 }

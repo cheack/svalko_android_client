@@ -6,6 +6,7 @@ import 'feed_parser.dart' show FeedPaginationInfo;
 import 'post_element_helpers.dart' show tryParseDateTime;
 
 final _imgTagRe = RegExp(r'''<img[^>]*src=["']([^"']+)["'][^>]*>''', caseSensitive: false);
+final _urlRe = RegExp(r'https?://\S+');
 
 abstract final class DarkSideParser {
   static ({List<DarkSidePost> posts, FeedPaginationInfo pagination}) parse(
@@ -59,6 +60,8 @@ abstract final class DarkSideParser {
     final authorPostCount = int.tryParse(authorPostCountMatch?.group(1) ?? '');
 
     final (approvedBy, approverComment) = _parseApproverNote(contentTd.querySelector('i'));
+    final approverCommentParts =
+        approverComment == null ? const <DarkSideTextPart>[] : _linkify(approverComment);
 
     final clone = contentTd.clone(true);
     clone.querySelectorAll('iframe, span.preview, i').forEach((e) => e.remove());
@@ -81,8 +84,24 @@ abstract final class DarkSideParser {
       imageUrls: imageUrls,
       approvedBy: approvedBy,
       approverComment: approverComment,
+      approverCommentParts: approverCommentParts,
       authorPostCount: authorPostCount,
     );
+  }
+
+  /// Splits [text] into plain-text and link parts, auto-linkifying any
+  /// `http(s)://` URL found (the site doesn't render these as real anchors).
+  static List<DarkSideTextPart> _linkify(String text) {
+    final parts = <DarkSideTextPart>[];
+    var last = 0;
+    for (final match in _urlRe.allMatches(text)) {
+      if (match.start > last) parts.add(DarkSideText(text.substring(last, match.start)));
+      final url = match.group(0)!;
+      parts.add(DarkSideLink(url, url));
+      last = match.end;
+    }
+    if (last < text.length) parts.add(DarkSideText(text.substring(last)));
+    return parts;
   }
 
   /// The approver note looks like `<i>Name: comment</i>` — splits on the first colon.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/settings_storage.dart';
+import '../../ui/widgets/blur_app_bar.dart';
 import '../../ui/widgets/inline_spinner.dart';
 import '../feed/feed_controller.dart' show navigateToRandomPost;
 import 'dark_side_post_tile.dart';
@@ -78,6 +79,11 @@ class _DarkSideRandomPostScreenState
         ),
       );
     }
-    return SingleChildScrollView(child: DarkSidePostTile(post: state.post!));
+    return SelectionArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: landscapeHPadding(context)),
+        child: DarkSidePostTile(post: state.post!),
+      ),
+    );
   }
 }
