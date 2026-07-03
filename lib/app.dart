@@ -5,6 +5,7 @@ import 'core/breadcrumb_collector.dart';
 import 'core/settings_storage.dart';
 import 'core/skin.dart';
 import 'features/about/about_screen.dart';
+import 'features/dark_side/dark_side_favorites_screen.dart';
 import 'features/dark_side/dark_side_random_post_screen.dart';
 import 'features/favorites/favorites_screen.dart';
 import 'features/feed/feed_screen.dart';
@@ -131,6 +132,9 @@ class SvalkoApp extends ConsumerWidget {
         }
         if (settings.name == '/favorites') {
           return MaterialPageRoute(settings: settings,builder: (_) => const FavoritesScreen());
+        }
+        if (settings.name == '/dark-side-favorites') {
+          return MaterialPageRoute(settings: settings,builder: (_) => const DarkSideFavoritesScreen());
         }
         if (settings.name == '/trends') {
           return MaterialPageRoute(settings: settings,builder: (_) => const TrendsScreen());

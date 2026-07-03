@@ -1,78 +1,16 @@
-import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/settings_storage.dart';
 import '../../models/author.dart';
 import '../../ui/widgets/blur_app_bar.dart';
+import '../../ui/widgets/deletable_items.dart';
 import '../../models/comment.dart';
 import '../post/widgets/comment_tile.dart';
 import '../navigation/app_drawer.dart';
+import 'favorites_export.dart';
 import 'favorites_storage.dart';
-
-mixin _DeletableItems<T extends StatefulWidget> on State<T> {
-  final _deleting = <int>{};
-  final _growing = <int>{};
-
-  void startDelete(BuildContext context, int id, VoidCallback onRestore) {
-    setState(() => _deleting.add(id));
-    _showUndoSnackBar(context, () {
-      if (_deleting.contains(id)) {
-        setState(() => _deleting.remove(id));
-      } else {
-        setState(() => _growing.add(id));
-        onRestore();
-      }
-    });
-  }
-
-  Widget wrapAnimated(int id, Widget child, VoidCallback onRemove) {
-    if (_deleting.contains(id)) {
-      return _AnimatedItem(
-        key: ValueKey(id),
-        shrink: true,
-        onEnd: () {
-          onRemove();
-          setState(() => _deleting.remove(id));
-        },
-        child: child,
-      );
-    }
-    if (_growing.contains(id)) {
-      return _AnimatedItem(
-        key: ValueKey(id),
-        shrink: false,
-        onEnd: () => setState(() => _growing.remove(id)),
-        child: child,
-      );
-    }
-    return KeyedSubtree(key: ValueKey(id), child: child);
-  }
-}
-
-void _showUndoSnackBar(BuildContext context, VoidCallback onUndo) {
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.hideCurrentSnackBar();
-  Timer? timer;
-  final ctrl = messenger.showSnackBar(SnackBar(
-    duration: const Duration(days: 1),
-    content: const Text('Удалено из избранного'),
-    action: SnackBarAction(
-      label: 'Отменить',
-      onPressed: () {
-        timer?.cancel();
-        onUndo();
-      },
-    ),
-  ));
-  timer = Timer(const Duration(seconds: 5), ctrl.close);
-  ctrl.closed.then((_) => timer?.cancel());
-}
 
 class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
@@ -91,12 +29,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       'posts': postsNotifier.exportList(),
       'comments': commentsNotifier.exportList(),
     });
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/svalko_favorites.json');
-    await file.writeAsString(json);
-    await Share.shareXFiles([
-      XFile(file.path, mimeType: 'application/json'),
-    ], subject: 'Избранное Свалочки');
+    await shareFavoritesJson(json);
   }
 
   Future<void> _import(
@@ -104,14 +37,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     FavoritesNotifier postsNotifier,
     FavoriteCommentsNotifier commentsNotifier,
   ) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
-    if (result == null || result.files.single.path == null) return;
+    final content = await pickFavoritesJsonFile();
+    if (content == null) return;
 
     try {
-      final content = await File(result.files.single.path!).readAsString();
       final decoded = jsonDecode(content);
 
       int addedPosts;
@@ -248,7 +177,7 @@ class _PostsTab extends StatefulWidget {
   State<_PostsTab> createState() => _PostsTabState();
 }
 
-class _PostsTabState extends State<_PostsTab> with _DeletableItems<_PostsTab> {
+class _PostsTabState extends State<_PostsTab> with DeletableItems<_PostsTab> {
 
   static String _fmt(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
@@ -349,7 +278,7 @@ class _CommentsTab extends ConsumerStatefulWidget {
 }
 
 class _CommentsTabState extends ConsumerState<_CommentsTab>
-    with _DeletableItems<_CommentsTab> {
+    with DeletableItems<_CommentsTab> {
 
   Comment _commentFromFavorite(FavoriteComment fav) => Comment(
         id: fav.id,
@@ -415,61 +344,3 @@ class _CommentsTabState extends ConsumerState<_CommentsTab>
 }
 
 enum _MenuAction { export, import }
-
-// ---------------------------------------------------------------------------
-
-class _AnimatedItem extends StatefulWidget {
-  const _AnimatedItem({
-    super.key,
-    required this.child,
-    required this.shrink,
-    required this.onEnd,
-  });
-
-  final Widget child;
-  final bool shrink;
-  final VoidCallback onEnd;
-
-  @override
-  State<_AnimatedItem> createState() => _AnimatedItemState();
-}
-
-class _AnimatedItemState extends State<_AnimatedItem>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _ctrl.forward().then((_) {
-      if (mounted) widget.onEnd();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final curved = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-    final size = widget.shrink
-        ? Tween<double>(begin: 1, end: 0).animate(curved)
-        : Tween<double>(begin: 0, end: 1).animate(curved);
-    final opacity = widget.shrink
-        ? Tween<double>(begin: 1, end: 0).animate(curved)
-        : Tween<double>(begin: 0, end: 1).animate(curved);
-    return IgnorePointer(
-      child: SizeTransition(
-        sizeFactor: size,
-        child: FadeTransition(opacity: opacity, child: widget.child),
-      ),
-    );
-  }
-}

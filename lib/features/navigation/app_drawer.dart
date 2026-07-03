@@ -284,13 +284,17 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
           selected: widget.activePage == 'images',
           onTap: () => _navTo('images', () => Navigator.of(context).pushNamed('/images')),
         ),
-      if (!isDarkSide)
-        ListTile(
-          leading: const Icon(Icons.bookmark_outline),
-          title: const Text('Избранное'),
-          selected: widget.activePage == 'favorites',
-          onTap: () => _navTo('favorites', () => Navigator.of(context).pushNamed('/favorites')),
+      ListTile(
+        leading: const Icon(Icons.bookmark_outline),
+        title: const Text('Избранное'),
+        selected: widget.activePage == 'favorites',
+        onTap: () => _navTo(
+          'favorites',
+          () => Navigator.of(context).pushNamed(
+            isDarkSide ? '/dark-side-favorites' : '/favorites',
+          ),
         ),
+      ),
     ];
 
     return Drawer(

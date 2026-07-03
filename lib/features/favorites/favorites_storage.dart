@@ -1,12 +1,16 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import '../../models/dark_side_post.dart';
 import '../../models/post.dart';
 
 final favoritesBoxProvider =
     Provider<Box<String>>((_) => throw UnimplementedError());
 
 final favoriteCommentsBoxProvider =
+    Provider<Box<String>>((_) => throw UnimplementedError());
+
+final favoritesDarkSideBoxProvider =
     Provider<Box<String>>((_) => throw UnimplementedError());
 
 abstract class _Favoritable {
@@ -54,6 +58,56 @@ class FavoritePost implements _Favoritable {
       );
 
   factory FavoritePost.fromJson(Map<String, dynamic> json) => FavoritePost(
+        id: json['id'] as int,
+        authorName: json['authorName'] as String,
+        publishedAt: DateTime.parse(json['publishedAt'] as String),
+        addedAt: DateTime.parse(json['addedAt'] as String),
+        firstImageUrl: json['firstImageUrl'] as String?,
+        previewText: json['previewText'] as String?,
+      );
+}
+
+class FavoriteDarkSidePost implements _Favoritable {
+  const FavoriteDarkSidePost({
+    required this.id,
+    required this.authorName,
+    required this.publishedAt,
+    required this.addedAt,
+    this.firstImageUrl,
+    this.previewText,
+  });
+
+  @override final int id;
+  final String authorName;
+  final DateTime publishedAt;
+  @override final DateTime addedAt;
+  final String? firstImageUrl;
+  final String? previewText;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'authorName': authorName,
+        'publishedAt': publishedAt.toIso8601String(),
+        'addedAt': addedAt.toIso8601String(),
+        if (firstImageUrl != null) 'firstImageUrl': firstImageUrl,
+        if (previewText != null) 'previewText': previewText,
+      };
+
+  factory FavoriteDarkSidePost.fromPost(DarkSidePost post) =>
+      FavoriteDarkSidePost(
+        id: post.id,
+        authorName: post.author,
+        publishedAt: post.publishedAt,
+        addedAt: DateTime.now(),
+        firstImageUrl: post.imageUrls.firstOrNull,
+        previewText: post.plainText.isNotEmpty
+            ? post.plainText.substring(0, post.plainText.length.clamp(0, 120))
+            : null,
+      );
+
+  factory FavoriteDarkSidePost.fromJson(Map<String, dynamic> json) =>
+      FavoriteDarkSidePost(
         id: json['id'] as int,
         authorName: json['authorName'] as String,
         publishedAt: DateTime.parse(json['publishedAt'] as String),
@@ -204,6 +258,12 @@ abstract class _FavoriteNotifier<T extends _Favoritable>
     }
     return newItems.length;
   }
+
+  /// Returns JSON string with all favorites (single-type export format).
+  String exportJson() => jsonEncode(exportList());
+
+  /// Merges favorites from a JSON string (single-type format). Returns count added.
+  int importJson(String json) => importList(jsonDecode(json) as List<dynamic>);
 }
 
 // ---------------------------------------------------------------------------
@@ -217,12 +277,6 @@ class FavoritesNotifier extends _FavoriteNotifier<FavoritePost> {
   @override
   FavoritePost _fromJson(Map<String, dynamic> json) =>
       FavoritePost.fromJson(json);
-
-  /// Returns JSON string with all favorite posts (legacy single-type export).
-  String exportJson() => jsonEncode(exportList());
-
-  /// Merges favorites from a JSON string (legacy format). Returns count added.
-  int importJson(String json) => importList(jsonDecode(json) as List<dynamic>);
 }
 
 final favoritesProvider =
@@ -245,3 +299,20 @@ class FavoriteCommentsNotifier extends _FavoriteNotifier<FavoriteComment> {
 final favoriteCommentsProvider =
     NotifierProvider<FavoriteCommentsNotifier, List<FavoriteComment>>(
         FavoriteCommentsNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Favorite dark-side posts
+// ---------------------------------------------------------------------------
+
+class DarkSideFavoritesNotifier extends _FavoriteNotifier<FavoriteDarkSidePost> {
+  @override
+  Provider<Box<String>> get _boxProvider => favoritesDarkSideBoxProvider;
+
+  @override
+  FavoriteDarkSidePost _fromJson(Map<String, dynamic> json) =>
+      FavoriteDarkSidePost.fromJson(json);
+}
+
+final darkSideFavoritesProvider =
+    NotifierProvider<DarkSideFavoritesNotifier, List<FavoriteDarkSidePost>>(
+        DarkSideFavoritesNotifier.new);

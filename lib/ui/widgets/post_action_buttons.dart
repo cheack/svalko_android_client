@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/config.dart';
 import '../../features/favorites/favorites_storage.dart';
+import '../../models/dark_side_post.dart';
 import '../../models/post.dart';
 
 class PostShareButton extends StatelessWidget {
@@ -42,6 +43,29 @@ class PostFavButton extends ConsumerWidget {
       visualDensity: visualDensity,
       tooltip: isFav ? 'Убрать из избранного' : 'В избранное',
       onPressed: () => ref.read(favoritesProvider.notifier).toggle(FavoritePost.fromPost(post)),
+    );
+  }
+}
+
+class DarkSidePostFavButton extends ConsumerWidget {
+  const DarkSidePostFavButton({super.key, required this.post, this.iconSize, this.visualDensity});
+  final DarkSidePost post;
+  final double? iconSize;
+  final VisualDensity? visualDensity;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFav = ref.watch(
+      darkSideFavoritesProvider.select((list) => list.any((f) => f.id == post.id)),
+    );
+    return IconButton(
+      icon: Icon(isFav ? Icons.bookmark : Icons.bookmark_outline),
+      iconSize: iconSize ?? 24,
+      visualDensity: visualDensity,
+      tooltip: isFav ? 'Убрать из избранного' : 'В избранное',
+      onPressed: () => ref
+          .read(darkSideFavoritesProvider.notifier)
+          .toggle(FavoriteDarkSidePost.fromPost(post)),
     );
   }
 }

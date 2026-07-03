@@ -3,12 +3,19 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:svalko_client/features/favorites/favorites_storage.dart';
+import 'package:svalko_client/models/dark_side_post.dart';
 import 'support/fake_string_box.dart';
 
 // Build a ProviderContainer that uses an in-memory box instead of Hive.
 ProviderContainer _container(FakeStringBox box) => ProviderContainer(
       overrides: [
         favoriteCommentsBoxProvider.overrideWithValue(box),
+      ],
+    );
+
+ProviderContainer _darkSideContainer(FakeStringBox box) => ProviderContainer(
+      overrides: [
+        favoritesDarkSideBoxProvider.overrideWithValue(box),
       ],
     );
 
@@ -247,6 +254,98 @@ void main() {
 
       expect(state.first.id, 11);
       expect(state.last.id, 10);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // FavoriteDarkSidePost.fromPost / toJson / fromJson
+  // -------------------------------------------------------------------------
+
+  group('FavoriteDarkSidePost.fromPost', () {
+    test('maps DarkSidePost fields, truncates preview to 120 chars', () {
+      final post = DarkSidePost(
+        id: 42,
+        author: 'СвиноДемон',
+        publishedAt: DateTime.utc(2026, 7, 3, 12, 0),
+        imageUrls: const ['https://dark.side.of.svalko.org/data/1.jpg'],
+        textParts: [DarkSideText('x' * 200)],
+      );
+      final fav = FavoriteDarkSidePost.fromPost(post);
+
+      expect(fav.id, 42);
+      expect(fav.authorName, 'СвиноДемон');
+      expect(fav.publishedAt, post.publishedAt);
+      expect(fav.firstImageUrl, 'https://dark.side.of.svalko.org/data/1.jpg');
+      expect(fav.previewText!.length, 120);
+    });
+
+    test('round-trips through JSON', () {
+      final fav = FavoriteDarkSidePost(
+        id: 1,
+        authorName: 'Аноним',
+        publishedAt: DateTime.utc(2026, 1, 1),
+        addedAt: DateTime.utc(2026, 1, 2),
+        firstImageUrl: 'https://example.com/img.jpg',
+        previewText: 'preview',
+      );
+      final restored = FavoriteDarkSidePost.fromJson(fav.toJson());
+
+      expect(restored.id, fav.id);
+      expect(restored.authorName, fav.authorName);
+      expect(restored.publishedAt, fav.publishedAt);
+      expect(restored.addedAt, fav.addedAt);
+      expect(restored.firstImageUrl, fav.firstImageUrl);
+      expect(restored.previewText, fav.previewText);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // DarkSideFavoritesNotifier — separate box from the main-site favorites
+  // -------------------------------------------------------------------------
+
+  group('DarkSideFavoritesNotifier', () {
+    late FakeStringBox box;
+    late ProviderContainer container;
+    late DarkSideFavoritesNotifier notifier;
+
+    FavoriteDarkSidePost minimal() => FavoriteDarkSidePost(
+          id: 1,
+          authorName: 'Аноним',
+          publishedAt: DateTime.utc(2026, 1, 1),
+          addedAt: DateTime.utc(2026, 1, 1),
+        );
+
+    setUp(() {
+      box = FakeStringBox();
+      container = _darkSideContainer(box);
+      notifier = container.read(darkSideFavoritesProvider.notifier);
+    });
+
+    tearDown(() => container.dispose());
+
+    test('starts empty', () {
+      expect(container.read(darkSideFavoritesProvider), isEmpty);
+    });
+
+    test('add persists to its own box and updates state', () {
+      notifier.add(minimal());
+
+      expect(container.read(darkSideFavoritesProvider).length, 1);
+      expect(box.values.length, 1);
+    });
+
+    test('toggle adds then removes', () {
+      notifier.toggle(minimal());
+      expect(container.read(darkSideFavoritesProvider).length, 1);
+
+      notifier.toggle(minimal());
+      expect(container.read(darkSideFavoritesProvider), isEmpty);
+    });
+
+    test('isFavorite returns correct value', () {
+      expect(notifier.isFavorite(1), isFalse);
+      notifier.add(minimal());
+      expect(notifier.isFavorite(1), isTrue);
     });
   });
 }
