@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/settings_storage.dart';
 import '../../ui/widgets/blur_app_bar.dart';
 import '../feed/widgets/page_nav_panel.dart';
 import '../navigation/app_drawer.dart';
@@ -13,6 +14,7 @@ class DarkSideFeedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(darkSideFeedControllerProvider);
     final ctrl = ref.read(darkSideFeedControllerProvider.notifier);
+    final fontSize = ref.watch(fontSizeProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -28,7 +30,12 @@ class DarkSideFeedScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: _buildBody(context, state, ctrl),
+      body: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
+        ),
+        child: _buildBody(context, state, ctrl),
+      ),
     );
   }
 

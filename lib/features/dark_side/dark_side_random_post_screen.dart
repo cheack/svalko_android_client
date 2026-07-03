@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/settings_storage.dart';
 import '../../ui/widgets/inline_spinner.dart';
 import '../feed/feed_controller.dart' show navigateToRandomPost;
 import 'dark_side_post_tile.dart';
@@ -32,6 +33,7 @@ class _DarkSideRandomPostScreenState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(darkSideRandomPostControllerProvider(widget.postId));
+    final fontSize = ref.watch(fontSizeProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -46,7 +48,12 @@ class _DarkSideRandomPostScreenState
           ),
         ],
       ),
-      body: _buildBody(state),
+      body: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(fontSize / FontSizeNotifier.defaultSize),
+        ),
+        child: _buildBody(state),
+      ),
     );
   }
 
