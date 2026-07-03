@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/parse_guard.dart';
 import '../../core/result.dart';
 import '../../core/settings_storage.dart';
 import '../../data/parsers/dark_side_parser.dart';
+import '../../data/parsers/feed_parser.dart' show FeedPaginationInfo;
 import '../../data/svalko_api.dart';
 import '../../models/dark_side_post.dart';
 import '../feed/feed_controller.dart' show apiProvider;
@@ -93,25 +95,48 @@ class DarkSideFeedController extends StateNotifier<DarkSideFeedState> {
     bool refreshing = false,
   }) {
     switch (result) {
-      case Ok(:final value):
-        final parsed = DarkSideParser.parse(value);
-        final existing = appending ? state.posts : const <DarkSidePost>[];
-        return state.copyWith(
-          posts: [...existing, ...parsed.posts],
-          currentPage: parsed.pagination.currentPage,
-          maxPage: parsed.pagination.maxPage,
-          hasMore: parsed.pagination.currentPage > 0,
-          isLoading: false,
-          isRefreshing: false,
-          isLoadingMore: false,
-          clearError: true,
-        );
       case Err(:final error):
         return state.copyWith(
           isLoading: false,
           isRefreshing: false,
           isLoadingMore: false,
           error: error,
+        );
+      case Ok(:final value):
+        return _applyParseResult(guardParse(() {
+          final parsed = DarkSideParser.parse(value);
+          if (parsed.posts.isEmpty && value.contains('author_name')) {
+            // Page clearly has post rows, but none parsed — markup likely changed.
+            throw StateError('DarkSideParser: 0 posts parsed from a page containing post rows');
+          }
+          return parsed;
+        }), appending: appending);
+    }
+  }
+
+  DarkSideFeedState _applyParseResult(
+    Result<({List<DarkSidePost> posts, FeedPaginationInfo pagination}), AppError> result, {
+    required bool appending,
+  }) {
+    switch (result) {
+      case Err():
+        return state.copyWith(
+          isLoading: false,
+          isRefreshing: false,
+          isLoadingMore: false,
+          error: AppError.parseFailure,
+        );
+      case Ok(:final value):
+        final existing = appending ? state.posts : const <DarkSidePost>[];
+        return state.copyWith(
+          posts: [...existing, ...value.posts],
+          currentPage: value.pagination.currentPage,
+          maxPage: value.pagination.maxPage,
+          hasMore: value.pagination.currentPage > 0,
+          isLoading: false,
+          isRefreshing: false,
+          isLoadingMore: false,
+          clearError: true,
         );
     }
   }

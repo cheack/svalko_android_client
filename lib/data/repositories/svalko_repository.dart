@@ -10,7 +10,7 @@ import '../parsers/last_parser.dart';
 import '../parsers/search_parser.dart';
 import '../parsers/tags_parser.dart';
 import '../svalko_api.dart';
-import '../../core/crash_reporter.dart';
+import '../../core/parse_guard.dart';
 import '../../core/result.dart';
 import '../../models/ban_page_data.dart';
 import '../../models/calendar.dart';
@@ -112,23 +112,22 @@ class SvalkoRepository {
 
   FeedResult _parseFeedResult(String html) {
     if (BanPageParser.isBanPage(html)) {
-      try {
-        return FeedBanned(BanPageParser.parse(html));
-      } catch (_) {
-        return const FeedFailure(AppError.parseFailure);
-      }
+      return switch (guardParse(() => BanPageParser.parse(html))) {
+        Ok(:final value) => FeedBanned(value),
+        Err(:final error) => FeedFailure(error),
+      };
     }
-    try {
-      final parsed = FeedParser.parse(html);
-      if (parsed.calendar != null) _currentMonthCache ??= parsed.calendar;
-      return FeedSuccess(FeedPage(
-        posts: parsed.posts,
-        pagination: parsed.pagination,
-        calendar: parsed.calendar,
-      ));
-    } catch (_) {
-      return const FeedFailure(AppError.parseFailure);
-    }
+    return switch (guardParse(() => FeedParser.parse(html))) {
+      Ok(:final value) => () {
+          if (value.calendar != null) _currentMonthCache ??= value.calendar;
+          return FeedSuccess(FeedPage(
+            posts: value.posts,
+            pagination: value.pagination,
+            calendar: value.calendar,
+          ));
+        }(),
+      Err(:final error) => FeedFailure(error),
+    };
   }
 
   CalendarMonth? getCachedCalendar(String path) {
@@ -165,26 +164,27 @@ class SvalkoRepository {
   }
 
   Result<CalendarMonth, AppError> _parseCalendar(String html, String path, {bool isCurrentMonth = false}) {
-    try {
+    final result = guardParse<CalendarMonth?>(() {
       final doc = html_parser.parse(html);
       final calendar = CalendarParser.parse(doc);
-      final month = calendar ?? () {
-        final m = RegExp(r'/(\d{4})/(\d+)/').firstMatch(path);
-        if (m == null) return null;
-        return CalendarParser.emptyMonth(
-          int.parse(m.group(1)!),
-          int.parse(m.group(2)!),
-        );
-      }();
-      if (month == null) return const Err(AppError.parseFailure);
-      if (isCurrentMonth) {
-        _currentMonthCache = month;
-      } else {
-        _calendarBox?.put(path, _encodeCalendar(month));
-      }
-      return Ok(month);
-    } catch (_) {
-      return const Err(AppError.parseFailure);
+      if (calendar != null) return calendar;
+      final m = RegExp(r'/(\d{4})/(\d+)/').firstMatch(path);
+      if (m == null) return null;
+      return CalendarParser.emptyMonth(int.parse(m.group(1)!), int.parse(m.group(2)!));
+    });
+    switch (result) {
+      case Err(:final error):
+        return Err(error);
+      case Ok(value: null):
+        return const Err(AppError.parseFailure);
+      case Ok(:final value):
+        final month = value!;
+        if (isCurrentMonth) {
+          _currentMonthCache = month;
+        } else {
+          _calendarBox?.put(path, _encodeCalendar(month));
+        }
+        return Ok(month);
     }
   }
 
@@ -228,14 +228,8 @@ class SvalkoRepository {
   Future<Result<(int, int?), AppError>> getImagePostId(String filename) =>
       _api.fetchImagePostId(filename);
 
-  Result<List<ImageItem>, AppError> _parseImages(String html) {
-    try {
-      return Ok(ImagesParser.parse(html));
-    } catch (e, st) {
-      CrashReporter.instance.report(e, st);
-      return const Err(AppError.parseFailure);
-    }
-  }
+  Result<List<ImageItem>, AppError> _parseImages(String html) =>
+      guardParse(() => ImagesParser.parse(html));
 
   Future<Result<(List<LastComment>, List<LastImage>), AppError>> getLast({int skip = 0}) async {
     final result = await _api.fetchLastPage(skip: skip);
@@ -245,14 +239,8 @@ class SvalkoRepository {
     };
   }
 
-  Result<(List<LastComment>, List<LastImage>), AppError> _parseLast(String html) {
-    try {
-      return Ok(LastParser.parse(html));
-    } catch (e, st) {
-      CrashReporter.instance.report(e, st);
-      return const Err(AppError.parseFailure);
-    }
-  }
+  Result<(List<LastComment>, List<LastImage>), AppError> _parseLast(String html) =>
+      guardParse(() => LastParser.parse(html));
 
   Future<Result<List<Tag>, AppError>> getTags() async {
     final result = await _api.fetchTagsPage();
@@ -263,18 +251,16 @@ class SvalkoRepository {
   }
 
   Result<PostPage, AppError> _parsePost(String html, int id) {
-    try {
-      final parsed = PostParser.parse(html, id);
-      if (parsed == null) return const Err(AppError.parseFailure);
-      return Ok(PostPage(
-        post: parsed.post,
-        comments: parsed.comments,
-        pagination: parsed.pagination,
-      ));
-    } catch (e, st) {
-      CrashReporter.instance.report(e, st);
-      return const Err(AppError.parseFailure);
-    }
+    final result = guardParse(() => PostParser.parse(html, id));
+    return switch (result) {
+      Ok(value: final parsed?) => Ok(PostPage(
+          post: parsed.post,
+          comments: parsed.comments,
+          pagination: parsed.pagination,
+        )),
+      Ok() => const Err(AppError.parseFailure),
+      Err(:final error) => Err(error),
+    };
   }
 
   Future<Result<SearchParseResult, AppError>> search({
@@ -295,14 +281,8 @@ class SvalkoRepository {
     };
   }
 
-  Result<SearchParseResult, AppError> _parseSearch(String html) {
-    try {
-      return Ok(SearchParser.parse(html));
-    } catch (e, st) {
-      CrashReporter.instance.report(e, st);
-      return const Err(AppError.parseFailure);
-    }
-  }
+  Result<SearchParseResult, AppError> _parseSearch(String html) =>
+      guardParse(() => SearchParser.parse(html));
 
   Future<Result<String, AppError>> vote(int postId, int vote) =>
       _api.vote(postId, vote);
@@ -310,12 +290,6 @@ class SvalkoRepository {
   Future<Result<String, AppError>> boroda(int postId, int dbl) =>
       _api.boroda(postId, dbl);
 
-  Result<List<Tag>, AppError> _parseTags(String html) {
-    try {
-      return Ok(TagsParser.parse(html));
-    } catch (e, st) {
-      CrashReporter.instance.report(e, st);
-      return const Err(AppError.parseFailure);
-    }
-  }
+  Result<List<Tag>, AppError> _parseTags(String html) =>
+      guardParse(() => TagsParser.parse(html));
 }
