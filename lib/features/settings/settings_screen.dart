@@ -12,8 +12,10 @@ import '../../core/skin.dart';
 import '../feed/feed_controller.dart';
 import '../navigation/tags_cache.dart';
 import '../../models/comment.dart';
+import '../../models/dark_side_post.dart';
 import '../../models/post.dart';
 import '../../ui/theme.dart';
+import '../dark_side/dark_side_post_tile.dart';
 import '../feed/widgets/post_card.dart';
 import '../news/news_settings_controller.dart';
 import 'debug_crash_tile.dart';
@@ -201,31 +203,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
 
           // ── Скин ──────────────────────────────────────────────────────────
-          const _SectionHeader('Скин'),
-          RadioGroup<AppSkin>(
-            groupValue: skin,
-            onChanged: (v) {
-              if (v != null) ref.read(skinProvider.notifier).set(v);
-            },
-            child: const Column(
-              children: [
-                RadioListTile(
-                  value: AppSkin.blue,
-                  title: Text('Синий (спасибо Татьяне)'),
-                ),
-                RadioListTile(
-                  value: AppSkin.yellow,
-                  title: Text('Жёлтый (классика)'),
-                ),
-                RadioListTile(value: AppSkin.pink, title: Text('Розовый')),
-                RadioListTile(value: AppSkin.dark, title: Text('Тёмный')),
-              ],
+          if (siteMode != SiteMode.darkSide) ...[
+            const _SectionHeader('Скин'),
+            RadioGroup<AppSkin>(
+              groupValue: skin,
+              onChanged: (v) {
+                if (v != null) ref.read(skinProvider.notifier).set(v);
+              },
+              child: const Column(
+                children: [
+                  RadioListTile(
+                    value: AppSkin.blue,
+                    title: Text('Синий (спасибо Татьяне)'),
+                  ),
+                  RadioListTile(
+                    value: AppSkin.yellow,
+                    title: Text('Жёлтый (классика)'),
+                  ),
+                  RadioListTile(value: AppSkin.pink, title: Text('Розовый')),
+                  RadioListTile(value: AppSkin.dark, title: Text('Тёмный')),
+                ],
+              ),
             ),
-          ),
+          ],
 
           // ── Текст ─────────────────────────────────────────────────────────
           const _SectionHeader('Текст'),
-          _TextSizeSection(skin: skin),
+          _TextSizeSection(
+            skin: siteMode == SiteMode.darkSide ? AppSkin.darkSideSite : skin,
+            isDarkSide: siteMode == SiteMode.darkSide,
+          ),
 
           // ── Медиа ─────────────────────────────────────────────────────────
           const _SectionHeader('Медиа'),
@@ -301,8 +308,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 }
 
 class _TextSizeSection extends ConsumerStatefulWidget {
-  const _TextSizeSection({required this.skin});
+  const _TextSizeSection({required this.skin, this.isDarkSide = false});
   final AppSkin skin;
+  final bool isDarkSide;
 
   @override
   ConsumerState<_TextSizeSection> createState() => _TextSizeSectionState();
@@ -331,8 +339,46 @@ class _TextSizeSectionState extends ConsumerState<_TextSizeSection> {
             },
           ),
         ),
-        _TextSizePreview(skin: widget.skin, fontSize: display),
+        widget.isDarkSide
+            ? _DarkSideTextSizePreview(fontSize: display)
+            : _TextSizePreview(skin: widget.skin, fontSize: display),
       ],
+    );
+  }
+}
+
+class _DarkSideTextSizePreview extends StatelessWidget {
+  const _DarkSideTextSizePreview({required this.fontSize});
+
+  final double fontSize;
+
+  static final _previewPost = DarkSidePost(
+    id: 130343,
+    author: 'СвиноДемон',
+    publishedAt: DateTime(2026, 7, 3, 12, 0),
+    text: 'Опрув с тёмной стороны выглядит примерно так.',
+    imageUrls: const [],
+    externalLinks: const [],
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = themeForSkin(AppSkin.darkSideSite);
+    final scale = fontSize / FontSizeNotifier.defaultSize;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Theme(
+        data: theme,
+        child: MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+          child: ColoredBox(
+            color: theme.scaffoldBackgroundColor,
+            child: IgnorePointer(
+              child: DarkSidePostTile(post: _previewPost),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

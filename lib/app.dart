@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/breadcrumb_collector.dart';
 import 'core/settings_storage.dart';
+import 'core/skin.dart';
 import 'features/about/about_screen.dart';
 import 'features/dark_side/dark_side_random_post_screen.dart';
 import 'features/favorites/favorites_screen.dart';
@@ -28,13 +29,16 @@ class SvalkoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final skin = ref.watch(skinProvider);
-    ref.watch(siteModeProvider); // initializes Config.baseUrl from saved setting
+    final siteMode = ref.watch(siteModeProvider); // initializes Config.baseUrl from saved setting
+    // Dark side has its own look, taken straight from the site's own CSS —
+    // it isn't a user-selectable skin and never applies outside that mode.
+    final effectiveSkin = siteMode == SiteMode.darkSide ? AppSkin.darkSideSite : skin;
 
     return MaterialApp(
       navigatorKey: navigatorKey,
       navigatorObservers: [BreadcrumbCollector.instance.navigatorObserver],
       title: 'Свалко',
-      theme: themeForSkin(skin),
+      theme: themeForSkin(effectiveSkin),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

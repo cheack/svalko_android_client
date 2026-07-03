@@ -22,6 +22,13 @@ const _svalkoPinkBg = Color(0xFFFCF5FA);
 const _svalkoPinkCard = Color(0xFFF9EEF6);
 const _svalkoPinkInfoPanel = Color(0xFFF3DAEC);
 
+// Dark side of svalko skin colors — taken from dark.side.of.svalko.org/css/darkside.css
+const _darkSideBg = Color(0xFF000000);
+const _darkSideCard = Color(0xFF0A0A0A);
+const _darkSideText = Color(0xFF999999);
+const _darkSideLink = Color(0xFF0084FF);
+const _darkSideBorder = Color(0xFF222222);
+
 const _heartPattern = DecorationImage(
   image: AssetImage('assets/heart-bg.png'),
   repeat: ImageRepeat.repeat,
@@ -34,6 +41,7 @@ ThemeData themeForSkin(AppSkin skin) => switch (skin) {
       AppSkin.dark => _darkTheme,
       AppSkin.pink => _pinkTheme,
       AppSkin.yellow => _yellowTheme,
+      AppSkin.darkSideSite => _darkSideSiteTheme,
     };
 
 ThemeData _buildLightTheme({
@@ -169,5 +177,50 @@ final _darkTheme = ThemeData(
   colorScheme: ColorScheme.fromSeed(
     seedColor: _svalkoBlue,
     brightness: Brightness.dark,
+  ),
+);
+
+final _darkSideSiteTheme = ThemeData(
+  useMaterial3: true,
+  brightness: Brightness.dark,
+  extensions: const [
+    SvalkoSkinExt(linkColor: _darkSideLink, headerColor: _darkSideLink, cardDividers: true),
+  ],
+  colorScheme: const ColorScheme.dark(
+    primary: _darkSideLink,
+    onPrimary: Colors.white,
+    secondary: _darkSideLink,
+    onSecondary: Colors.white,
+    surface: _darkSideBg,
+    onSurface: _darkSideText,
+    surfaceContainerLow: _darkSideBg,
+    surfaceContainer: _darkSideCard,
+    surfaceContainerHigh: _darkSideCard,
+    outline: _darkSideLink,
+  ),
+  scaffoldBackgroundColor: _darkSideBg,
+  cardTheme: const CardThemeData(
+    color: _darkSideCard,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+  ),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: _darkSideBg,
+    foregroundColor: _darkSideLink,
+    elevation: 0,
+  ),
+  listTileTheme: const ListTileThemeData(
+    selectedColor: _darkSideLink,
+  ),
+  radioTheme: RadioThemeData(
+    fillColor: WidgetStateProperty.resolveWith((_) => _darkSideLink),
+  ),
+  dividerColor: _darkSideBorder,
+  textTheme: const TextTheme(
+    bodyMedium: TextStyle(fontSize: 13, color: _darkSideText),
+    bodySmall: TextStyle(fontSize: 11, color: _darkSideText),
+    labelLarge: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _darkSideLink),
+    labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _darkSideLink),
+    labelSmall: TextStyle(fontSize: 10, color: _darkSideText),
   ),
 );
