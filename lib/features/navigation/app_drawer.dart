@@ -160,6 +160,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     final activeTag = ref.watch(activeTagProvider);
     final s = AppStrings.of(ref.watch(languageProvider));
     final theme = Theme.of(context);
+    final isDarkSide = ref.watch(siteModeProvider) == SiteMode.darkSide;
 
     if (activeTag != _lastScrolledTag) {
       _lastScrolledTag = activeTag;
@@ -188,42 +189,44 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
           Navigator.of(context).pushNamed('/about');
         },
       ),
-      ListTile(
-        leading: _fojjerLoading
-            ? const InlineSpinner()
-            : const Icon(Icons.campaign_outlined),
-        title: Text(_fojjerText),
-        onTap: _shoutFojjer,
-      ),
-      const Divider(height: 1),
-      InkWell(
-        onTap: () {
-          Navigator.of(context).pop();
-          Navigator.of(context).pushNamed('/trends');
-        },
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 10, 16, 10 + bottomPadding),
-          child: Row(
-            children: [
-              CachedNetworkImage(
-                imageUrl: '${Config.baseUrl}/trends_images.php?informer=1',
-                width: 110,
-                height: 38,
-                fit: BoxFit.cover,
-                errorWidget: (_, _, _) => const SizedBox(width: 110, height: 38),
-              ),
-              const SizedBox(width: 4),
-              CachedNetworkImage(
-                imageUrl: '${Config.baseUrl}/trends_images.php?informer=1&mode=1',
-                width: 60,
-                height: 38,
-                fit: BoxFit.cover,
-                errorWidget: (_, _, _) => const SizedBox(width: 60, height: 38),
-              ),
-            ],
+      if (!isDarkSide)
+        ListTile(
+          leading: _fojjerLoading
+              ? const InlineSpinner()
+              : const Icon(Icons.campaign_outlined),
+          title: Text(_fojjerText),
+          onTap: _shoutFojjer,
+        ),
+      if (!isDarkSide) const Divider(height: 1),
+      if (!isDarkSide)
+        InkWell(
+          onTap: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed('/trends');
+          },
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 10, 16, 10 + bottomPadding),
+            child: Row(
+              children: [
+                CachedNetworkImage(
+                  imageUrl: '${Config.baseUrl}/trends_images.php?informer=1',
+                  width: 110,
+                  height: 38,
+                  fit: BoxFit.cover,
+                  errorWidget: (_, _, _) => const SizedBox(width: 110, height: 38),
+                ),
+                const SizedBox(width: 4),
+                CachedNetworkImage(
+                  imageUrl: '${Config.baseUrl}/trends_images.php?informer=1&mode=1',
+                  width: 60,
+                  height: 38,
+                  fit: BoxFit.cover,
+                  errorWidget: (_, _, _) => const SizedBox(width: 60, height: 38),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
     ];
 
     final topNavItems = <Widget>[
@@ -236,31 +239,33 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
           Navigator.of(context).popUntil((r) => r.isFirst);
         },
       ),
-      ListTile(
-        leading: const Icon(Icons.history_outlined),
-        title: const Text('Ласты'),
-        selected: widget.activePage == 'last',
-        onTap: () => _navTo('last', () {
-          ref.read(lastProvider.notifier).resetToFirst();
-          Navigator.of(context).pushNamed('/last');
-        }),
-      ),
-      ListTile(
-        leading: const Icon(Icons.edit_outlined),
-        title: const Text('Написать!'),
-        onTap: () async {
-          Navigator.of(context).pop();
-          final api = ref.read(apiProvider);
-          final settingsBox = ref.read(settingsBoxProvider);
-          if (!context.mounted) return;
-          final sent = await showNewPostSheet(context, api, settingsBox);
-          if (sent && context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Пост отправлен')),
-            );
-          }
-        },
-      ),
+      if (!isDarkSide)
+        ListTile(
+          leading: const Icon(Icons.history_outlined),
+          title: const Text('Ласты'),
+          selected: widget.activePage == 'last',
+          onTap: () => _navTo('last', () {
+            ref.read(lastProvider.notifier).resetToFirst();
+            Navigator.of(context).pushNamed('/last');
+          }),
+        ),
+      if (!isDarkSide)
+        ListTile(
+          leading: const Icon(Icons.edit_outlined),
+          title: const Text('Написать!'),
+          onTap: () async {
+            Navigator.of(context).pop();
+            final api = ref.read(apiProvider);
+            final settingsBox = ref.read(settingsBoxProvider);
+            if (!context.mounted) return;
+            final sent = await showNewPostSheet(context, api, settingsBox);
+            if (sent && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Пост отправлен')),
+              );
+            }
+          },
+        ),
       ListTile(
         leading: _loadingRandom
             ? const InlineSpinner()
@@ -268,18 +273,20 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
         title: Text(s.navRandom),
         onTap: _openRandom,
       ),
-      ListTile(
-        leading: const Icon(Icons.photo_library_outlined),
-        title: Text(s.navImages),
-        selected: widget.activePage == 'images',
-        onTap: () => _navTo('images', () => Navigator.of(context).pushNamed('/images')),
-      ),
-      ListTile(
-        leading: const Icon(Icons.bookmark_outline),
-        title: const Text('Избранное'),
-        selected: widget.activePage == 'favorites',
-        onTap: () => _navTo('favorites', () => Navigator.of(context).pushNamed('/favorites')),
-      ),
+      if (!isDarkSide)
+        ListTile(
+          leading: const Icon(Icons.photo_library_outlined),
+          title: Text(s.navImages),
+          selected: widget.activePage == 'images',
+          onTap: () => _navTo('images', () => Navigator.of(context).pushNamed('/images')),
+        ),
+      if (!isDarkSide)
+        ListTile(
+          leading: const Icon(Icons.bookmark_outline),
+          title: const Text('Избранное'),
+          selected: widget.activePage == 'favorites',
+          onTap: () => _navTo('favorites', () => Navigator.of(context).pushNamed('/favorites')),
+        ),
     ];
 
     return Drawer(
@@ -297,16 +304,20 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
               topBar,
               ...topNavItems,
               const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-                child: Text(
-                  s.navTags,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.secondary,
-                    letterSpacing: 1.2,
+              if (!isDarkSide)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                  child: Text(
+                    s.navTags,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.secondary,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
-              ),
+              if (isDarkSide)
+                const Spacer()
+              else
               Expanded(
                 child: tagsAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
@@ -375,7 +386,7 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
               topBar,
               ...topNavItems,
               const Divider(height: 1),
-              tagsTile,
+              if (!isDarkSide) tagsTile,
               ...bottomItems,
             ],
           ),

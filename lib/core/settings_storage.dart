@@ -125,12 +125,13 @@ final autoLoadVideoProvider =
 // Site mode
 // ---------------------------------------------------------------------------
 
-enum SiteMode { svalko, taSvalko }
+enum SiteMode { svalko, taSvalko, darkSide }
 
 class SiteModeNotifier extends Notifier<SiteMode> {
   static const _urls = {
     SiteMode.svalko: 'https://svalko.org',
     SiteMode.taSvalko: 'https://ta.svalko.org',
+    SiteMode.darkSide: 'https://dark.side.of.svalko.org',
   };
 
   @override

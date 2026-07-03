@@ -116,6 +116,15 @@ class SvalkoApi {
     return _get(url);
   }
 
+  /// Fetches a page of the dark-side mirror's feed (posts only, no comments).
+  Future<Result<String, AppError>> fetchDarkSidePage({int? page}) {
+    final url = page == null
+        ? Config.baseUrl
+        : '${Config.baseUrl}/page/$page';
+    AppLogger.instance.info('[fetchDarkSidePage] $url');
+    return _get(url);
+  }
+
   Future<Result<int, AppError>> fetchRandomPostId() async {
     try {
       final response = await _dio.get<dynamic>(

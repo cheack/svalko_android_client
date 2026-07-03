@@ -161,6 +161,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   value: SiteMode.taSvalko,
                   title: Text('Та свалка'),
                 ),
+                RadioListTile(
+                  value: SiteMode.darkSide,
+                  title: Text('Тёмная сторона'),
+                ),
               ],
             ),
           ),

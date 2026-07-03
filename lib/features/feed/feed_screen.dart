@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
 import '../../models/feed_source.dart';
+import '../dark_side/dark_side_feed_screen.dart';
 import '../navigation/app_drawer.dart';
 import '../search/search_controller.dart';
 import '../search/search_dialog.dart';
@@ -90,6 +91,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.source is MainFeed &&
+        ref.watch(siteModeProvider) == SiteMode.darkSide) {
+      return const DarkSideFeedScreen();
+    }
+
     final state = ref.watch(feedControllerProvider(widget.source));
     final ctrl = ref.read(feedControllerProvider(widget.source).notifier);
     final s = AppStrings.of(ref.watch(languageProvider));
