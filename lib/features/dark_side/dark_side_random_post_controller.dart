@@ -26,6 +26,7 @@ class DarkSideRandomPostController extends StateNotifier<DarkSideRandomPostState
   Future<void> load() async {
     state = const DarkSideRandomPostState(isLoading: true);
     final result = await _api.fetchPost(_id);
+    if (!mounted) return;
     switch (result) {
       case Err(:final error):
         state = DarkSideRandomPostState(error: error);

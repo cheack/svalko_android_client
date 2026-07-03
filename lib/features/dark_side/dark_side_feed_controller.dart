@@ -62,18 +62,21 @@ class DarkSideFeedController extends StateNotifier<DarkSideFeedState> {
   Future<void> loadInitial() async {
     state = state.copyWith(isLoading: true, clearError: true);
     final result = await _api.fetchDarkSidePage();
+    if (!mounted) return;
     state = _applyResult(result);
   }
 
   Future<void> refresh() async {
     state = state.copyWith(isRefreshing: true, clearError: true);
     final result = await _api.fetchDarkSidePage();
+    if (!mounted) return;
     state = _applyResult(result, refreshing: true);
   }
 
   Future<void> loadPage(int page) async {
     state = state.copyWith(isRefreshing: true, clearError: true);
     final result = await _api.fetchDarkSidePage(page: page);
+    if (!mounted) return;
     state = _applyResult(result);
   }
 
@@ -86,6 +89,7 @@ class DarkSideFeedController extends StateNotifier<DarkSideFeedState> {
     }
     state = state.copyWith(isLoadingMore: true);
     final result = await _api.fetchDarkSidePage(page: nextPage);
+    if (!mounted) return;
     state = _applyResult(result, appending: true);
   }
 

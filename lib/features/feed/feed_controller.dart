@@ -164,12 +164,14 @@ class FeedController extends StateNotifier<FeedState> {
   Future<void> loadInitial() async {
     state = state.copyWith(isLoading: true, clearError: true, clearBanData: true);
     final result = await _repo.getFeed(source: _source);
+    if (!mounted) return;
     state = _stateFromResult(result);
   }
 
   Future<void> refresh() async {
     state = state.copyWith(isRefreshing: true, clearError: true, clearBanData: true);
     final result = await _repo.getFeed(source: _source);
+    if (!mounted) return;
     state = switch (result) {
       FeedSuccess(:final page) => _stateFromFeedPage(page),
       FeedBanned(:final data) => FeedState(banData: data),
@@ -181,6 +183,7 @@ class FeedController extends StateNotifier<FeedState> {
     final prevMaxPage = state.maxPage;
     state = state.copyWith(isRefreshing: true, clearError: true, clearBanData: true);
     final result = await _repo.getFeed(page: page, source: _source);
+    if (!mounted) return;
     state = switch (result) {
       FeedSuccess(:final page) => _stateFromFeedPage(page, existingMaxPage: prevMaxPage),
       FeedBanned(:final data) => FeedState(banData: data),
@@ -197,6 +200,7 @@ class FeedController extends StateNotifier<FeedState> {
     }
     state = state.copyWith(isLoadingMore: true);
     final result = await _repo.getFeed(page: nextPage, source: _source);
+    if (!mounted) return;
     state = switch (result) {
       FeedSuccess(:final page) => _stateFromFeedPage(
           page,
@@ -226,9 +230,11 @@ class FeedController extends StateNotifier<FeedState> {
       final error = result.error;
       if (error != AppError.network && error != AppError.timeout) break;
       await Future.delayed(retryDelay);
+      if (!mounted) return;
       result = await _repo.submitBanAnswer(riddleId: riddleId, answer: answer);
     }
 
+    if (!mounted) return;
     state = _stateFromResult(result);
   }
 }
