@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:svalko_client/core/config.dart';
 import 'package:svalko_client/data/parsers/dark_side_parser.dart';
+import 'package:svalko_client/models/dark_side_post.dart';
 
 void main() {
   late String html;
@@ -50,13 +51,36 @@ void main() {
     test('post text does not contain leftover <img> tag markup', () {
       final result = DarkSideParser.parse(htmlWithImage);
       for (final post in result.posts) {
-        expect(post.text ?? '', isNot(contains('<img')));
+        for (final part in post.textParts) {
+          if (part is DarkSideText) expect(part.text, isNot(contains('<img')));
+        }
       }
     });
 
     test('pagination maxPage is at least currentPage', () {
       final result = DarkSideParser.parse(html);
       expect(result.pagination.maxPage, greaterThanOrEqualTo(result.pagination.currentPage));
+    });
+
+    test('real <a> links become clickable DarkSideLink parts, not plain text', () {
+      final result = DarkSideParser.parse(html);
+      final withLink = result.posts.firstWhere((p) => p.id == 224228);
+      final links = withLink.textParts.whereType<DarkSideLink>();
+      expect(links, isNotEmpty);
+      expect(links.first.url, 'https://jecarchive.ru/');
+    });
+
+    test('extracts approver name and comment from the <i> attribution', () {
+      final result = DarkSideParser.parse(html);
+      final withApprover = result.posts.firstWhere((p) => p.id == 224228);
+      expect(withApprover.approvedBy, 'Unwaiter');
+      expect(withApprover.approverComment, 'тут');
+    });
+
+    test('extracts author post count from "Всего постов: N"', () {
+      final result = DarkSideParser.parse(html);
+      final post = result.posts.firstWhere((p) => p.id == 224228);
+      expect(post.authorPostCount, 2616);
     });
   });
 

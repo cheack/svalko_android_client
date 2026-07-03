@@ -54,30 +54,101 @@ abstract final class DarkSideParser {
         tryParseDateTime(row.querySelector('.author nobr')?.text.trim() ?? '');
     if (publishedAt == null) return null;
 
-    final externalLinks = contentTd
-        .querySelectorAll('a[href]')
-        .map((a) => a.attributes['href'] ?? '')
-        .where((h) => h.isNotEmpty)
-        .toList();
+    final authorPostCountMatch =
+        RegExp(r'Всего постов:\s*(\d+)').firstMatch(row.querySelector('.author')?.text ?? '');
+    final authorPostCount = int.tryParse(authorPostCountMatch?.group(1) ?? '');
+
+    final (approvedBy, approverComment) = _parseApproverNote(contentTd.querySelector('i'));
 
     final clone = contentTd.clone(true);
     clone.querySelectorAll('iframe, span.preview, i').forEach((e) => e.remove());
-    final rawText = clone.text.trim();
 
-    final imageUrls = _imgTagRe
-        .allMatches(rawText)
-        .map((m) => _resolveUrl(m.group(1)!))
-        .toList();
-    final text = rawText.replaceAll(_imgTagRe, '').trim();
+    final imageUrls = <String>[];
+    final rawParts = <DarkSideTextPart>[];
+    final buffer = StringBuffer();
+    for (final node in clone.nodes) {
+      _walk(node, rawParts, buffer);
+    }
+    _flush(rawParts, buffer);
+
+    final textParts = _extractImages(rawParts, imageUrls);
 
     return DarkSidePost(
       id: id,
       author: author,
       publishedAt: publishedAt,
-      text: text.isEmpty ? null : text,
+      textParts: textParts,
       imageUrls: imageUrls,
-      externalLinks: externalLinks,
+      approvedBy: approvedBy,
+      approverComment: approverComment,
+      authorPostCount: authorPostCount,
     );
+  }
+
+  /// The approver note looks like `<i>Name: comment</i>` — splits on the first colon.
+  static (String?, String?) _parseApproverNote(Element? i) {
+    final raw = i?.text.trim();
+    if (raw == null || raw.isEmpty) return (null, null);
+    final idx = raw.indexOf(':');
+    if (idx < 0) return (null, raw);
+    return (raw.substring(0, idx).trim(), raw.substring(idx + 1).trim());
+  }
+
+  static void _walk(Node node, List<DarkSideTextPart> parts, StringBuffer buffer) {
+    if (node is Text) {
+      buffer.write(node.data);
+      return;
+    }
+    if (node is! Element) return;
+    switch (node.localName) {
+      case 'br':
+        buffer.write('\n');
+      case 'a':
+        final href = node.attributes['href'];
+        final label = node.text.trim();
+        if (href != null && href.isNotEmpty && label.isNotEmpty) {
+          _flush(parts, buffer);
+          parts.add(DarkSideLink(label, _resolveUrl(href)));
+        } else {
+          buffer.write(label);
+        }
+      case 'iframe':
+        // dropped entirely — no visible content
+        break;
+      default:
+        if (node.classes.contains('preview')) break;
+        for (final child in node.nodes) {
+          _walk(child, parts, buffer);
+        }
+    }
+  }
+
+  static void _flush(List<DarkSideTextPart> parts, StringBuffer buffer) {
+    if (buffer.isNotEmpty) {
+      parts.add(DarkSideText(buffer.toString()));
+      buffer.clear();
+    }
+  }
+
+  /// Pulls HTML-escaped `<img>` tags (rendered as literal text by the site)
+  /// out of [parts] and into [imageUrls], stripping the matched text.
+  static List<DarkSideTextPart> _extractImages(
+    List<DarkSideTextPart> parts,
+    List<String> imageUrls,
+  ) {
+    final result = <DarkSideTextPart>[];
+    for (final part in parts) {
+      if (part is! DarkSideText) {
+        result.add(part);
+        continue;
+      }
+      imageUrls.addAll(
+        _imgTagRe.allMatches(part.text).map((m) => _resolveUrl(m.group(1)!)),
+      );
+      final cleaned = part.text.replaceAll(_imgTagRe, '').trim();
+      if (cleaned.isNotEmpty) result.add(DarkSideText(cleaned));
+    }
+    return result;
   }
 
   static String _resolveUrl(String url) =>
