@@ -131,7 +131,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final siteMode = ref.watch(siteModeProvider);
     final newsNotifications = ref.watch(newsNotificationsProvider);
 
-    return Scaffold(
+    return PopScope(
+      canPop: siteMode != SiteMode.darkSide,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        // Screens below Settings (post, images, a tag feed, ...) don't apply
+        // in dark-side mode — leaving Settings should land on the home feed.
+        Navigator.of(context).popUntil((r) => r.isFirst);
+      },
+      child: Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
       body: Theme(
         data: Theme.of(context).copyWith(
@@ -285,6 +293,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   ),
           ),
         ],
+      ),
       ),
       ),
     );
