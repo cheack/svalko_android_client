@@ -179,29 +179,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ),
 
-          // ── Язык ──────────────────────────────────────────────────────────
-          const _SectionHeader('Язык'),
-          RadioGroup<AppLanguage>(
-            groupValue: lang,
-            onChanged: (v) {
-              if (v != null) ref.read(languageProvider.notifier).set(v);
-            },
-            child: const Column(
-              children: [
-                RadioListTile(
-                  value: AppLanguage.svalko,
-                  title: Text('Свалочный'),
-                  subtitle: Text('насрано 5 раз'),
-                ),
-                RadioListTile(
-                  value: AppLanguage.ru,
-                  title: Text('Русский'),
-                  subtitle: Text('5 комментариев'),
-                ),
-              ],
-            ),
-          ),
-
           // ── Скин ──────────────────────────────────────────────────────────
           if (siteMode != SiteMode.darkSide) ...[
             const _SectionHeader('Скин'),
@@ -232,6 +209,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           _TextSizeSection(
             skin: siteMode == SiteMode.darkSide ? AppSkin.darkSideSite : skin,
             isDarkSide: siteMode == SiteMode.darkSide,
+          ),
+
+          // ── Язык ──────────────────────────────────────────────────────────
+          const _SectionHeader('Язык'),
+          RadioGroup<AppLanguage>(
+            groupValue: lang,
+            onChanged: (v) {
+              if (v != null) ref.read(languageProvider.notifier).set(v);
+            },
+            child: const Column(
+              children: [
+                RadioListTile(
+                  value: AppLanguage.svalko,
+                  title: Text('Свалочный'),
+                  subtitle: Text('насрано 5 раз'),
+                ),
+                RadioListTile(
+                  value: AppLanguage.ru,
+                  title: Text('Русский'),
+                  subtitle: Text('5 комментариев'),
+                ),
+              ],
+            ),
           ),
 
           // ── Медиа ─────────────────────────────────────────────────────────
@@ -356,9 +356,11 @@ class _DarkSideTextSizePreview extends StatelessWidget {
     id: 130343,
     author: 'СвиноДемон',
     publishedAt: DateTime(2026, 7, 3, 12, 0),
-    text: 'Опрув с тёмной стороны выглядит примерно так.',
+    textParts: const [DarkSideText('Опрув с тёмной стороны выглядит примерно так.')],
     imageUrls: const [],
-    externalLinks: const [],
+    approvedBy: 'Unwaiter',
+    approverComment: 'тут',
+    authorPostCount: 2616,
   );
 
   @override
