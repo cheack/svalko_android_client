@@ -28,7 +28,7 @@ class SkinNotifier extends Notifier<AppSkin> {
       (s) => s.name == box.get('skin'),
       orElse: () => AppSkin.blue,
     );
-    listenSelf((_, next) => box.put('skin', next.name));
+    listenSelf((_, next) async => await box.put('skin', next.name));
     return skin;
   }
 
@@ -50,7 +50,7 @@ class LanguageNotifier extends Notifier<AppLanguage> {
       (l) => l.name == box.get('language'),
       orElse: () => AppLanguage.svalko,
     );
-    listenSelf((_, next) => box.put('language', next.name));
+    listenSelf((_, next) async => await box.put('language', next.name));
     return lang;
   }
 
@@ -69,7 +69,7 @@ class AutoLoadMediaNotifier extends Notifier<bool> {
   bool build() {
     final box = ref.watch(settingsBoxProvider);
     final v = box.get('autoLoadMedia');
-    listenSelf((_, next) => box.put('autoLoadMedia', next.toString()));
+    listenSelf((_, next) async => await box.put('autoLoadMedia', next.toString()));
     return v == null ? true : v == 'true';
   }
 
@@ -92,7 +92,7 @@ class FontSizeNotifier extends Notifier<double> {
   double build() {
     final box = ref.watch(settingsBoxProvider);
     final v = double.tryParse(box.get('fontSize') ?? '');
-    listenSelf((_, next) => box.put('fontSize', next.toString()));
+    listenSelf((_, next) async => await box.put('fontSize', next.toString()));
     return (v != null && v >= _min && v <= _max) ? v : defaultSize;
   }
 
@@ -111,7 +111,7 @@ class AutoLoadVideoNotifier extends Notifier<bool> {
   bool build() {
     final box = ref.watch(settingsBoxProvider);
     final v = box.get('autoLoadVideo');
-    listenSelf((_, next) => box.put('autoLoadVideo', next.toString()));
+    listenSelf((_, next) async => await box.put('autoLoadVideo', next.toString()));
     return v == null ? false : v == 'true';
   }
 
@@ -142,9 +142,9 @@ class SiteModeNotifier extends Notifier<SiteMode> {
       orElse: () => SiteMode.svalko,
     );
     Config.setBaseUrl(_urls[mode]!);
-    listenSelf((_, next) {
-      box.put('siteMode', next.name);
+    listenSelf((_, next) async {
       Config.setBaseUrl(_urls[next]!);
+      await box.put('siteMode', next.name);
     });
     return mode;
   }
