@@ -153,14 +153,25 @@ void _showPushDialog(RemoteMessage message) {
   );
 }
 
+// Dark side has no comments/post-detail page, so `/post` can't work there —
+// notifications and deep links always point at a normal-site post.
+void _ensureNormalSiteMode(BuildContext context) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  if (container.read(siteModeProvider) == SiteMode.darkSide) {
+    container.read(siteModeProvider.notifier).set(SiteMode.svalko);
+  }
+}
+
 void _openPostFromNotification(int postId) {
+  final context = navigatorKey.currentContext;
   final navigator = navigatorKey.currentState;
-  if (navigator == null) {
+  if (context == null || navigator == null) {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _openPostFromNotification(postId),
     );
     return;
   }
+  _ensureNormalSiteMode(context);
   navigator.pushNamed('/post', arguments: postId);
 }
 
@@ -179,5 +190,8 @@ void _handleDeepLink(Uri uri) {
   if (match == null) return;
   final postId = int.tryParse(match.group(1)!);
   if (postId == null) return;
+  final context = navigatorKey.currentContext;
+  if (context == null) return;
+  _ensureNormalSiteMode(context);
   navigatorKey.currentState?.pushNamed('/post', arguments: postId);
 }

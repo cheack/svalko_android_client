@@ -42,6 +42,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Deep links (svalko.org/*.html) are handled by our own app_links
+             listener in main.dart (_initDeepLinks) so that dark-side mode can
+             be switched off before opening the post. Flutter's automatic deep
+             linking would otherwise also try to Navigator.pushNamed() the raw
+             URL path directly, which isn't a registered route and crashes. -->
+        <meta-data
+            android:name="flutter_deeplinking_enabled"
+            android:value="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
