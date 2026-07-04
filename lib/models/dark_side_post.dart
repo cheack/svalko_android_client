@@ -35,7 +35,8 @@ class DarkSidePost {
 
   final int id;
   final String author;
-  final DateTime publishedAt;
+  /// Null for very old posts where the site itself never recorded a date.
+  final DateTime? publishedAt;
   final List<DarkSideTextPart> textParts;
   final List<String> imageUrls;
   final String? approvedBy;

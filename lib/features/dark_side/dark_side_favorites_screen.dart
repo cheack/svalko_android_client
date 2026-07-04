@@ -20,11 +20,13 @@ class DarkSideFavoritesScreen extends ConsumerStatefulWidget {
 
 class _DarkSideFavoritesScreenState extends ConsumerState<DarkSideFavoritesScreen>
     with DeletableItems<DarkSideFavoritesScreen> {
-  static String _fmt(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
-      '${dt.day.toString().padLeft(2, '0')} '
-      '${dt.hour.toString().padLeft(2, '0')}:'
-      '${dt.minute.toString().padLeft(2, '0')}';
+  static String _fmt(DateTime? dt) {
+    if (dt == null) return 'дата неизвестна';
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
+        '${dt.day.toString().padLeft(2, '0')} '
+        '${dt.hour.toString().padLeft(2, '0')}:'
+        '${dt.minute.toString().padLeft(2, '0')}';
+  }
 
   Future<void> _export(DarkSideFavoritesNotifier notifier) async {
     await shareFavoritesJson(notifier.exportJson());

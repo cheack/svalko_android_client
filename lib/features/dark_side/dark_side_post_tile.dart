@@ -66,7 +66,7 @@ class _DarkSideHeader extends StatelessWidget {
   });
 
   final String author;
-  final DateTime publishedAt;
+  final DateTime? publishedAt;
   final int? authorPostCount;
 
   @override
@@ -92,10 +92,11 @@ class _DarkSideHeader extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                Text(
-                  PostHeader.formatRelativeTime(publishedAt),
-                  style: theme.textTheme.bodySmall,
-                ),
+                if (publishedAt != null)
+                  Text(
+                    PostHeader.formatRelativeTime(publishedAt!),
+                    style: theme.textTheme.bodySmall,
+                  ),
               ],
             ),
           ),

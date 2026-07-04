@@ -79,7 +79,7 @@ class FavoriteDarkSidePost implements _Favoritable {
 
   @override final int id;
   final String authorName;
-  final DateTime publishedAt;
+  final DateTime? publishedAt;
   @override final DateTime addedAt;
   final String? firstImageUrl;
   final String? previewText;
@@ -88,7 +88,7 @@ class FavoriteDarkSidePost implements _Favoritable {
   Map<String, dynamic> toJson() => {
         'id': id,
         'authorName': authorName,
-        'publishedAt': publishedAt.toIso8601String(),
+        if (publishedAt != null) 'publishedAt': publishedAt!.toIso8601String(),
         'addedAt': addedAt.toIso8601String(),
         if (firstImageUrl != null) 'firstImageUrl': firstImageUrl,
         if (previewText != null) 'previewText': previewText,
@@ -110,7 +110,9 @@ class FavoriteDarkSidePost implements _Favoritable {
       FavoriteDarkSidePost(
         id: json['id'] as int,
         authorName: json['authorName'] as String,
-        publishedAt: DateTime.parse(json['publishedAt'] as String),
+        publishedAt: json['publishedAt'] != null
+            ? DateTime.parse(json['publishedAt'] as String)
+            : null,
         addedAt: DateTime.parse(json['addedAt'] as String),
         firstImageUrl: json['firstImageUrl'] as String?,
         previewText: json['previewText'] as String?,

@@ -8,12 +8,15 @@ void main() {
   late String html;
   late String htmlWithImage;
   late String randomPostHtml;
+  late String postWithNoDateHtml;
 
   setUpAll(() {
     html = File('test/fixtures/dark_side_feed_page.html').readAsStringSync();
     htmlWithImage =
         File('test/fixtures/dark_side_feed_page_with_image.html').readAsStringSync();
     randomPostHtml = File('test/fixtures/dark_side_random_post.html').readAsStringSync();
+    postWithNoDateHtml =
+        File('test/fixtures/dark_side_post_no_date.html').readAsStringSync();
     Config.setBaseUrl('https://dark.side.of.svalko.org');
   });
 
@@ -33,7 +36,8 @@ void main() {
     test('each post has a publishedAt date', () {
       final result = DarkSideParser.parse(html);
       for (final post in result.posts) {
-        expect(post.publishedAt.year, greaterThan(2000));
+        expect(post.publishedAt, isNotNull);
+        expect(post.publishedAt!.year, greaterThan(2000));
       }
     });
 
@@ -90,6 +94,15 @@ void main() {
       final links = post.approverCommentParts.whereType<DarkSideLink>();
       expect(links, hasLength(1));
       expect(links.first.url, 'https://imwerden.de/multi-volume-set-1000047-page-1');
+    });
+  });
+
+  group('DarkSideParser — post with no recorded date', () {
+    test('parseSinglePost still succeeds when <nobr></nobr> is empty', () {
+      final post = DarkSideParser.parseSinglePost(postWithNoDateHtml, id: 5786);
+      expect(post, isNotNull);
+      expect(post!.author, 'lena');
+      expect(post.publishedAt, isNull);
     });
   });
 

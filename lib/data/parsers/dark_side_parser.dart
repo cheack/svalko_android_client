@@ -51,9 +51,9 @@ abstract final class DarkSideParser {
     required Element row,
   }) {
     final author = row.querySelector('.author b')?.text.trim() ?? '';
+    // Very old posts have an empty <nobr></nobr> — the site never recorded a date.
     final publishedAt =
         tryParseDateTime(row.querySelector('.author nobr')?.text.trim() ?? '');
-    if (publishedAt == null) return null;
 
     final authorPostCountMatch =
         RegExp(r'Всего постов:\s*(\d+)').firstMatch(row.querySelector('.author')?.text ?? '');
