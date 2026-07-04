@@ -79,11 +79,9 @@ class _DarkSideRandomPostScreenState
         ),
       );
     }
-    return SelectionArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: landscapeHPadding(context)),
-        child: DarkSidePostTile(post: state.post!),
-      ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: landscapeHPadding(context)),
+      child: SelectionArea(child: DarkSidePostTile(post: state.post!)),
     );
   }
 }

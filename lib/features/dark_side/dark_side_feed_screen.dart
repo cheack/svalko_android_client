@@ -71,8 +71,7 @@ class DarkSideFeedScreen extends ConsumerWidget {
 
     return Stack(
       children: [
-        SelectionArea(
-          child: RefreshIndicator(
+        RefreshIndicator(
           onRefresh: ctrl.refresh,
           edgeOffset: blurAppBarTopPadding(context),
           child: NotificationListener<ScrollNotification>(
@@ -97,10 +96,13 @@ class DarkSideFeedScreen extends ConsumerWidget {
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
-                return DarkSidePostTile(post: state.posts[i]);
+                // SelectionArea per item, not around the whole scrollable list —
+                // wrapping a Scrollable whose item count changes during a
+                // drag-selection trips a Flutter framework assertion
+                // ('!_selectionStartsInScrollable').
+                return SelectionArea(child: DarkSidePostTile(post: state.posts[i]));
               },
             ),
-          ),
           ),
         ),
         if (currentPage < maxPage || currentPage > 0)
