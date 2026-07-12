@@ -613,6 +613,12 @@ class _PostMenuState extends State<_PostMenu> {
           onPressed: () => openInBrowser(context, PostShareButton.postUrl(post.id)),
           child: const Text('Открыть в браузере'),
         ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.link),
+          onPressed: () =>
+              copyLinkToClipboard(context, PostShareButton.postUrl(post.id)),
+          child: const Text('Скопировать ссылку'),
+        ),
       ],
       builder: (_, controller, _) => IconButton(
         icon: const Icon(Icons.more_vert),

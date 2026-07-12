@@ -13,6 +13,7 @@ abstract class AppStrings {
   String get saveVideo;
   String get share;
   String get shareLink;
+  String get copyLink;
   String get photoSaved;
   String get videoSaved;
   String get navHome;
@@ -71,6 +72,9 @@ class SvalkoStrings extends AppStrings {
 
   @override
   String get shareLink => 'поделиться ссылкой';
+
+  @override
+  String get copyLink => 'скопировать ссылку';
 
   @override
   String get photoSaved => 'фото сохранено';
@@ -152,6 +156,9 @@ class RuStrings extends AppStrings {
 
   @override
   String get shareLink => 'Поделиться ссылкой';
+
+  @override
+  String get copyLink => 'Скопировать ссылку';
 
   @override
   String get photoSaved => 'Фото сохранено';

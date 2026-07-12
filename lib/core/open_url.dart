@@ -32,6 +32,16 @@ Future<void> openInBrowser(BuildContext context, String url) async {
   }
 }
 
+/// Copies [url] to the clipboard and shows a confirmation snackbar.
+Future<void> copyLinkToClipboard(BuildContext context, String url) async {
+  await Clipboard.setData(ClipboardData(text: url));
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Ссылка скопирована')),
+    );
+  }
+}
+
 bool _isSvalkoUrl(Uri uri) =>
     uri.host == 'svalko.org' || uri.host == 'pda.svalko.org' ||
     uri.host == 'ta.svalko.org' || uri.host == 'pda.ta.svalko.org' ||

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../core/config.dart';
 import '../../../core/open_url.dart';
 import '../../../core/l10n.dart';
 import '../../../core/settings_storage.dart';
@@ -166,7 +165,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   static Future<void> _showPostSheet(
       BuildContext context, AppStrings s, int id) async {
-    final postUrl = '${Config.baseUrl}/$id.html';
+    final postUrl = PostShareButton.postUrl(id);
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -190,6 +189,14 @@ class _PostCardState extends ConsumerState<PostCard> {
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   Share.share(postUrl);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.link),
+                title: Text(s.copyLink),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  copyLinkToClipboard(context, postUrl);
                 },
               ),
             ],
