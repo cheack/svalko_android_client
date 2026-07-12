@@ -3,9 +3,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gif/gif.dart';
 import '../../core/l10n.dart';
 import '../../core/settings_storage.dart';
+import 'gif_player.dart';
 import 'media_actions.dart';
 
 bool isGifUrl(String url) => url.toLowerCase().contains('.gif');
