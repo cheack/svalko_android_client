@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/last_item.dart';
 import '../../ui/skin_ext.dart';
 import '../../ui/widgets/blur_app_bar.dart';
+import '../../ui/widgets/comment_preview.dart';
 import '../../ui/widgets/font_scaled_body.dart';
 import '../navigation/app_drawer.dart';
 import 'last_controller.dart';
@@ -202,14 +203,13 @@ class _CommentsTab extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (c.commentText.isNotEmpty)
+                  if (c.commentHtml.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
-                      child: Text(
-                        c.commentText,
-                        style: theme.textTheme.bodyMedium,
-                        maxLines: 5,
-                        overflow: TextOverflow.ellipsis,
+                      child: CommentPreview(
+                        c.commentHtml,
+                        onSvalkoPost: (id) =>
+                            Navigator.of(ctx).pushNamed('/post', arguments: id),
                       ),
                     ),
                 ],

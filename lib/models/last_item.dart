@@ -9,7 +9,7 @@ class LastComment {
     required this.postId,
     required this.commentId,
     required this.postTitle,
-    required this.commentText,
+    required this.commentHtml,
     required this.commentCount,
     required this.topicAge,
   });
@@ -18,7 +18,7 @@ class LastComment {
   final int postId;
   final int commentId;
   final String postTitle;
-  final String commentText;
+  final String commentHtml;
   final int commentCount;
   final TopicAge topicAge;
 }

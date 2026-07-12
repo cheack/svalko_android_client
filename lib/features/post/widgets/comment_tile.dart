@@ -8,6 +8,7 @@ import '../../../models/comment.dart';
 import '../../../ui/skin_ext.dart';
 import '../../../ui/widgets/image_viewer.dart';
 import '../../../ui/widgets/comment_html.dart';
+import '../../../ui/widgets/comment_preview.dart';
 import '../../../ui/widgets/kum_shake.dart';
 import '../../../ui/widgets/media_actions.dart';
 import '../../../ui/widgets/image_carousel.dart';
@@ -257,20 +258,10 @@ class _CommentTileState extends ConsumerState<CommentTile> with SingleTickerProv
                   if (comment.text != null && comment.text!.isNotEmpty) ...[
                     const SizedBox(height: 0),
                     if (widget.compact)
-                      ClipRect(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxHeight: (MediaQuery.textScalerOf(context).scale(
-                                  theme.textTheme.bodyMedium?.fontSize ?? 14,
-                                ) * 1.45 * 5),
-                          ),
-                          child: CommentHtml(
-                            comment.text!,
-                            compact: true,
-                            onSvalkoPost: (id) =>
-                                Navigator.of(context).pushNamed('/post', arguments: id),
-                          ),
-                        ),
+                      CommentPreview(
+                        comment.text!,
+                        onSvalkoPost: (id) =>
+                            Navigator.of(context).pushNamed('/post', arguments: id),
                       )
                     else
                       CommentHtml(

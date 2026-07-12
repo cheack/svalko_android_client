@@ -62,6 +62,22 @@ void main() {
       expect(comments.any((c) => c.postTitle.isNotEmpty), isTrue);
     });
 
+    test('commentHtml preserves inline markup instead of flattening to text',
+        () {
+      final c = comments.firstWhere((c) => c.author == 'Рвун Чехлов');
+      expect(c.commentHtml, contains('<a'));
+    });
+
+    test('commentHtml does not include the author prefix or trailing link',
+        () {
+      for (final c in comments) {
+        expect(c.commentHtml, isNot(startsWith(':')),
+            reason: 'leading ": " not stripped for post ${c.postId}');
+        expect(c.commentHtml, isNot(contains('class="last"')),
+            reason: 'trailing "ссылка" link leaked for post ${c.postId}');
+      }
+    });
+
     test('postTitle contains no raw newlines', () {
       for (final c in comments) {
         expect(c.postTitle, isNot(contains('\n')),

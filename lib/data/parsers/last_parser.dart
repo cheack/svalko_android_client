@@ -53,28 +53,48 @@ abstract final class LastParser {
       final commentId = int.tryParse(linkMatch?.group(2) ?? '');
       if (postId == null || commentId == null) continue;
 
-      // Comment text: after "author: " and before "ссылка"
-      final tdText = td.text;
-      final prefix = '$author: ';
-      final prefixIdx = tdText.indexOf(prefix);
-      String commentText = '';
-      if (prefixIdx >= 0) {
-        final raw = tdText.substring(prefixIdx + prefix.length);
-        final linkIdx = raw.lastIndexOf('ссылка');
-        commentText = (linkIdx >= 0 ? raw.substring(0, linkIdx) : raw).trim();
-      }
+      // Comment HTML: everything between the author <b> and the "ссылка"
+      // link, kept as markup (not flattened to text) so formatting like
+      // <u>/<a>/[s] survives into the comment preview.
+      final commentHtml = _extractCommentHtml(td, authorEl, lastLink);
 
       result.add(LastComment(
         author: author,
         postId: postId,
         commentId: commentId,
         postTitle: postTitle,
-        commentText: commentText,
+        commentHtml: commentHtml,
         commentCount: commentCount,
         topicAge: topicAge,
       ));
     }
     return result;
+  }
+
+  /// Everything between [authorEl] (exclusive) and [lastLink] (exclusive)
+  /// inside [td], as HTML markup. Strips the leading ": " that follows the
+  /// author name.
+  static String _extractCommentHtml(
+      Element td, Element? authorEl, Element? lastLink) {
+    if (authorEl == null || lastLink == null) return '';
+    final nodes = td.nodes;
+    final start = nodes.indexOf(authorEl) + 1;
+    final end = nodes.indexOf(lastLink);
+    if (start <= 0 || end < 0 || start >= end) return '';
+
+    final wrapper = Element.tag('div');
+    for (var i = start; i < end; i++) {
+      final node = nodes[i];
+      if (i == start && node is Text) {
+        final colonIdx = node.data.indexOf(':');
+        final rest =
+            colonIdx >= 0 ? node.data.substring(colonIdx + 1) : node.data;
+        wrapper.append(Text(rest.trimLeft()));
+      } else {
+        wrapper.append(node.clone(true));
+      }
+    }
+    return wrapper.innerHtml.trim();
   }
 
   static List<LastImage> _parseImages(List<Element> tds) {
