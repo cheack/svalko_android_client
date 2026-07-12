@@ -3,6 +3,7 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../core/config.dart';
 import '../../core/open_url.dart';
 import '../skin_ext.dart';
+import 'html_marquee.dart';
 import 'video_link_card.dart';
 
 class CommentHtml extends StatelessWidget {
@@ -35,6 +36,16 @@ class CommentHtml extends StatelessWidget {
               child: VideoLinkCard(url: href),
             );
           }
+        }
+        if (el.localName == 'marquee') {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: HtmlMarquee(
+              el.text.trim(),
+              style: theme.textTheme.bodyMedium,
+              reverse: el.attributes['direction'] == 'right',
+            ),
+          );
         }
         return null;
       },
