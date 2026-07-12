@@ -139,20 +139,33 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     }
     _scrollRetries = 0;
     _didScrollToHighlight = true;
-    Scrollable.ensureVisible(ctx,
-        duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+    _scrollToHighlightBox(ctx, const Duration(milliseconds: 400));
     // Images loading above the target shift the layout — re-scroll a few times.
     for (final ms in [400, 900, 1800]) {
       Future.delayed(Duration(milliseconds: ms), () {
         if (!mounted) return;
         final c = _highlightKey.currentContext;
         if (c != null && c.mounted) {
-          Scrollable.ensureVisible(c,
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOut);
+          _scrollToHighlightBox(c, const Duration(milliseconds: 250));
         }
       });
     }
+  }
+
+  // Scrolls so the highlighted comment's top edge lands just below the
+  // transparent app bar, instead of Scrollable.ensureVisible's default of
+  // flush with the viewport's physical top edge (which is behind the bar,
+  // since the body extends behind it).
+  void _scrollToHighlightBox(BuildContext ctx, Duration duration) {
+    if (!_scrollController.hasClients) return;
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final appBarHeight = kToolbarHeight + MediaQuery.of(context).padding.top;
+    final target = (_scrollController.offset +
+            box.localToGlobal(Offset.zero).dy -
+            appBarHeight)
+        .clamp(0.0, _scrollController.position.maxScrollExtent);
+    _scrollController.animateTo(target, duration: duration, curve: Curves.easeOut);
   }
 
   // After a page change: jump instantly to the remembered header position,
