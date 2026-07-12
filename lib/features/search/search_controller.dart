@@ -13,6 +13,7 @@ class SearchState {
     this.isLoading = false,
     this.isLoadingMore = false,
     this.error,
+    this.directMatch,
   });
 
   final List<SearchResult> results;
@@ -22,6 +23,7 @@ class SearchState {
   final bool isLoading;
   final bool isLoadingMore;
   final AppError? error;
+  final SearchResult? directMatch;
 
   SearchState copyWith({
     List<SearchResult>? results,
@@ -32,6 +34,7 @@ class SearchState {
     bool? isLoadingMore,
     AppError? error,
     bool clearError = false,
+    SearchResult? directMatch,
   }) =>
       SearchState(
         results: results ?? this.results,
@@ -41,6 +44,7 @@ class SearchState {
         isLoading: isLoading ?? this.isLoading,
         isLoadingMore: isLoadingMore ?? this.isLoadingMore,
         error: clearError ? null : (error ?? this.error),
+        directMatch: directMatch ?? this.directMatch,
       );
 }
 
@@ -56,6 +60,7 @@ class SearchController extends StateNotifier<SearchState> {
 
   Future<void> _load() async {
     state = state.copyWith(isLoading: true, clearError: true);
+    final directMatch = await _loadDirectMatch();
     final result = await _repo.search(
       query: _params.query,
       order: _params.order,
@@ -68,8 +73,25 @@ class SearchController extends StateNotifier<SearchState> {
           totalCount: value.totalCount,
           skip: value.results.length,
           hasMore: value.hasMore,
+          directMatch: directMatch,
         ),
-      Err(:final error) => SearchState(error: error),
+      Err(:final error) => SearchState(error: error, directMatch: directMatch),
+    };
+  }
+
+  Future<SearchResult?> _loadDirectMatch() async {
+    final postId = extractSvalkoPostId(_params.query);
+    if (postId == null) return null;
+    final result = await _repo.getPost(postId);
+    return switch (result) {
+      Ok(:final value) => SearchResult(
+          author: value.post.author.name,
+          publishedAt: value.post.publishedAt,
+          textHtml: value.post.textHtml ?? value.post.text ?? '',
+          postId: postId,
+          isDirectMatch: true,
+        ),
+      Err() => null,
     };
   }
 

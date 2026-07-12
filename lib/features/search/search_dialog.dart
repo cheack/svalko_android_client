@@ -75,6 +75,12 @@ class _SearchDialogState extends State<_SearchDialog> {
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _submit(),
           ),
+          const SizedBox(height: 4),
+          Text(
+            'Можно искать по ссылке на пост или по его айди',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
           const SizedBox(height: 16),
           Text('Сортировка', style: theme.textTheme.labelMedium),
           RadioGroup<String>(

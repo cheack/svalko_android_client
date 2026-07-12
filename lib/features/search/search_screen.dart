@@ -71,7 +71,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state.error != null && state.results.isEmpty) {
+    if (state.error != null &&
+        state.results.isEmpty &&
+        state.directMatch == null) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -89,13 +91,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
-    if (state.results.isEmpty) {
+    if (state.results.isEmpty && state.directMatch == null) {
       return const Center(child: Text('Ничего не найдено'));
     }
 
     final theme = Theme.of(context);
     final skinExt = theme.extension<SvalkoSkinExt>();
     final dividers = skinExt?.cardDividers ?? false;
+
+    final directMatch = state.directMatch;
+    final hasDirectMatch = directMatch != null &&
+        !state.results.any((r) => r.postId == directMatch.postId);
+    final itemOffset = hasDirectMatch ? 1 : 0;
 
     return ListView.builder(
       controller: _scrollController,
@@ -105,17 +112,25 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         right: dividers ? 0 : 8,
         bottom: 8 + MediaQuery.of(context).padding.bottom,
       ),
-      itemCount: state.results.length + (state.isLoadingMore ? 1 : 0),
+      itemCount:
+          itemOffset + state.results.length + (state.isLoadingMore ? 1 : 0),
       itemBuilder: (ctx, i) {
-        if (i == state.results.length) {
+        if (hasDirectMatch && i == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _SearchResultCard(result: directMatch, isDirectMatch: true),
+          );
+        }
+        final resultIndex = i - itemOffset;
+        if (resultIndex == state.results.length) {
           return const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator()),
           );
         }
-        final result = state.results[i];
+        final result = state.results[resultIndex];
         final card = _SearchResultCard(result: result);
-        if (dividers && i > 0) {
+        if (dividers && resultIndex > 0) {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [const Divider(height: 1, thickness: 1), card],
@@ -131,9 +146,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 }
 
 class _SearchResultCard extends StatelessWidget {
-  const _SearchResultCard({required this.result});
+  const _SearchResultCard({required this.result, this.isDirectMatch = false});
 
   final SearchResult result;
+  final bool isDirectMatch;
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +160,83 @@ class _SearchResultCard extends StatelessWidget {
     final dateStr =
         '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
+    final card = SkinCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SkinHeader(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      result.author,
+                      style: theme.textTheme.labelMedium
+                          ?.copyWith(color: cs.primary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    dateStr,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(width: 8),
+                  if (isDirectMatch)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: cs.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          'найден по ссылке',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: cs.onTertiaryContainer,
+                          ),
+                        ),
+                      ),
+                    ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: result.isComment
+                          ? cs.secondaryContainer
+                          : cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      result.isComment ? 'камент' : 'пост',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: result.isComment
+                            ? cs.onSecondaryContainer
+                            : cs.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (result.textHtml.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+              child: CommentHtml(
+                result.textHtml,
+                onSvalkoPost: (id) =>
+                    Navigator.of(context).pushNamed('/post', arguments: id),
+              ),
+            ),
+        ],
+      ),
+    );
+
     return GestureDetector(
       onTap: () => Navigator.of(context).pushNamed(
         '/post',
@@ -151,64 +244,7 @@ class _SearchResultCard extends StatelessWidget {
             ? (result.postId, result.commentId)
             : result.postId,
       ),
-      child: SkinCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SkinHeader(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        result.author,
-                        style: theme.textTheme.labelMedium
-                            ?.copyWith(color: cs.primary),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      dateStr,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: result.isComment
-                            ? cs.secondaryContainer
-                            : cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        result.isComment ? 'камент' : 'пост',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: result.isComment
-                              ? cs.onSecondaryContainer
-                              : cs.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (result.textHtml.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
-                child: CommentHtml(
-                  result.textHtml,
-                  onSvalkoPost: (id) =>
-                      Navigator.of(context).pushNamed('/post', arguments: id),
-                ),
-              ),
-          ],
-        ),
-      ),
+      child: card,
     );
   }
 }
