@@ -113,6 +113,7 @@ class _CommentsTab extends StatelessWidget {
     final dividers = skinExt?.cardDividers ?? false;
     return RefreshIndicator(
       onRefresh: onRefresh,
+      edgeOffset: MediaQuery.of(context).padding.top,
       child: ListView.builder(
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top,
@@ -257,6 +258,7 @@ class _ImagesTab extends StatelessWidget {
     final theme = Theme.of(context);
     return RefreshIndicator(
       onRefresh: onRefresh,
+      edgeOffset: MediaQuery.of(context).padding.top,
       child: GridView.builder(
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top,

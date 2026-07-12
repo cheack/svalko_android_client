@@ -385,6 +385,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         child: SelectionArea(
         child: RefreshIndicator(
         onRefresh: ctrl.refresh,
+        edgeOffset: blurAppBarTopPadding(context),
         child: NotificationListener<ScrollStartNotification>(
         onNotification: (n) {
           // User grabbed the list — stop pinning the comments header.

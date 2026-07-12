@@ -232,6 +232,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         children: [
           RefreshIndicator(
             onRefresh: ctrl.refresh,
+            edgeOffset: blurAppBarTopPadding(context),
             child: NotificationListener<ScrollNotification>(
               onNotification: (n) {
                 if (n is ScrollEndNotification &&

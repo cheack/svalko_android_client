@@ -95,6 +95,7 @@ class _ImagesScreenState extends ConsumerState<ImagesScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadMore,
+      edgeOffset: blurAppBarTopPadding(context),
       child: CustomScrollView(
       controller: _scrollController,
       slivers: [
