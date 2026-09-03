@@ -133,7 +133,7 @@ class _GifState extends State<Gif> with SingleTickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadFrames().then((value) => _autostart());
+    _loadFrames().then((value) => _autostart()).catchError((_) {});
   }
 
   @override
@@ -149,7 +149,7 @@ class _GifState extends State<Gif> with SingleTickerProviderStateMixin {
         (widget.duration != oldWidget.duration)) {
       _loadFrames().then((value) {
         if (widget.image != oldWidget.image) _autostart();
-      });
+      }).catchError((_) {});
     }
     if (widget.autostart != oldWidget.autostart) _autostart();
   }
@@ -247,9 +247,19 @@ class _GifState extends State<Gif> with SingleTickerProviderStateMixin {
     var duration = Duration.zero;
 
     for (var i = 0; i < codec.frameCount; i++) {
-      final frameInfo = await codec.getNextFrame();
-      infos.add(ImageInfo(image: frameInfo.image));
-      duration += frameInfo.duration;
+      try {
+        final frameInfo = await codec.getNextFrame();
+        infos.add(ImageInfo(image: frameInfo.image));
+        duration += frameInfo.duration;
+      } catch (e) {
+        // Some frames can fail to decode (e.g. corrupt/truncated animated
+        // image). Keep whatever frames decoded so far instead of crashing.
+        break;
+      }
+    }
+
+    if (infos.isEmpty) {
+      throw Exception('Could not decode any frame for image');
     }
 
     return GifInfo(frames: infos, duration: duration);
