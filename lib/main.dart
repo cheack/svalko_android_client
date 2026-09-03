@@ -21,6 +21,7 @@ import 'features/feed/feed_controller.dart';
 import 'features/news/news_background_worker.dart';
 import 'features/news/news_check_service.dart';
 import 'features/notifications/notification_service.dart';
+import 'features/notifications/notification_text.dart';
 
 void main() {
   runZonedGuarded(
@@ -79,6 +80,7 @@ void main() {
           settings.put('mynameCookie', mynameCookie);
         }
       }
+      NotificationService.instance.username = settings.get('comment_author') ?? '';
 
       int? launchPostId;
       try {
@@ -135,8 +137,12 @@ void main() {
 }
 
 void _showPushDialog(RemoteMessage message) {
-  final text = message.data['message'] as String?;
-  if (text == null || text.isEmpty) return;
+  final rawText = message.data['message'] as String?;
+  if (rawText == null || rawText.isEmpty) return;
+  final text = applyNotificationPlaceholders(
+    rawText,
+    username: NotificationService.instance.username,
+  );
   final context = navigatorKey.currentContext;
   if (context == null) return;
   showDialog<void>(

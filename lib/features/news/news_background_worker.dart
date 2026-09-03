@@ -44,6 +44,7 @@ void newsBackgroundCallbackDispatcher() {
       if (!checker.notificationsEnabled) return true;
 
       final notifications = NotificationService.instance;
+      notifications.username = settings.get('comment_author') ?? '';
       await notifications.initialize();
       if (!await notifications.areNotificationsEnabled()) return true;
 

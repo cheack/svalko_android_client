@@ -59,6 +59,11 @@ class DebugNewsTile extends ConsumerWidget {
             title: s.label,
             onPressed: () => _showMediaPost(ref, s.label, s.imageUrl, s.html),
           ),
+        debugSubHeader('Подстановка %username% (напрямую → showNewPosts)'),
+        debugTile(
+          title: '%username%',
+          onPressed: () => _showUsernamePost(ref),
+        ),
       ],
     );
   }
@@ -104,6 +109,23 @@ class DebugNewsTile extends ConsumerWidget {
         link: Uri.parse('https://svalko.org/$id.html'),
         descriptionHtml: html,
         imageUrl: imageUrl,
+      ),
+    ]);
+  }
+
+  Future<void> _showUsernamePost(WidgetRef ref) async {
+    final box = ref.read(settingsBoxProvider);
+    final baseId =
+        int.tryParse(box.get(NewsSettingsKeys.lastSeenPostId) ?? '') ?? 1000000;
+    final id = baseId + 1;
+    await NotificationService.instance.showNewPosts([
+      NewsItem(
+        id: id,
+        title: 'смотри не перепутай %username%!',
+        author: 'Комодер',
+        publishedAt: DateTime.now(),
+        link: Uri.parse('https://svalko.org/$id.html'),
+        descriptionHtml: '<p>Тест подстановки %username% в тексте пуша.</p>',
       ),
     ]);
   }

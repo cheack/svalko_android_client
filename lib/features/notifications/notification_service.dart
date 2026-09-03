@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/config.dart';
 import '../news/news_item.dart';
 import 'notification_channels.dart';
+import 'notification_text.dart';
 
 typedef PostNotificationTap = void Function(int postId);
 
@@ -24,6 +25,10 @@ class NotificationService {
 
   bool _initialized = false;
   PostNotificationTap? _onPostTap;
+
+  /// The locally-chosen commenter name, used to fill in `%username%` in
+  /// push notification text sent by the server.
+  String username = '';
 
   Future<void> initialize({PostNotificationTap? onPostTap}) async {
     _onPostTap = onPostTap ?? _onPostTap;
@@ -84,9 +89,13 @@ class NotificationService {
     final title = items.length == 1
         ? 'Новый пост'
         : 'Новых постов: ${items.length}';
-    final body = items.length == 1
+    final rawBody = items.length == 1
         ? items.first.notificationBody
         : items.take(3).map((i) => i.notificationBody).join('\n');
+    // Some post titles carry the site's own %username% joke token (an
+    // easter egg from the generated-post feature) — fill it in with the
+    // reader's own name rather than showing the raw placeholder.
+    final body = applyNotificationPlaceholders(rawBody, username: username);
 
     await _plugin.show(
       id: items.length == 1 ? items.first.id : _newsSummaryNotificationId,
@@ -141,8 +150,10 @@ class NotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
-    final title = notification.title ?? '';
-    final body = notification.body ?? '';
+    final title =
+        applyNotificationPlaceholders(notification.title ?? '', username: username);
+    final body =
+        applyNotificationPlaceholders(notification.body ?? '', username: username);
 
     await _plugin.show(
       id: message.hashCode,
