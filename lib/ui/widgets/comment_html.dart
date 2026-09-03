@@ -3,6 +3,7 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../core/config.dart';
 import '../../core/open_url.dart';
 import '../skin_ext.dart';
+import 'broken_image_placeholder.dart';
 import 'html_marquee.dart';
 import 'video_link_card.dart';
 
@@ -66,6 +67,8 @@ class CommentHtml extends StatelessWidget {
         }
         return null;
       },
+      onErrorBuilder: (context, element, error) =>
+          BrokenImagePlaceholder(url: element.attributes['src'] ?? ''),
       onTapUrl: (url) {
         final postId = int.tryParse(
           _svalkoPostRe.firstMatch(url)?.group(1) ?? '',

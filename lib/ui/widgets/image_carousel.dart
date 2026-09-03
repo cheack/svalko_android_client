@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../../core/app_logger.dart';
 import '../../core/settings_storage.dart';
+import 'broken_image_placeholder.dart';
 import 'gif_player.dart';
 import 'image_viewer.dart';
 import 'media_actions.dart';
@@ -263,6 +264,7 @@ class MediaImageState extends ConsumerState<MediaImage>
   // null = unknown, 0 = not cached, >0 = bytes
   int? _remoteSize;
   bool _manuallyTriggered = false;
+  bool _downloadFailed = false;
 
   static String _name(String url) =>
       Uri.tryParse(url)?.pathSegments.lastOrNull ?? url;
@@ -302,7 +304,10 @@ class MediaImageState extends ConsumerState<MediaImage>
 
   void _startDownload() {
     if (_downloadSub != null) return;
-    setState(() => _manuallyTriggered = true);
+    setState(() {
+      _manuallyTriggered = true;
+      _downloadFailed = false;
+    });
     _downloadSub = DefaultCacheManager()
         .getFileStream(widget.url, withProgress: true)
         .listen((event) {
@@ -312,6 +317,11 @@ class MediaImageState extends ConsumerState<MediaImage>
       } else if (event is FileInfo) {
         setState(() => _gifFile = event.file);
       }
+    }, onError: (Object error) {
+      AppLogger.instance.error('gif error: ${_name(widget.url)}', detail: error.toString());
+      if (!mounted) return;
+      setState(() => _downloadFailed = true);
+      _downloadSub = null;
     });
   }
 
@@ -398,6 +408,7 @@ class MediaImageState extends ConsumerState<MediaImage>
     final name = _name(url);
 
     if (url.toLowerCase().contains('.gif')) {
+      if (_downloadFailed) return BrokenImagePlaceholder(url: url);
       if (_gifFile == null && !_manuallyTriggered) {
         return _manualLoadPlaceholder();
       }
@@ -452,7 +463,7 @@ class MediaImageState extends ConsumerState<MediaImage>
       },
       errorWidget: (_, _, error) {
         AppLogger.instance.error('img error: $name', detail: error.toString());
-        return const SizedBox.shrink();
+        return BrokenImagePlaceholder(url: url);
       },
       fadeOutDuration: Duration.zero,
       fadeInDuration: const Duration(milliseconds: 250),
