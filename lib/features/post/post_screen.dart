@@ -538,27 +538,38 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               ),
             ),
           const SizedBox(height: 4),
-          AnimatedOpacity(
-            opacity: state.isLoadingMore ? 0.35 : 1.0,
-            duration: const Duration(milliseconds: 200),
-            child: Builder(builder: (ctx) {
-              final dividers = Theme.of(ctx).extension<SvalkoSkinExt>()?.cardDividers ?? false;
-              return Column(
-                children: [
-                  for (int i = 0; i < state.comments.length; i++) ...[
-                    if (dividers && i > 0) const Divider(height: 1, thickness: 1),
-                    CommentTile(
-                      key: state.comments[i].id == widget.highlightCommentId
-                          ? _highlightKey
-                          : null,
-                      comment: state.comments[i],
-                      currentPage: state.currentPage,
-                      isHighlighted: state.comments[i].id == widget.highlightCommentId,
-                    ),
+          // The comments list is entirely replaced on every page change, so
+          // its length/content can shift under a live selection. Excluding
+          // it from the outer SelectionArea and giving each tile its own
+          // (like dark_side_feed_screen's per-item SelectionArea) keeps that
+          // reshuffling from corrupting the outer selectable registry
+          // (RangeError in MultiSelectableSelectionContainerDelegate.getSelectionGeometry).
+          SelectionContainer.disabled(
+            child: AnimatedOpacity(
+              opacity: state.isLoadingMore ? 0.35 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: Builder(builder: (ctx) {
+                final dividers = Theme.of(ctx).extension<SvalkoSkinExt>()?.cardDividers ?? false;
+                return Column(
+                  children: [
+                    for (int i = 0; i < state.comments.length; i++) ...[
+                      if (dividers && i > 0) const Divider(height: 1, thickness: 1),
+                      SelectionArea(
+                        key: ValueKey(state.comments[i].id),
+                        child: CommentTile(
+                          key: state.comments[i].id == widget.highlightCommentId
+                              ? _highlightKey
+                              : null,
+                          comment: state.comments[i],
+                          currentPage: state.currentPage,
+                          isHighlighted: state.comments[i].id == widget.highlightCommentId,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              );
-            }),
+                );
+              }),
+            ),
           ),
           // Bottom page bar
           if (state.totalPages > 1)
