@@ -74,7 +74,7 @@ Future<void> shareMedia(
     context,
     () async {
       final path = await _downloadToTemp(url);
-      await Share.shareXFiles([XFile(path)]);
+      await SharePlus.instance.share(ShareParams(files: [XFile(path)]));
     },
     successMsg: s.share,
     errorPrefix: s.unknownError,

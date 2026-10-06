@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../core/parse_guard.dart';
 import '../../core/result.dart';
 import '../../data/parsers/dark_side_parser.dart';

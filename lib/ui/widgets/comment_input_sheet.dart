@@ -157,14 +157,13 @@ class _CommentSheetState extends State<_CommentSheet> {
     setState(() => _picking = true);
 
     try {
-    final result = await FilePicker.platform.pickFiles(
+    final file = await FilePicker.pickFile(
       type: FileType.image,
-      allowMultiple: false,
       compressionQuality: 0,
     );
-    if (result == null || result.files.single.path == null) return;
+    if (file == null || file.path == null) return;
 
-    final path = result.files.single.path!;
+    final path = file.path!;
     final attachment = _Attachment(localPath: path);
     setState(() => _attachments.add(attachment));
 

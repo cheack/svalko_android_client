@@ -188,7 +188,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                 title: Text(s.shareLink),
                 onTap: () {
                   Navigator.pop(sheetCtx);
-                  Share.share(postUrl);
+                  SharePlus.instance.share(ShareParams(text: postUrl));
                 },
               ),
               ListTile(

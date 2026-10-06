@@ -11,20 +11,22 @@ Future<void> shareFavoritesJson(
   final dir = await getTemporaryDirectory();
   final file = File('${dir.path}/svalko_favorites.json');
   await file.writeAsString(json);
-  await Share.shareXFiles(
-    [XFile(file.path, mimeType: 'application/json')],
-    subject: subject,
+  await SharePlus.instance.share(
+    ShareParams(
+      files: [XFile(file.path, mimeType: 'application/json')],
+      subject: subject,
+    ),
   );
 }
 
 /// Lets the user pick a `.json` file and returns its contents, or null if
 /// the picker was cancelled.
 Future<String?> pickFavoritesJsonFile() async {
-  final result = await FilePicker.platform.pickFiles(
+  final file = await FilePicker.pickFile(
     type: FileType.custom,
     allowedExtensions: ['json'],
   );
-  final path = result?.files.single.path;
+  final path = file?.path;
   if (path == null) return null;
   return File(path).readAsString();
 }

@@ -21,7 +21,7 @@ class PostShareButton extends StatelessWidget {
       iconSize: iconSize ?? 24,
       visualDensity: visualDensity,
       tooltip: 'Поделиться',
-      onPressed: () => Share.share(postUrl(postId)),
+      onPressed: () => SharePlus.instance.share(ShareParams(text: postUrl(postId))),
     );
   }
 }

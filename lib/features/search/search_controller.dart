@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../core/result.dart';
 import '../../data/repositories/svalko_repository.dart';
 import '../../features/feed/feed_controller.dart';

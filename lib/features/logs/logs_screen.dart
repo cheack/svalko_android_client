@@ -95,7 +95,9 @@ class _LogsScreenState extends State<LogsScreen> {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/svalko_logs.txt');
     await file.writeAsString(buf.toString());
-    await Share.shareXFiles([XFile(file.path)], subject: 'svalko logs');
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path)], subject: 'svalko logs'),
+    );
   }
 
   String _p(int v) => v.toString().padLeft(2, '0');

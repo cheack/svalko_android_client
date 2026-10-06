@@ -630,7 +630,7 @@ class _PostMenuState extends State<_PostMenu> {
       menuChildren: [
         MenuItemButton(
           leadingIcon: const Icon(Icons.share_outlined),
-          onPressed: () => Share.share(PostShareButton.postUrl(post.id)),
+          onPressed: () => SharePlus.instance.share(ShareParams(text: PostShareButton.postUrl(post.id))),
           child: const Text('Поделиться'),
         ),
         MenuItemButton(

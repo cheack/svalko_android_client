@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../core/result.dart';
 import '../../core/settings_storage.dart';
 import '../../data/repositories/svalko_repository.dart';
