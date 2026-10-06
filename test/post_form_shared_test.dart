@@ -120,4 +120,17 @@ void main() {
       expect(parseUploadedFiles(html), isEmpty);
     });
   });
+
+  group('insertAtCursor', () {
+    test('replaces selection and moves cursor after the insert', () {
+      final ctrl = TextEditingController(text: 'hello world');
+      final focus = FocusNode();
+      addTearDown(ctrl.dispose);
+      addTearDown(focus.dispose);
+      ctrl.selection = const TextSelection(baseOffset: 5, extentOffset: 11);
+      insertAtCursor(' there', ctrl, focus);
+      expect(ctrl.text, 'hello there');
+      expect(ctrl.selection.baseOffset, 11);
+    });
+  });
 }

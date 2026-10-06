@@ -47,6 +47,19 @@ void wrapBbCode(String tag, TextEditingController ctrl, FocusNode focus) {
   focus.requestFocus();
 }
 
+/// Replaces the current selection with [insert] and puts the cursor after it.
+void insertAtCursor(String insert, TextEditingController ctrl, FocusNode focus) {
+  final text = ctrl.text;
+  final sel = ctrl.selection;
+  final start = sel.start.clamp(0, text.length);
+  final end = sel.end.clamp(0, text.length);
+  ctrl.value = TextEditingValue(
+    text: text.replaceRange(start, end, insert),
+    selection: TextSelection.collapsed(offset: start + insert.length),
+  );
+  focus.requestFocus();
+}
+
 Future<void> saveAuthorCookie(
   Box<String> settingsBox,
   SvalkoApi api,

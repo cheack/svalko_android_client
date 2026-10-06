@@ -158,7 +158,7 @@ class SvalkoApi {
       );
       return Ok(utf8.decode(_toBytes(response.data)));
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (e, st) {
       CrashReporter.instance.report(e, st);
       return const Err(AppError.unknown);
@@ -188,7 +188,7 @@ class SvalkoApi {
       final commentId = int.tryParse(finalUri.queryParameters['high'] ?? '');
       return Ok((postId, commentId));
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -281,7 +281,7 @@ class SvalkoApi {
         suggestedAuthor: suggestedAuthor,
       ));
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -323,7 +323,7 @@ class SvalkoApi {
       );
       return Ok(await _decodeResponse(response));
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -351,7 +351,7 @@ class SvalkoApi {
       );
       return const Ok(null);
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -401,7 +401,7 @@ class SvalkoApi {
       );
       return const Ok(null);
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -426,7 +426,7 @@ class SvalkoApi {
       );
       return Ok(await _decodeResponse(response));
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -442,7 +442,7 @@ class SvalkoApi {
       );
       return Ok(await _decodeResponse(response));
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -460,7 +460,7 @@ class SvalkoApi {
       );
       return Ok((await _decodeResponse(response)).trim());
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -480,7 +480,7 @@ class SvalkoApi {
       );
       return Ok(response.data ?? '');
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -497,7 +497,7 @@ class SvalkoApi {
       );
       return Ok(await _decodeResponse(response));
     } on DioException catch (e) {
-      return Err(_mapDioError(e));
+      return Err(mapDioError(e));
     } catch (_) {
       return const Err(AppError.unknown);
     }
@@ -508,15 +508,16 @@ class SvalkoApi {
 
   Future<String> _decodeResponse(Response<dynamic> r) =>
       decodeWin1251(_toBytes(r.data));
-
-  AppError _mapDioError(DioException e) => switch (e.type) {
-        DioExceptionType.connectionTimeout ||
-        DioExceptionType.sendTimeout ||
-        DioExceptionType.receiveTimeout =>
-          AppError.timeout,
-        DioExceptionType.badResponse =>
-          e.response?.statusCode == 404 ? AppError.notFound : AppError.network,
-        DioExceptionType.connectionError => AppError.network,
-        _ => AppError.unknown,
-      };
 }
+
+/// Maps a Dio failure onto the app's coarse error categories.
+AppError mapDioError(DioException e) => switch (e.type) {
+      DioExceptionType.connectionTimeout ||
+      DioExceptionType.sendTimeout ||
+      DioExceptionType.receiveTimeout =>
+        AppError.timeout,
+      DioExceptionType.badResponse =>
+        e.response?.statusCode == 404 ? AppError.notFound : AppError.network,
+      DioExceptionType.connectionError => AppError.network,
+      _ => AppError.unknown,
+    };

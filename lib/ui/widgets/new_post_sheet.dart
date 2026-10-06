@@ -1,8 +1,11 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
+import '../../data/fastpic_uploader.dart';
 import '../../data/svalko_api.dart';
 import '../../core/result.dart';
+import 'attachment_widgets.dart';
 import 'author_label.dart';
 import 'post_form_shared.dart';
 
@@ -48,15 +51,19 @@ class _NewPostSheet extends StatefulWidget {
 class _NewPostSheetState extends State<_NewPostSheet> {
   static const _authorKey = 'comment_author';
   static const _draftKey = 'post_draft';
+  static const _attachmentsKey = 'post_attachments';
 
   final _authorCtrl = TextEditingController();
   final _textCtrl = TextEditingController();
   final _focusNode = FocusNode();
+  final _fastpic = FastpicUploader();
 
   CommentFormData? _form;
   bool _formError = false;
   bool _submitting = false;
   String? _submitError;
+  bool _picking = false;
+  final _attachments = <Attachment>[];
 
   @override
   void initState() {
@@ -69,6 +76,7 @@ class _NewPostSheetState extends State<_NewPostSheet> {
           (_) => _focusNode.requestFocus());
     }
     restoreAndTrackDraft(_textCtrl, widget.settingsBox, _draftKey);
+    _attachments.addAll(restoreAttachments(widget.settingsBox, _attachmentsKey));
     _loadForm(hasSavedAuthor: hasSavedAuthor);
   }
 
@@ -93,6 +101,50 @@ class _NewPostSheetState extends State<_NewPostSheet> {
     _textCtrl.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _saveAttachments() => saveAttachments(widget.settingsBox, _attachmentsKey, _attachments);
+
+  bool get _hasUploading => _attachments.any((a) => a.isUploading);
+
+  Future<void> _pickAndUpload() async {
+    if (_picking) return;
+    setState(() => _picking = true);
+    try {
+      final file = await FilePicker.pickFile(type: FileType.image);
+      final path = file?.path;
+      if (path == null || !mounted) return;
+
+      final attachment = Attachment(localPath: path);
+      setState(() => _attachments.add(attachment));
+
+      final result = await _fastpic.upload(
+        path,
+        onProgress: (sent, total) {
+          if (!mounted) return;
+          setState(() => attachment.progress = total > 0 ? sent / total : 0);
+        },
+      );
+      if (!mounted) return;
+
+      setState(() {
+        switch (result) {
+          case Ok(:final value):
+            attachment.uploaded = UploadedFile(code: value, deleteParam: '');
+          case Err():
+            attachment.uploadError = 'Не удалось загрузить';
+        }
+      });
+      _saveAttachments();
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
+  }
+
+  Future<void> _delete(Attachment attachment) async {
+    if (!await animateAttachmentRemoval(attachment, setState, () => mounted)) return;
+    setState(() => _attachments.remove(attachment));
+    _saveAttachments();
   }
 
   Future<void> _submit() async {
@@ -127,6 +179,7 @@ class _NewPostSheetState extends State<_NewPostSheet> {
     }
 
     clearDraft(widget.settingsBox, _draftKey);
+    widget.settingsBox.delete(_attachmentsKey);
     Navigator.of(context).pop(true);
   }
 
@@ -165,8 +218,16 @@ class _NewPostSheetState extends State<_NewPostSheet> {
                 style: TextStyle(color: theme.colorScheme.error)),
           ],
           const SizedBox(height: 10),
+          AttachmentRow(
+            attachments: _attachments,
+            canAdd: !_hasUploading,
+            onAdd: _pickAndUpload,
+            onInsert: (a) => insertAtCursor('${a.uploaded!.code}\n', _textCtrl, _focusNode),
+            onDelete: _delete,
+          ),
+          const SizedBox(height: 10),
           FilledButton(
-            onPressed: (_submitting || !_formReady) ? null : _submit,
+            onPressed: (_submitting || !_formReady || _hasUploading) ? null : _submit,
             child: _submitting
                 ? const SizedBox(
                     height: 20,

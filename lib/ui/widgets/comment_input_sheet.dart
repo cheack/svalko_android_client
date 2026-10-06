@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -7,6 +5,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import '../../data/svalko_api.dart';
 import '../../core/result.dart';
 import 'author_label.dart';
+import 'attachment_widgets.dart';
 import 'post_form_shared.dart';
 
 /// Returns true if a comment was successfully submitted.
@@ -46,17 +45,6 @@ class _CommentScreen extends StatelessWidget {
   }
 }
 
-class _Attachment {
-  _Attachment({this.localPath});
-  final String? localPath;
-  UploadedFile? uploaded;  // null while uploading a new file
-  String? uploadError;
-  double progress = 0;
-  bool removing = false;
-
-  bool get isUploading => localPath != null && uploaded == null && uploadError == null;
-}
-
 class _CommentSheet extends StatefulWidget {
   const _CommentSheet({
     required this.api,
@@ -87,7 +75,7 @@ class _CommentSheetState extends State<_CommentSheet> {
   bool _picking = false;
   String? _submitError;
 
-  final _attachments = <_Attachment>[];
+  final _attachments = <Attachment>[];
   // Codes already confirmed on server (to diff after next upload).
   final _knownCodes = <String>{};
 
@@ -107,26 +95,16 @@ class _CommentSheetState extends State<_CommentSheet> {
   }
 
   void _restoreAttachments() {
-    final saved = widget.settingsBox.get(_attachmentsKey);
-    if (saved == null) return;
-    final list = jsonDecode(saved) as List<dynamic>;
-    for (final item in list) {
-      final code = item['code'] as String;
-      final deleteParam = item['deleteParam'] as String;
-      final cachedPath = widget.settingsBox.get('img_cache_$code');
-      final localPath = cachedPath != null && File(cachedPath).existsSync() ? cachedPath : null;
-      _knownCodes.add(code);
-      _attachments.add(_Attachment(localPath: localPath)..uploaded = UploadedFile(code: code, deleteParam: deleteParam));
-    }
+    final restored = restoreAttachments(
+      widget.settingsBox,
+      _attachmentsKey,
+      fallbackPath: (code) => widget.settingsBox.get('img_cache_$code'),
+    );
+    _attachments.addAll(restored);
+    _knownCodes.addAll(restored.map((a) => a.uploaded!.code));
   }
 
-  void _saveAttachments() {
-    final data = _attachments
-        .where((a) => a.uploaded != null && a.uploaded!.code.isNotEmpty)
-        .map((a) => {'code': a.uploaded!.code, 'deleteParam': a.uploaded!.deleteParam})
-        .toList();
-    widget.settingsBox.put(_attachmentsKey, jsonEncode(data));
-  }
+  void _saveAttachments() => saveAttachments(widget.settingsBox, _attachmentsKey, _attachments);
 
   Future<void> _loadForm({required bool hasSavedAuthor}) async {
     final result = await widget.api.fetchCommentForm(widget.postId);
@@ -164,7 +142,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     if (file == null || file.path == null) return;
 
     final path = file.path!;
-    final attachment = _Attachment(localPath: path);
+    final attachment = Attachment(localPath: path);
     setState(() => _attachments.add(attachment));
 
     final uploadResult = await widget.api.uploadCommentImage(
@@ -207,13 +185,11 @@ class _CommentSheetState extends State<_CommentSheet> {
     }
   }
 
-  Future<void> _delete(_Attachment attachment) async {
+  Future<void> _delete(Attachment attachment) async {
     final form = _form;
     final uploaded = attachment.uploaded;
 
-    setState(() => attachment.removing = true);
-    await Future.delayed(const Duration(milliseconds: 250));
-    if (!mounted) return;
+    if (!await animateAttachmentRemoval(attachment, setState, () => mounted)) return;
 
     setState(() => _attachments.remove(attachment));
     _saveAttachments();
@@ -228,18 +204,7 @@ class _CommentSheetState extends State<_CommentSheet> {
     );
   }
 
-  void _insertCode(String code) {
-    final text = _textCtrl.text;
-    final sel = _textCtrl.selection;
-    final start = sel.start.clamp(0, text.length);
-    final end = sel.end.clamp(0, text.length);
-    final newText = text.replaceRange(start, end, code);
-    _textCtrl.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: start + code.length),
-    );
-    _focusNode.requestFocus();
-  }
+  void _insertCode(String code) => insertAtCursor(code, _textCtrl, _focusNode);
 
   Future<void> _submit() async {
     final form = _form;
@@ -315,40 +280,12 @@ class _CommentSheetState extends State<_CommentSheet> {
                 style: TextStyle(color: theme.colorScheme.error)),
           ],
           const SizedBox(height: 10),
-          // Attachment row
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _AddImageButton(
-                  enabled: _formReady && !_hasUploading,
-                  onTap: _pickAndUpload,
-                ),
-                for (final a in _attachments)
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    child: AnimatedOpacity(
-                      opacity: a.removing ? 0.0 : 1.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: _AttachmentTile(
-                        attachment: a,
-                        onInsert: a.uploaded != null && !a.removing
-                            ? () => _insertCode(a.uploaded!.code)
-                            : null,
-                        onDelete: () => _delete(a),
-                        onError: a.uploadError != null
-                            ? () => ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(a.uploadError!)),
-                                )
-                            : null,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          AttachmentRow(
+            attachments: _attachments,
+            canAdd: _formReady && !_hasUploading,
+            onAdd: _pickAndUpload,
+            onInsert: (a) => _insertCode(a.uploaded!.code),
+            onDelete: _delete,
           ),
           const SizedBox(height: 10),
           FilledButton(
@@ -368,179 +305,3 @@ class _CommentSheetState extends State<_CommentSheet> {
     );
   }
 }
-
-class _AttachmentTile extends StatelessWidget {
-  const _AttachmentTile({
-    required this.attachment,
-    required this.onInsert,
-    required this.onDelete,
-    this.onError,
-  });
-
-  final _Attachment attachment;
-  final VoidCallback? onInsert;
-  final VoidCallback onDelete;
-  final VoidCallback? onError;
-
-  static const double _size = 80;
-
-  static Widget _placeholder(ColorScheme colorScheme) => Container(
-        color: colorScheme.surfaceContainerHigh,
-        child: Icon(Icons.image_outlined, color: colorScheme.outline),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, right: 8),
-      child: SizedBox(
-        width: _size,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(
-                    width: _size,
-                    height: _size,
-                    child: attachment.localPath != null
-                      ? Image.file(
-                          File(attachment.localPath!),
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _placeholder(colorScheme),
-                        )
-                      : _placeholder(colorScheme),
-                  ),
-                ),
-                // Upload progress overlay
-                if (attachment.isUploading)
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        color: Colors.black54,
-                        child: Center(
-                          child: SizedBox(
-                            width: 36,
-                            height: 36,
-                            child: CircularProgressIndicator(
-                              value: attachment.progress > 0
-                                  ? attachment.progress
-                                  : null,
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                // Error overlay
-                if (attachment.uploadError != null)
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onTap: onError,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          color: Colors.black54,
-                          child: const Center(
-                            child: Icon(Icons.error_outline,
-                                color: Colors.white, size: 32),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                // Delete button (top-right)
-                Positioned(
-                  top: -6,
-                  right: -6,
-                  child: GestureDetector(
-                    onTap: onDelete,
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: colorScheme.error,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close,
-                          color: Colors.white, size: 14),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (attachment.uploadError == null) ...[
-              const SizedBox(height: 4),
-              SizedBox(
-                height: 28,
-                child: TextButton(
-                  onPressed: onInsert,
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    'В пост',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: onInsert != null
-                          ? colorScheme.primary
-                          : colorScheme.outline,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AddImageButton extends StatelessWidget {
-  const _AddImageButton({required this.enabled, required this.onTap});
-
-  final bool enabled;
-  final VoidCallback onTap;
-
-  static const double _size = 80;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, right: 8),
-      child: GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        width: _size,
-        height: _size,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: enabled
-                ? colorScheme.outline
-                : colorScheme.outlineVariant,
-            width: 1.5,
-          ),
-        ),
-        child: Icon(
-          Icons.add_photo_alternate_outlined,
-          color: enabled ? colorScheme.primary : colorScheme.outlineVariant,
-          size: 32,
-        ),
-      ),
-    ));
-  }
-}
-
